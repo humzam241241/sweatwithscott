@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dump-schema": "node scripts/dump-schema.cjs",
+    "migrate": "node scripts/migrate.cjs",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
