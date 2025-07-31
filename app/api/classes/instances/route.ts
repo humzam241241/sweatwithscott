@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
-import { startOfWeek, endOfWeek, format } from "date-fns"
+import { addDays, format } from "date-fns"
 
 // Return class schedule between start_date and end_date.
 export async function GET(request: NextRequest) {
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
 
     if (!startDate || !endDate) {
       const now = new Date()
-      startDate = format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd")
-      endDate = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd")
+      startDate = format(now, "yyyy-MM-dd")
+      endDate = format(addDays(now, 7), "yyyy-MM-dd")
     }
 
     const db = getDb()
