@@ -1,5 +1,6 @@
 import Database from "better-sqlite3"
 import path from "path"
+import bcrypt from "bcryptjs"
 
 // Database connection with proper error handling
 const dbPath = path.join(process.cwd(), "gym.db")
@@ -112,10 +113,11 @@ export function initializeDatabase() {
     // Insert admin user if not exists
     const adminExists = db.prepare("SELECT id FROM users WHERE username = ?").get("admin")
     if (!adminExists) {
+      const hashedAdmin = bcrypt.hashSync("admin123", 10)
       db.prepare(`
-        INSERT INTO users (username, password, email, full_name, is_admin, membership_status) 
+        INSERT INTO users (username, password, email, full_name, is_admin, membership_status)
         VALUES (?, ?, ?, ?, ?, ?)
-      `).run("admin", "admin123", "admin@cavegym.com", "Admin User", 1, "admin")
+      `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin")
     }
 
     // Insert sample classes if none exist
@@ -239,7 +241,8 @@ export function initializeDatabase() {
       `)
 
       sampleUsers.forEach((user) => {
-        insertUser.run(user.username, user.password, user.email, user.full_name, user.phone, user.membership_type)
+        const hashed = bcrypt.hashSync(user.password, 10)
+        insertUser.run(user.username, hashed, user.email, user.full_name, user.phone, user.membership_type)
       })
     }
 
@@ -555,6 +558,32 @@ export const dbOperations = {
     } catch (error) {
       console.error("Error getting all bookings:", error)
       return []
+    }
+  },
+
+  getClassInstanceById: (id: number) => {
+    try {
+      return db
+        .prepare(
+          `SELECT ci.*, c.name as class_name FROM class_instances ci JOIN classes c ON ci.class_id = c.id WHERE ci.id = ?`
+        )
+        .get(id)
+    } catch (error) {
+      console.error("Error getting class instance by id:", error)
+      return null
+    }
+  },
+
+  getUserBookingForClass: (userId: number, classInstanceId: number) => {
+    try {
+      return db
+        .prepare(
+          `SELECT * FROM class_bookings WHERE user_id = ? AND class_instance_id = ? LIMIT 1`
+        )
+        .get(userId, classInstanceId)
+    } catch (error) {
+      console.error("Error checking existing booking:", error)
+      return null
     }
   },
 

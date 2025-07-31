@@ -15,7 +15,7 @@ import Footer from "@/components/footer"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
-    username: "",
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -40,7 +40,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: formData.username,
+          fullName: formData.fullName,
           email: formData.email,
           password: formData.password,
         }),
@@ -49,7 +49,7 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (response.ok) {
-        router.push("/login?message=Registration successful")
+        router.push("/dashboard")
       } else {
         setError(data.error || "Registration failed")
       }
@@ -78,12 +78,12 @@ export default function RegisterPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="fullName">Full Name</Label>
               <Input
-                id="username"
+                id="fullName"
                 type="text"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                value={formData.fullName}
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 required
               />
             </div>
