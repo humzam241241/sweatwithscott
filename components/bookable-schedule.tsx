@@ -1,75 +1,82 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Clock, Users, MapPin, Calendar, User } from "lucide-react"
-import { format, addDays, startOfWeek, isSameDay } from "date-fns"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Clock, Users, MapPin, Calendar, User } from "lucide-react";
+import { format, addDays, startOfWeek, isSameDay } from "date-fns";
 
 interface ClassInstance {
-  id: number
-  class_id: number
-  name: string
-  coach: string
-  date: string
-  start_time: string
-  end_time: string
-  level: string
-  max_capacity: number
-  current_bookings: number
-  price: number
-  status: string
-  user_booking_status?: string
+  id: number;
+  class_id: number;
+  name: string;
+  coach: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  level: string;
+  max_capacity: number;
+  current_bookings: number;
+  price: number;
+  status: string;
+  user_booking_status?: string;
 }
 
 interface BookableScheduleProps {
-  userMode?: boolean
-  userId?: number
+  userMode?: boolean;
+  userId?: number;
 }
 
 export default function BookableSchedule({ userMode = false, userId }: BookableScheduleProps) {
-  const [selectedWeek, setSelectedWeek] = useState(new Date())
-  const [classInstances, setClassInstances] = useState<ClassInstance[]>([])
-  const [loading, setLoading] = useState(true)
-  const [bookingLoading, setBookingLoading] = useState<number | null>(null)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [selectedWeek, setSelectedWeek] = useState(new Date());
+  const [classInstances, setClassInstances] = useState<ClassInstance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState<number | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }) // Monday
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // Monday
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   useEffect(() => {
-    fetchClassInstances()
-  }, [selectedWeek, userId])
+    fetchClassInstances();
+  }, [selectedWeek, userId]);
 
   const fetchClassInstances = async () => {
     try {
-      const startDate = format(weekStart, "yyyy-MM-dd")
-      const endDate = format(addDays(weekStart, 6), "yyyy-MM-dd")
+      const startDate = format(weekStart, "yyyy-MM-dd");
+      const endDate = format(addDays(weekStart, 6), "yyyy-MM-dd");
 
       const url =
         userMode && userId
           ? `/api/classes/instances?start_date=${startDate}&end_date=${endDate}&user_id=${userId}`
-          : `/api/classes/instances?start_date=${startDate}&end_date=${endDate}`
+          : `/api/classes/instances?start_date=${startDate}&end_date=${endDate}`;
 
-      const response = await fetch(url)
-      const data = await response.json()
-      setClassInstances(data)
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        setClassInstances(data);
+      } else {
+        console.error("❌ API did not return an array:", data);
+        setClassInstances([]);
+      }
     } catch (error) {
-      console.error("Error fetching class instances:", error)
+      console.error("❌ Error fetching class instances:", error);
+      setClassInstances([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleBookClass = async (classInstanceId: number) => {
     if (!userId) {
-      setMessage({ type: "error", text: "Please log in to book classes" })
-      return
+      setMessage({ type: "error", text: "Please log in to book classes" });
+      return;
     }
 
-    setBookingLoading(classInstanceId)
+    setBookingLoading(classInstanceId);
     try {
       const response = await fetch("/api/classes/book", {
         method: "POST",
@@ -78,27 +85,27 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
           user_id: userId,
           class_instance_id: classInstanceId,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: data.message })
-        fetchClassInstances() // Refresh the schedule
+        setMessage({ type: "success", text: data.message });
+        fetchClassInstances();
       } else {
-        setMessage({ type: "error", text: data.error })
+        setMessage({ type: "error", text: data.error });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to book class. Please try again." })
+      setMessage({ type: "error", text: "Failed to book class. Please try again." });
     } finally {
-      setBookingLoading(null)
+      setBookingLoading(null);
     }
-  }
+  };
 
   const handleCancelBooking = async (classInstanceId: number) => {
-    if (!userId) return
+    if (!userId) return;
 
-    setBookingLoading(classInstanceId)
+    setBookingLoading(classInstanceId);
     try {
       const response = await fetch("/api/classes/cancel", {
         method: "POST",
@@ -107,39 +114,43 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
           user_id: userId,
           class_instance_id: classInstanceId,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setMessage({ type: "success", text: data.message })
-        fetchClassInstances()
+        setMessage({ type: "success", text: data.message });
+        fetchClassInstances();
       } else {
-        setMessage({ type: "error", text: data.error })
+        setMessage({ type: "error", text: data.error });
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to cancel booking. Please try again." })
+      setMessage({ type: "error", text: "Failed to cancel booking. Please try again." });
     } finally {
-      setBookingLoading(null)
+      setBookingLoading(null);
     }
-  }
+  };
 
   const getClassesForDay = (date: Date) => {
-    return classInstances.filter((instance) => isSameDay(new Date(instance.date), date))
-  }
+    if (!Array.isArray(classInstances)) {
+      console.error("❌ classInstances is not an array:", classInstances);
+      return [];
+    }
+    return classInstances.filter((instance) => isSameDay(new Date(instance.date), date));
+  };
 
   const getLevelColor = (level: string) => {
-    if (level.includes("Ages")) return "bg-purple-100 text-purple-800"
-    if (level === "Beginner") return "bg-green-100 text-green-800"
-    if (level === "Intermediate") return "bg-yellow-100 text-yellow-800"
-    if (level === "Advanced") return "bg-red-100 text-red-800"
-    if (level === "Members Only") return "bg-blue-100 text-blue-800"
-    return "bg-gray-100 text-gray-800"
-  }
+    if (level.includes("Ages")) return "bg-purple-100 text-purple-800";
+    if (level === "Beginner") return "bg-green-100 text-green-800";
+    if (level === "Intermediate") return "bg-yellow-100 text-yellow-800";
+    if (level === "Advanced") return "bg-red-100 text-red-800";
+    if (level === "Members Only") return "bg-blue-100 text-blue-800";
+    return "bg-gray-100 text-gray-800";
+  };
 
   const getBookingButton = (instance: ClassInstance) => {
-    const isFullyBooked = instance.current_bookings >= instance.max_capacity
-    const isLoading = bookingLoading === instance.id
+    const isFullyBooked = instance.current_bookings >= instance.max_capacity;
+    const isLoading = bookingLoading === instance.id;
 
     if (instance.user_booking_status === "confirmed") {
       return (
@@ -152,7 +163,7 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
         >
           {isLoading ? "Cancelling..." : "Cancel Booking"}
         </Button>
-      )
+      );
     }
 
     if (instance.user_booking_status === "waitlist") {
@@ -160,7 +171,7 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
         <Button size="sm" variant="outline" disabled className="border-yellow-600 text-yellow-600 bg-transparent">
           On Waitlist
         </Button>
-      )
+      );
     }
 
     if (isFullyBooked) {
@@ -174,7 +185,7 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
         >
           {isLoading ? "Joining..." : "Join Waitlist"}
         </Button>
-      )
+      );
     }
 
     return (
@@ -186,11 +197,11 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       >
         {isLoading ? "Booking..." : "Book Class"}
       </Button>
-    )
-  }
+    );
+  };
 
   if (loading) {
-    return <div className="text-center py-8">Loading schedule...</div>
+    return <div className="text-center py-8">Loading schedule...</div>;
   }
 
   return (
@@ -238,9 +249,9 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       {/* Schedule Grid */}
       <div className="grid gap-6">
         {weekDays.map((day) => {
-          const dayClasses = getClassesForDay(day)
-          const dayName = format(day, "EEEE")
-          const dayDate = format(day, "MMM d")
+          const dayClasses = getClassesForDay(day);
+          const dayName = format(day, "EEEE");
+          const dayDate = format(day, "MMM d");
 
           return (
             <Card key={day.toISOString()} className="overflow-hidden">
@@ -298,7 +309,7 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
                 )}
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
@@ -316,5 +327,5 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
         </p>
       </div>
     </div>
-  )
+  );
 }

@@ -1,292 +1,61 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { dbOperations } from "@/lib/database"
+// app/api/classes/instances/route.ts
 
-// Mock data for class instances - in production, this would come from the database
-const generateClassInstances = (startDate: string, endDate: string, userId?: number) => {
-  const instances = [
-    // Monday classes
-    {
-      id: 1,
-      class_id: 1,
-      name: "Boxing Technique",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-05",
-      start_time: "06:00",
-      end_time: "07:00",
-      level: "All Levels",
-      max_capacity: 15,
-      current_bookings: 8,
-      price: 25.0,
-      status: "active",
-      user_booking_status: userId === 2 ? "confirmed" : undefined,
-    },
-    {
-      id: 2,
-      class_id: 2,
-      name: "Strength & Conditioning",
-      coach: "Humza Muhammad",
-      date: "2024-02-05",
-      start_time: "19:00",
-      end_time: "20:00",
-      level: "Intermediate",
-      max_capacity: 12,
-      current_bookings: 10,
-      price: 25.0,
-      status: "active",
-    },
-    // Tuesday classes
-    {
-      id: 3,
-      class_id: 3,
-      name: "Boxing Bootcamp",
-      coach: "Scott McDonald",
-      date: "2024-02-06",
-      start_time: "06:00",
-      end_time: "07:00",
-      level: "All Levels",
-      max_capacity: 20,
-      current_bookings: 15,
-      price: 25.0,
-      status: "active",
-    },
-    {
-      id: 4,
-      class_id: 4,
-      name: "Teen Boxing",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-06",
-      start_time: "16:00",
-      end_time: "17:00",
-      level: "Ages 13-16",
-      max_capacity: 10,
-      current_bookings: 6,
-      price: 20.0,
-      status: "active",
-    },
-    {
-      id: 5,
-      class_id: 5,
-      name: "Women's Boxing",
-      coach: "Scott McDonald",
-      date: "2024-02-06",
-      start_time: "19:00",
-      end_time: "20:00",
-      level: "All Levels",
-      max_capacity: 15,
-      current_bookings: 12,
-      price: 25.0,
-      status: "active",
-      user_booking_status: userId === 3 ? "confirmed" : undefined,
-    },
-    // Wednesday classes
-    {
-      id: 6,
-      class_id: 6,
-      name: "Boxing Technique",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-07",
-      start_time: "06:00",
-      end_time: "07:00",
-      level: "All Levels",
-      max_capacity: 15,
-      current_bookings: 15,
-      price: 25.0,
-      status: "active",
-    },
-    {
-      id: 7,
-      class_id: 7,
-      name: "Strength & Conditioning",
-      coach: "Humza Muhammad",
-      date: "2024-02-07",
-      start_time: "19:00",
-      end_time: "20:00",
-      level: "Advanced",
-      max_capacity: 12,
-      current_bookings: 9,
-      price: 25.0,
-      status: "active",
-    },
-    // Thursday classes
-    {
-      id: 8,
-      class_id: 8,
-      name: "Boxing Bootcamp",
-      coach: "Scott McDonald",
-      date: "2024-02-08",
-      start_time: "06:00",
-      end_time: "07:00",
-      level: "All Levels",
-      max_capacity: 20,
-      current_bookings: 18,
-      price: 25.0,
-      status: "active",
-    },
-    {
-      id: 9,
-      class_id: 9,
-      name: "Teen Boxing",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-08",
-      start_time: "16:00",
-      end_time: "17:00",
-      level: "Ages 13-16",
-      max_capacity: 10,
-      current_bookings: 7,
-      price: 20.0,
-      status: "active",
-    },
-    {
-      id: 10,
-      class_id: 10,
-      name: "Boxing Technique",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-08",
-      start_time: "19:00",
-      end_time: "20:00",
-      level: "Intermediate",
-      max_capacity: 15,
-      current_bookings: 11,
-      price: 25.0,
-      status: "active",
-    },
-    // Friday classes
-    {
-      id: 11,
-      class_id: 11,
-      name: "Boxing Technique",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-09",
-      start_time: "06:00",
-      end_time: "07:00",
-      level: "All Levels",
-      max_capacity: 15,
-      current_bookings: 13,
-      price: 25.0,
-      status: "active",
-    },
-    {
-      id: 12,
-      class_id: 12,
-      name: "Open Gym",
-      coach: "Self-Directed",
-      date: "2024-02-09",
-      start_time: "19:00",
-      end_time: "20:00",
-      level: "Members Only",
-      max_capacity: 25,
-      current_bookings: 8,
-      price: 0.0,
-      status: "active",
-    },
-    // Saturday classes
-    {
-      id: 13,
-      class_id: 13,
-      name: "Boxing Bootcamp",
-      coach: "Scott McDonald",
-      date: "2024-02-10",
-      start_time: "09:00",
-      end_time: "10:00",
-      level: "All Levels",
-      max_capacity: 20,
-      current_bookings: 16,
-      price: 25.0,
-      status: "active",
-    },
-    {
-      id: 14,
-      class_id: 14,
-      name: "Junior Jabbers",
-      coach: "Humza Muhammad",
-      date: "2024-02-10",
-      start_time: "10:00",
-      end_time: "11:00",
-      level: "Ages 6-12",
-      max_capacity: 12,
-      current_bookings: 9,
-      price: 15.0,
-      status: "active",
-    },
-    {
-      id: 15,
-      class_id: 15,
-      name: "Teen Boxing",
-      coach: "Kyle McLaughlin",
-      date: "2024-02-10",
-      start_time: "11:30",
-      end_time: "12:30",
-      level: "Ages 13-16",
-      max_capacity: 10,
-      current_bookings: 8,
-      price: 20.0,
-      status: "active",
-    },
-    // Sunday classes
-    {
-      id: 16,
-      class_id: 16,
-      name: "Open Gym",
-      coach: "Self-Directed",
-      date: "2024-02-11",
-      start_time: "10:00",
-      end_time: "11:00",
-      level: "Members Only",
-      max_capacity: 25,
-      current_bookings: 5,
-      price: 0.0,
-      status: "active",
-    },
-  ]
+import { NextResponse } from "next/server";
+import Database from "better-sqlite3";
+import path from "path";
 
-  return instances
-}
+// Path to your SQLite database in project root
+const dbPath = path.join(process.cwd(), "gym.db");
+const db = new Database(dbPath);
 
-export async function GET(request: NextRequest) {
+export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const startDate = searchParams.get("start_date") || ""
-    const endDate = searchParams.get("end_date") || ""
-    const userId = searchParams.get("user_id") ? Number.parseInt(searchParams.get("user_id")!) : undefined
+    const { searchParams } = new URL(req.url);
+    const startDate = searchParams.get("start_date");
+    const endDate = searchParams.get("end_date");
+    const userId = searchParams.get("user_id") ? Number(searchParams.get("user_id")) : undefined;
 
+    // ✅ Validate required params
     if (!startDate || !endDate) {
-      return NextResponse.json({ error: "Start date and end date are required" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Missing required start_date or end_date" },
+        { status: 400 }
+      );
     }
 
-    // Get class instances from database
-    const instances = await dbOperations.getClassInstances(startDate, endDate)
+    let sql = `
+      SELECT ci.id, ci.class_id, c.name, c.coach, ci.date, ci.start_time, ci.end_time, 
+             ci.level, ci.max_capacity, ci.current_bookings, ci.price, ci.status
+      FROM class_instances ci
+      JOIN classes c ON ci.class_id = c.id
+      WHERE date BETWEEN ? AND ?
+    `;
 
-    // If userId is provided, check user's booking status for each class
-    const instancesWithBookingStatus = instances.map((instance) => {
-      let userBookingStatus = undefined
+    const params: (string | number)[] = [startDate, endDate];
 
-      if (userId) {
-        const userBooking = dbOperations.getUserBookingForClass(userId, instance.id)
-        if (userBooking) {
-          userBookingStatus = userBooking.booking_status
-        }
-      }
+    // If userId is provided, optionally filter or join with bookings table
+    if (userId) {
+      sql += `
+        AND ci.id IN (
+          SELECT class_instance_id 
+          FROM bookings 
+          WHERE user_id = ?
+        )
+      `;
+      params.push(userId);
+    }
 
-      return {
-        id: instance.id,
-        class_id: instance.class_id,
-        name: instance.name,
-        coach: instance.coach,
-        date: instance.date,
-        start_time: instance.start_time,
-        end_time: instance.end_time,
-        level: instance.level,
-        max_capacity: instance.max_capacity,
-        current_bookings: instance.current_bookings,
-        price: instance.price,
-        status: instance.status,
-        user_booking_status: userBookingStatus,
-      }
-    })
+    const rows = db.prepare(sql).all(...params);
 
-    return NextResponse.json(instancesWithBookingStatus)
+    // ✅ Always return an array
+    if (!Array.isArray(rows)) {
+      console.error("❌ Query did not return an array:", rows);
+      return NextResponse.json([]);
+    }
+
+    return NextResponse.json(rows);
   } catch (error) {
-    console.error("Error fetching class instances:", error)
-    return NextResponse.json({ error: "Failed to fetch class instances" }, { status: 500 })
+    console.error("❌ Error fetching class instances:", error);
+    return NextResponse.json([], { status: 500 });
   }
 }
