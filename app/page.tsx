@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
 import ContactForm from "@/components/contact-form"
 import ClassSchedule from "@/components/class-schedule"
 import MembershipPackages from "@/components/membership-packages"
@@ -114,7 +115,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+        </section>
+      <Footer />
     </div>
   )
 }

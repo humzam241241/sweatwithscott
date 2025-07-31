@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, User, TrendingUp, CreditCard, CheckCircle, XCircle } from "lucide-react"
 import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
 import BookableSchedule from "@/components/bookable-schedule"
 
 interface UserBooking {
@@ -114,6 +115,7 @@ export default function Dashboard() {
             <p>Loading your dashboard...</p>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
@@ -416,6 +418,7 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </div>
+      <Footer />
     </div>
   )
 }

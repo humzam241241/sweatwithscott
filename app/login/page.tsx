@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
+import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -51,8 +53,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
-      <Card className="w-full max-w-md bg-gray-900 border-gray-700">
+    <div className="min-h-screen bg-black text-white">
+      <Navigation />
+      <div className="flex items-center justify-center px-4">
+        <Card className="w-full max-w-md bg-gray-900 border-gray-700">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img src="/images/cave-logo.png" alt="The Cave Boxing" className="h-16 w-16" />
@@ -135,7 +139,9 @@ export default function LoginPage() {
             <p className="text-xs text-gray-500">Demo: admin/admin123 (Admin) or create a new account</p>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
+      <Footer />
     </div>
   )
 }

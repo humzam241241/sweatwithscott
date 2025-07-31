@@ -62,15 +62,9 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       }
 
       const url =
-<<<<<<< HEAD
-        userMode && userId
-          ? `/api/classes/instances?start_date=${startDate}&end_date=${endDate}&user_id=${userId}`
-          : `/api/classes/instances?start_date=${startDate}&end_date=${endDate}`;
-=======
         params.toString().length > 0
           ? `/api/classes/instances?${params.toString()}`
           : "/api/classes/instances"
->>>>>>> ea2a8739ecf0ae94551f5d9a0d00496e913c3ad4
 
       const response = await fetch(url);
       const data = await response.json();
