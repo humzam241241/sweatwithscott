@@ -58,14 +58,7 @@ export default function Navigation() {
   return (
     <nav className="bg-black border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center">
-              <img src="/images/cave-logo.png" alt="The Cave Boxing Logo" className="h-10 w-10 mr-2" />
-              <span className="text-xl font-bold text-red-600">The Cave Boxing</span>
-            </Link>
-          </div>
-
+        <div className="flex justify-between h-16 items-center">
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
@@ -80,7 +73,7 @@ export default function Navigation() {
           </div>
 
           {/* Auth Section */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 ml-4">
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link
@@ -105,6 +98,13 @@ export default function Navigation() {
                 <Button className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2">SIGN IN</Button>
               </Link>
             )}
+          </div>
+
+          <div className="flex items-center ml-auto flex-shrink-0 whitespace-nowrap">
+            <Link href="/" className="flex items-center">
+              <img src="/images/cave-logo.png" alt="The Cave Boxing Logo" className="h-10 w-10 mr-2" />
+              <span className="text-xl font-bold text-red-600">The Cave Boxing</span>
+            </Link>
           </div>
 
           {/* Mobile menu button */}

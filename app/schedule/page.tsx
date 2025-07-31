@@ -1,5 +1,5 @@
 import Link from "next/link"
-import ClassSchedule from "@/components/class-schedule"
+import BookableSchedule from "@/components/bookable-schedule"
 
 export default function SchedulePage() {
   return (
@@ -50,7 +50,7 @@ export default function SchedulePage() {
 
       {/* Schedule Content */}
       <section className="max-w-6xl mx-auto py-16 px-4">
-        <ClassSchedule />
+        <BookableSchedule />
       </section>
 
       {/* Footer */}
