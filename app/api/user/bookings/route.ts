@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
       attended: booking.attendance_status === "attended",
       status: booking.booking_status,
       level: booking.level,
+      classInstanceId: booking.class_instance_id,
     }))
 
     return NextResponse.json(transformedBookings)

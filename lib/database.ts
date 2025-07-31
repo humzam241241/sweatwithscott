@@ -24,6 +24,7 @@ export function initializeDatabase() {
           phone TEXT,
           membership_type TEXT DEFAULT 'basic',
           membership_status TEXT DEFAULT 'active',
+          membership_expiry DATE,
           is_admin INTEGER DEFAULT 0,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -106,18 +107,28 @@ export function initializeDatabase() {
           class_date DATE NOT NULL,
           attended INTEGER DEFAULT 1,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (user_id) REFERENCES users(id)
+      FOREIGN KEY (user_id) REFERENCES users(id)
       );
     `)
+
+    // Add membership_expiry column for existing installations
+    try {
+      db.prepare("ALTER TABLE users ADD COLUMN membership_expiry DATE").run()
+    } catch {
+      // Ignore if column already exists
+    }
 
     // Insert admin user if not exists
     const adminExists = db.prepare("SELECT id FROM users WHERE username = ?").get("admin")
     if (!adminExists) {
       const hashedAdmin = bcrypt.hashSync("admin123", 10)
+      const expiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0]
       db.prepare(`
-        INSERT INTO users (username, password, email, full_name, is_admin, membership_status)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin")
+        INSERT INTO users (username, password, email, full_name, is_admin, membership_status, membership_expiry)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin", expiry)
     }
 
     // Insert sample classes if none exist
@@ -236,13 +247,24 @@ export function initializeDatabase() {
       ]
 
       const insertUser = db.prepare(`
-        INSERT INTO users (username, password, email, full_name, phone, membership_type)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO users (username, password, email, full_name, phone, membership_type, membership_expiry)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `)
 
       sampleUsers.forEach((user) => {
         const hashed = bcrypt.hashSync(user.password, 10)
-        insertUser.run(user.username, hashed, user.email, user.full_name, user.phone, user.membership_type)
+        const expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0]
+        insertUser.run(
+          user.username,
+          hashed,
+          user.email,
+          user.full_name,
+          user.phone,
+          user.membership_type,
+          expiry,
+        )
       })
     }
 
@@ -376,9 +398,16 @@ export const dbOperations = {
   createUser: (userData: any) => {
     try {
       const stmt = db.prepare(`
-        INSERT INTO users (username, password, email, full_name, phone, membership_type)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO users (username, password, email, full_name, phone, membership_type, membership_expiry)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
       `)
+
+      const expiry =
+        userData.membershipExpiry ||
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0]
+
       return stmt.run(
         userData.username,
         userData.password,
@@ -386,6 +415,7 @@ export const dbOperations = {
         userData.fullName,
         userData.phone,
         userData.membershipType || "basic",
+        expiry,
       )
     } catch (error) {
       console.error("Error creating user:", error)
@@ -601,6 +631,66 @@ export const dbOperations = {
         .get(userId, classInstanceId)
     } catch (error) {
       console.error("Error checking existing booking:", error)
+      return null
+    }
+  },
+
+  getUserBookingOverlap: (
+    userId: number,
+    date: string,
+    startTime: string,
+    endTime: string,
+  ) => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.* FROM class_bookings cb
+           JOIN class_instances ci ON cb.class_instance_id = ci.id
+           WHERE cb.user_id = ? AND ci.date = ?
+             AND ci.start_time < ? AND ci.end_time > ?
+             AND cb.status = 'confirmed'
+           LIMIT 1`,
+        )
+        .get(userId, date, endTime, startTime)
+    } catch (error) {
+      console.error("Error checking overlapping booking:", error)
+      return null
+    }
+  },
+
+  waitlistClass: (userId: number, classInstanceId: number) => {
+    try {
+      const stmt = db.prepare(`
+        INSERT INTO class_bookings (user_id, class_instance_id, status, payment_status, payment_amount)
+        VALUES (?, ?, 'waitlist', 'pending', 25.00)
+      `)
+      return stmt.run(userId, classInstanceId)
+    } catch (error) {
+      console.error("Error adding to waitlist:", error)
+      throw error
+    }
+  },
+
+  promoteWaitlistedUser: (classInstanceId: number) => {
+    try {
+      const booking = db
+        .prepare(
+          `SELECT * FROM class_bookings WHERE class_instance_id = ? AND status = 'waitlist' ORDER BY booking_date LIMIT 1`,
+        )
+        .get(classInstanceId)
+
+      if (booking) {
+        db.prepare(
+          `UPDATE class_bookings SET status = 'confirmed' WHERE id = ?`,
+        ).run(booking.id)
+        db.prepare(
+          `UPDATE class_instances SET current_bookings = current_bookings + 1 WHERE id = ?`,
+        ).run(classInstanceId)
+        return booking.user_id
+      }
+      return null
+    } catch (error) {
+      console.error("Error promoting waitlisted user:", error)
       return null
     }
   },

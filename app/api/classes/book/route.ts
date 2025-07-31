@@ -30,16 +30,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "You already have a booking for this class" }, { status: 400 })
     }
 
-    // Check if class is full
-    if (classInstance.current_bookings >= classInstance.max_capacity) {
-      // TODO: Add to waitlist functionality
+    // Prevent double booking at the same time
+    const overlap = dbOperations.getUserBookingOverlap(
+      user_id,
+      classInstance.date,
+      classInstance.start_time,
+      classInstance.end_time,
+    )
+    if (overlap) {
       return NextResponse.json(
-        {
-          error: "Class is full. Waitlist functionality coming soon!",
-          status: "full",
-        },
+        { error: "You already have another class booked at this time" },
         { status: 400 },
       )
+    }
+
+    // Check if class is full
+    if (classInstance.current_bookings >= classInstance.max_capacity) {
+      const result = dbOperations.waitlistClass(user_id, class_instance_id)
+      return NextResponse.json({
+        message: "Class is full. You've been added to the waitlist.",
+        booking_id: result.lastInsertRowid,
+        status: "waitlist",
+      })
     }
 
     // Create the booking

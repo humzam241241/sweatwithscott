@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     email: user.username,
     membershipType: user.membership_type,
     membershipStatus: user.membership_status,
+    membershipExpiry: user.membership_expiry,
   })
 }
 

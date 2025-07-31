@@ -16,6 +16,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No confirmed booking found to cancel" }, { status: 404 })
     }
 
+    // Promote first waitlisted user if any
+    const promoted = dbOperations.promoteWaitlistedUser(class_instance_id)
+    if (promoted) {
+      console.log(`Promoted waitlisted user ${promoted} to confirmed for class ${class_instance_id}`)
+    }
+
     // In production, you would also:
     // 1. Process refund if applicable
     // 2. Notify waitlisted users

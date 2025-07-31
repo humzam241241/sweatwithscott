@@ -11,6 +11,7 @@ interface Booking {
   className: string
   date: string
   time: string
+  classInstanceId: number
 }
 
 interface Membership {
@@ -18,6 +19,7 @@ interface Membership {
   email: string
   membershipType: string
   membershipStatus: string
+  membershipExpiry?: string
 }
 
 export default function Dashboard() {
@@ -91,6 +93,18 @@ export default function Dashboard() {
     }
   }
 
+  const handleCancelBooking = async (classInstanceId: number) => {
+    if (!user) return
+    const resp = await fetch("/api/classes/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.userId, class_instance_id: classInstanceId }),
+    })
+    if (resp.ok) {
+      loadBookings(user.userId)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Navigation />
@@ -105,9 +119,11 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold mb-2">Membership Details</h2>
             <p>Plan: {membership.membershipType}</p>
             <p>Status: {membership.membershipStatus}</p>
-            <p className="text-sm text-gray-400">
-              Next billing date: {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-            </p>
+            {membership.membershipExpiry && (
+              <p className="text-sm text-gray-400">
+                Next billing date: {new Date(membership.membershipExpiry).toLocaleDateString()}
+              </p>
+            )}
             {payments.length > 0 && (
               <div className="mt-2">
                 <h3 className="font-semibold">Payment History</h3>
@@ -128,10 +144,20 @@ export default function Dashboard() {
           <ul className="space-y-2">
             {upcoming.map((b) => (
               <li key={b.id} className="border border-gray-700 p-4 rounded bg-gray-900">
-                <p className="font-semibold">{b.className}</p>
-                <p className="text-sm text-gray-400">
-                  {new Date(b.date).toLocaleDateString()} {b.time}
-                </p>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{b.className}</p>
+                    <p className="text-sm text-gray-400">
+                      {new Date(b.date).toLocaleDateString()} {b.time}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleCancelBooking(b.classInstanceId)}
+                    className="text-red-500 text-sm hover:underline"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
