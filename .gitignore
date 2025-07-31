@@ -1,6 +1,5 @@
 # dependencies
 /node_modules/
-/pnpm-lock.yaml
 
 # next.js
 /.next/
@@ -16,9 +15,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (secrets)
-.env
-.env.local
-.env.*.local
+.env*
 
 # vercel
 .vercel/
@@ -36,3 +33,7 @@ gym.db-wal
 .vscode/
 .DS_Store
 Thumbs.db
+
+# SQLite CLI binaries you added (don't track)
+sqlite3.dll
+sqlite3.def
