@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Users, MapPin } from "lucide-react"
+import BookingDialog from "@/components/booking-dialog"
 
 // Easy to update schedule data
 const scheduleData = {
@@ -170,26 +171,31 @@ export default function ClassSchedule() {
               ) : (
                 <div className="divide-y">
                   {scheduleData[day].map((classItem, index) => (
-                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="h-4 w-4 text-red-600" />
-                            <span className="font-semibold text-gray-900">{classItem.time}</span>
-                          </div>
-                          <h3 className="text-lg font-bold text-gray-900 mb-1">{classItem.class}</h3>
-                          <p className="text-gray-600">Coach: {classItem.coach}</p>
-                        </div>
+                    <BookingDialog
+                      key={index}
+                      trigger={
+                        <div className="p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Clock className="h-4 w-4 text-red-600" />
+                                <span className="font-semibold text-gray-900">{classItem.time}</span>
+                              </div>
+                              <h3 className="text-lg font-bold text-gray-900 mb-1">{classItem.class}</h3>
+                              <p className="text-gray-600">Coach: {classItem.coach}</p>
+                            </div>
 
-                        <div className="flex flex-col md:items-end gap-2">
-                          <Badge className={getLevelColor(classItem.level)}>{classItem.level}</Badge>
-                          <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Users className="h-4 w-4" />
-                            <span>{classItem.spots} spots</span>
+                            <div className="flex flex-col md:items-end gap-2">
+                              <Badge className={getLevelColor(classItem.level)}>{classItem.level}</Badge>
+                              <div className="flex items-center gap-1 text-sm text-gray-600">
+                                <Users className="h-4 w-4" />
+                                <span>{classItem.spots} spots</span>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      }
+                    />
                   ))}
                 </div>
               )}
