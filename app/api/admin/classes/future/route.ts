@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { dbOperations } from "@/lib/database"
+
+async function getSession() {
+  const cookieStore = await cookies()
+  const sessionCookie = cookieStore.get("session")
+
+  if (!sessionCookie) {
+    return null
+  }
+
+  try {
+    return JSON.parse(sessionCookie.value)
+  } catch {
+    return null
+  }
+}
+
+export async function GET() {
+  try {
+    const session = await getSession()
+
+    if (!session || !session.isAdmin) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const futureClasses = dbOperations.getFutureClasses()
+    return NextResponse.json(futureClasses)
+  } catch (error) {
+    console.error("Error fetching future classes:", error)
+    return NextResponse.json({ error: "Failed to fetch future classes" }, { status: 500 })
+  }
+}
