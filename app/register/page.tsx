@@ -63,8 +63,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Navigation />
-      <div className="flex items-center justify-center bg-gray-50 py-12 px-4 w-full">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md bg-gray-100 text-black shadow-lg border border-gray-300">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
           <CardDescription className="text-center">Join our boxing gym community</CardDescription>
@@ -84,6 +84,8 @@ export default function RegisterPage() {
                 type="text"
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                className="border-gray-300 rounded-md p-2 placeholder-gray-500 text-black"
+                placeholder="Enter your full name"
                 required
               />
             </div>
@@ -95,6 +97,8 @@ export default function RegisterPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="border-gray-300 rounded-md p-2 placeholder-gray-500 text-black"
+                placeholder="Enter your email"
                 required
               />
             </div>
@@ -106,6 +110,8 @@ export default function RegisterPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="border-gray-300 rounded-md p-2 placeholder-gray-500 text-black"
+                placeholder="Create a password"
                 required
               />
             </div>
@@ -117,11 +123,17 @@ export default function RegisterPage() {
                 type="password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                className="border-gray-300 rounded-md p-2 placeholder-gray-500 text-black"
+                placeholder="Confirm your password"
                 required
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded"
+              disabled={loading}
+            >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
