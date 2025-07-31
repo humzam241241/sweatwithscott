@@ -35,6 +35,11 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [dayFilter, setDayFilter] = useState<string>("All");
+  const [coachFilter, setCoachFilter] = useState<string>("All");
+  const [typeFilter, setTypeFilter] = useState<string>("All");
+  const [coachOptions, setCoachOptions] = useState<string[]>([]);
+  const [typeOptions, setTypeOptions] = useState<string[]>([]);
 
   const weekStart = startOfWeek(selectedWeek, { weekStartsOn: 1 }); // Monday
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -42,6 +47,12 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
   useEffect(() => {
     fetchClassInstances();
   }, [selectedWeek, userId]);
+
+  useEffect(() => {
+    setDayFilter("All");
+    setCoachFilter("All");
+    setTypeFilter("All");
+  }, [selectedWeek]);
 
   const fetchClassInstances = async () => {
     try {
@@ -71,6 +82,10 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
 
       if (Array.isArray(data)) {
         setClassInstances(data);
+        const coaches = Array.from(new Set(data.map((d: any) => d.coach)));
+        const types = Array.from(new Set(data.map((d: any) => d.name)));
+        setCoachOptions(coaches);
+        setTypeOptions(types);
       } else {
         console.error("❌ API did not return an array:", data);
         setClassInstances([]);
@@ -149,7 +164,13 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       console.error("❌ classInstances is not an array:", classInstances);
       return [];
     }
-    return classInstances.filter((instance) => isSameDay(new Date(instance.date), date));
+    return classInstances.filter((instance) => {
+      if (!isSameDay(new Date(instance.date), date)) return false;
+      if (dayFilter !== "All" && format(new Date(instance.date), "EEEE") !== dayFilter) return false;
+      if (coachFilter !== "All" && instance.coach !== coachFilter) return false;
+      if (typeFilter !== "All" && instance.name !== typeFilter) return false;
+      return true;
+    });
   };
 
   const getLevelColor = (level: string) => {
@@ -237,6 +258,42 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
           </AlertDescription>
         </Alert>
       )}
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 mb-6">
+        <select
+          className="border rounded px-2 py-1 text-sm text-black"
+          value={dayFilter}
+          onChange={(e) => setDayFilter(e.target.value)}
+        >
+          <option value="All">All Days</option>
+          {weekDays.map((d) => (
+            <option key={d.toISOString()} value={format(d, "EEEE")}> 
+              {format(d, "EEEE")}
+            </option>
+          ))}
+        </select>
+        <select
+          className="border rounded px-2 py-1 text-sm text-black"
+          value={coachFilter}
+          onChange={(e) => setCoachFilter(e.target.value)}
+        >
+          <option value="All">All Coaches</option>
+          {coachOptions.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <select
+          className="border rounded px-2 py-1 text-sm text-black"
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+        >
+          <option value="All">All Classes</option>
+          {typeOptions.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Week Navigation */}
       <div className="flex items-center justify-between mb-6">
