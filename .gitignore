@@ -37,3 +37,4 @@ Thumbs.db
 # SQLite CLI binaries you added (don't track)
 sqlite3.dll
 sqlite3.def
+!.env.example
