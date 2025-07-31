@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Check, X } from "lucide-react"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 
@@ -24,21 +25,24 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  const checks = {
+    length: formData.password.length >= 8,
+    upper: /[A-Z]/.test(formData.password),
+    lower: /[a-z]/.test(formData.password),
+    number: /[0-9]/.test(formData.password),
+    special: /[!@#$%^&*]/.test(formData.password),
+    match: formData.password !== "" && formData.password === formData.confirmPassword,
+  }
+
+  const allValid = Object.values(checks).every(Boolean)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
-    const pwErrors: string[] = []
-    if (formData.password.length < 8) pwErrors.push("Minimum 8 characters")
-    if (!/[A-Z]/.test(formData.password)) pwErrors.push("At least one uppercase letter")
-    if (!/[a-z]/.test(formData.password)) pwErrors.push("At least one lowercase letter")
-    if (!/[0-9]/.test(formData.password)) pwErrors.push("At least one number")
-    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(formData.password))
-      pwErrors.push("At least one special character")
-    if (formData.password !== formData.confirmPassword) pwErrors.push("Passwords do not match")
-    if (pwErrors.length > 0) {
-      setError(pwErrors.join(". "))
+    if (!allValid) {
+      setError("Please meet all password requirements")
       setLoading(false)
       return
     }
@@ -134,15 +138,41 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 className="border-gray-300 rounded-md p-2 placeholder-gray-500 text-black"
-                placeholder="Confirm your password"
-                required
-              />
-            </div>
+              placeholder="Confirm your password"
+              required
+            />
+          </div>
+
+            <ul className="space-y-1 text-sm">
+              {[
+                { label: "Minimum 8 characters", valid: checks.length },
+                { label: "At least 1 uppercase letter", valid: checks.upper },
+                { label: "At least 1 lowercase letter", valid: checks.lower },
+                { label: "At least 1 number", valid: checks.number },
+                {
+                  label: "At least 1 special character (!@#$%^&*)",
+                  valid: checks.special,
+                },
+                { label: "Passwords match", valid: checks.match },
+              ].map((rule) => (
+                <li
+                  key={rule.label}
+                  className={`flex items-center ${rule.valid ? "text-green-600" : "text-red-600"}`}
+                >
+                  {rule.valid ? (
+                    <Check className="mr-2 h-4 w-4" />
+                  ) : (
+                    <X className="mr-2 h-4 w-4" />
+                  )}
+                  {rule.label}
+                </li>
+              ))}
+            </ul>
 
             <Button
               type="submit"
               className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded"
-              disabled={loading}
+              disabled={loading || !allValid}
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>

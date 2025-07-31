@@ -120,90 +120,8 @@ export function initializeDatabase() {
       `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin")
     }
 
-    // Insert sample classes if none exist
-    const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get() as { count: number }
-    if (classCount.count === 0) {
-      const sampleClasses = [
-        {
-          name: "Boxing Fundamentals",
-          description: "Learn the basics of boxing technique and footwork",
-          instructor: "Coach Kyle",
-          day_of_week: "Monday",
-          start_time: "18:00",
-          end_time: "19:00",
-          max_capacity: 15,
-          price: 25.0,
-        },
-        {
-          name: "Advanced Boxing",
-          description: "High-intensity boxing training for experienced fighters",
-          instructor: "Coach Kyle",
-          day_of_week: "Tuesday",
-          start_time: "19:00",
-          end_time: "20:00",
-          max_capacity: 12,
-          price: 30.0,
-        },
-        {
-          name: "Strength & Conditioning",
-          description: "Build strength and endurance with functional training",
-          instructor: "Coach Humza",
-          day_of_week: "Wednesday",
-          start_time: "18:00",
-          end_time: "19:00",
-          max_capacity: 20,
-          price: 25.0,
-        },
-        {
-          name: "Junior Jabbers",
-          description: "Boxing classes for kids aged 8-16",
-          instructor: "Coach Scott",
-          day_of_week: "Thursday",
-          start_time: "17:00",
-          end_time: "18:00",
-          max_capacity: 15,
-          price: 20.0,
-        },
-        {
-          name: "Women's Boxing",
-          description: "Boxing classes designed specifically for women",
-          instructor: "Coach Kyle",
-          day_of_week: "Friday",
-          start_time: "18:30",
-          end_time: "19:30",
-          max_capacity: 15,
-          price: 25.0,
-        },
-        {
-          name: "Open Gym",
-          description: "Self-directed training with equipment access",
-          instructor: "Staff",
-          day_of_week: "Saturday",
-          start_time: "10:00",
-          end_time: "12:00",
-          max_capacity: 25,
-          price: 15.0,
-        },
-      ]
-
-      const insertClass = db.prepare(`
-        INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `)
-
-      sampleClasses.forEach((cls) => {
-        insertClass.run(
-          cls.name,
-          cls.description,
-          cls.instructor,
-          cls.day_of_week,
-          cls.start_time,
-          cls.end_time,
-          cls.max_capacity,
-          cls.price,
-        )
-      })
-    }
+    // Replace class schedule with updated classes
+    resetClassSchedule()
 
     // Insert sample users if none exist (excluding admin)
     const userCount = db.prepare("SELECT COUNT(*) as count FROM users WHERE is_admin = 0").get() as { count: number }
@@ -253,6 +171,75 @@ export function initializeDatabase() {
   } catch (error) {
     console.error("Database initialization error:", error)
   }
+}
+
+function resetClassSchedule() {
+  // Clear existing classes and instances
+  db.prepare("DELETE FROM class_instances").run()
+  db.prepare("DELETE FROM classes").run()
+
+  const capacities: Record<string, number> = {
+    "Bootcamp": 30,
+    "Boxing Tech": 30,
+    "Junior Jabbers (6-12 yr)": 15,
+    "Strength & Conditioning": 30,
+    "Beginner Boxing": 30,
+    "Sparring": 20,
+    "Open Gym": 9999,
+  }
+
+  const schedule = [
+    { day: "Monday", time: "12:00", name: "Bootcamp" },
+    { day: "Monday", time: "17:00", name: "Boxing Tech" },
+    { day: "Monday", time: "18:00", name: "Bootcamp" },
+    { day: "Monday", time: "19:00", name: "Boxing Tech" },
+    { day: "Monday", time: "20:00", name: "Strength & Conditioning" },
+    { day: "Tuesday", time: "12:00", name: "Bootcamp" },
+    { day: "Tuesday", time: "17:00", name: "Bootcamp" },
+    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
+    { day: "Tuesday", time: "19:00", name: "Boxing Tech" },
+    { day: "Tuesday", time: "20:00", name: "Open Gym" },
+    { day: "Wednesday", time: "12:00", name: "Bootcamp" },
+    { day: "Wednesday", time: "17:00", name: "Boxing Tech" },
+    { day: "Wednesday", time: "18:00", name: "Bootcamp" },
+    { day: "Wednesday", time: "19:00", name: "Boxing Tech" },
+    { day: "Wednesday", time: "20:00", name: "Open Gym" },
+    { day: "Thursday", time: "12:00", name: "Bootcamp" },
+    { day: "Thursday", time: "17:00", name: "Bootcamp" },
+    { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
+    { day: "Thursday", time: "19:00", name: "Boxing Tech" },
+    { day: "Thursday", time: "20:00", name: "Open Gym" },
+    { day: "Friday", time: "16:00", name: "Open Gym" },
+    { day: "Friday", time: "18:00", name: "Bootcamp" },
+    { day: "Friday", time: "19:00", name: "Boxing Tech" },
+    { day: "Friday", time: "20:00", name: "Open Gym" },
+    { day: "Saturday", time: "11:00", name: "Bootcamp" },
+    { day: "Saturday", time: "12:00", name: "Beginner Boxing" },
+    { day: "Saturday", time: "13:00", name: "Sparring" },
+  ]
+
+  const addHour = (time: string) => {
+    const [h, m] = time.split(":").map(Number)
+    const endHour = (h + 1).toString().padStart(2, "0")
+    return `${endHour}:${m.toString().padStart(2, "0")}`
+  }
+
+  const insertClass = db.prepare(`
+    INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `)
+
+  schedule.forEach((cls) => {
+    insertClass.run(
+      cls.name,
+      "",
+      cls.day,
+      cls.time,
+      addHour(cls.time),
+      capacities[cls.name] || 30,
+      0,
+    )
+  })
 }
 
 // Generate class instances based on class schedule
