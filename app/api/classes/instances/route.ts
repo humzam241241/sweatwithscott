@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/db"
+import { startOfWeek, endOfWeek, format } from "date-fns"
 
 // Return class schedule between start_date and end_date.
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const startDate = searchParams.get("start_date")
-    const endDate = searchParams.get("end_date")
+    let startDate = searchParams.get("start_date")
+    let endDate = searchParams.get("end_date")
     const userIdParam = searchParams.get("user_id")
     const userId = userIdParam ? Number.parseInt(userIdParam) : undefined
 
     if (!startDate || !endDate) {
-      // Missing parameters: return empty array so frontend does not crash
-      return NextResponse.json([])
+      const now = new Date()
+      startDate = format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd")
+      endDate = format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd")
     }
 
     const db = getDb()
@@ -22,15 +24,16 @@ export async function GET(request: NextRequest) {
       SELECT
         ci.id,
         ci.class_id,
+        c.name AS name,
+        c.instructor AS coach,
         ci.date,
         ci.start_time,
         ci.end_time,
-        ci.instructor,
+        IFNULL(c.level, 'All Levels') AS level,
         ci.max_capacity,
         ci.current_bookings,
-        ci.status,
-        c.name AS class_name,
-        c.instructor AS coach
+        c.price,
+        ci.status
       FROM class_instances ci
       JOIN classes c ON ci.class_id = c.id
       WHERE ci.date BETWEEN ? AND ?`

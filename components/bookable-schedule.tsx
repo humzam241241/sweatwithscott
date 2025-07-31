@@ -48,10 +48,23 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       const startDate = format(weekStart, "yyyy-MM-dd")
       const endDate = format(addDays(weekStart, 6), "yyyy-MM-dd")
 
+      const params = new URLSearchParams()
+      const isCurrentWeek = isSameDay(
+        weekStart,
+        startOfWeek(new Date(), { weekStartsOn: 1 })
+      )
+      if (!isCurrentWeek) {
+        params.set("start_date", startDate)
+        params.set("end_date", endDate)
+      }
+      if (userMode && userId) {
+        params.set("user_id", userId.toString())
+      }
+
       const url =
-        userMode && userId
-          ? `/api/classes/instances?start_date=${startDate}&end_date=${endDate}&user_id=${userId}`
-          : `/api/classes/instances?start_date=${startDate}&end_date=${endDate}`
+        params.toString().length > 0
+          ? `/api/classes/instances?${params.toString()}`
+          : "/api/classes/instances"
 
       const response = await fetch(url)
       const data = await response.json()
