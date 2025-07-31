@@ -13,9 +13,20 @@ interface Booking {
   time: string
 }
 
+interface Membership {
+  fullName: string
+  email: string
+  membershipType: string
+  membershipStatus: string
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [upcoming, setUpcoming] = useState<Booking[]>([])
+  const [past, setPast] = useState<Booking[]>([])
+  const [membership, setMembership] = useState<Membership | null>(null)
+  const [payments, setPayments] = useState<any[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -25,6 +36,7 @@ export default function Dashboard() {
         const session = await resp.json()
         setUser(session)
         loadBookings(session.userId)
+        loadMembership(session.userId)
       } else {
         router.push("/login")
       }
@@ -35,7 +47,47 @@ export default function Dashboard() {
   const loadBookings = async (userId: number) => {
     const resp = await fetch(`/api/user/bookings?user_id=${userId}`)
     if (resp.ok) {
-      setBookings(await resp.json())
+      const all = (await resp.json()) as Booking[]
+      setBookings(all)
+      const today = new Date()
+      setUpcoming(all.filter((b) => new Date(b.date) >= today))
+      setPast(all.filter((b) => new Date(b.date) < today))
+    }
+  }
+
+  const loadMembership = async (userId: number) => {
+    const resp = await fetch(`/api/user/profile?user_id=${userId}`)
+    if (resp.ok) {
+      setMembership(await resp.json())
+    }
+    const payResp = await fetch(`/api/user/payments`)
+    if (payResp.ok) {
+      setPayments(await payResp.json())
+    }
+  }
+
+  const [profileData, setProfileData] = useState({ fullName: "", email: "", password: "" })
+  const [profileMsg, setProfileMsg] = useState("")
+
+  const handleProfileSave = async () => {
+    if (!user) return
+    setProfileMsg("")
+    const resp = await fetch(`/api/user/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.userId,
+        fullName: profileData.fullName || undefined,
+        email: profileData.email || undefined,
+        password: profileData.password || undefined,
+      }),
+    })
+    const data = await resp.json()
+    if (resp.ok) {
+      setProfileMsg("Profile updated")
+      loadMembership(user.userId)
+    } else {
+      setProfileMsg(data.errors ? data.errors.join(". ") : data.error)
     }
   }
 
@@ -47,10 +99,34 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
         )}
         <BookableSchedule userMode userId={user?.userId} />
-        <h2 className="text-xl font-bold mt-8 mb-4">My Booked Classes</h2>
-        {bookings.length > 0 ? (
+
+        {membership && (
+          <div className="mt-8 border border-gray-700 p-4 rounded bg-gray-900">
+            <h2 className="text-xl font-bold mb-2">Membership Details</h2>
+            <p>Plan: {membership.membershipType}</p>
+            <p>Status: {membership.membershipStatus}</p>
+            <p className="text-sm text-gray-400">
+              Next billing date: {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+            </p>
+            {payments.length > 0 && (
+              <div className="mt-2">
+                <h3 className="font-semibold">Payment History</h3>
+                <ul className="list-disc ml-4 text-sm">
+                  {payments.map((p) => (
+                    <li key={p.id}>
+                      {p.date} - ${'{'}p.amount{'}'} ({'{'}p.status{'}'})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        <h2 className="text-xl font-bold mt-8 mb-4">Upcoming Classes</h2>
+        {upcoming.length > 0 ? (
           <ul className="space-y-2">
-            {bookings.map((b) => (
+            {upcoming.map((b) => (
               <li key={b.id} className="border border-gray-700 p-4 rounded bg-gray-900">
                 <p className="font-semibold">{b.className}</p>
                 <p className="text-sm text-gray-400">
@@ -60,8 +136,56 @@ export default function Dashboard() {
             ))}
           </ul>
         ) : (
-          <p>No bookings yet.</p>
+          <p>No upcoming bookings.</p>
         )}
+
+        <h2 className="text-xl font-bold mt-8 mb-4">Past Classes</h2>
+        {past.length > 0 ? (
+          <ul className="space-y-2">
+            {past.map((b) => (
+              <li key={b.id} className="border border-gray-700 p-4 rounded bg-gray-900">
+                <p className="font-semibold">{b.className}</p>
+                <p className="text-sm text-gray-400">
+                  {new Date(b.date).toLocaleDateString()} {b.time}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No past bookings.</p>
+        )}
+
+        <h2 className="text-xl font-bold mt-8 mb-4">Edit Profile</h2>
+        {profileMsg && <p className="mb-2 text-sm text-red-400">{profileMsg}</p>}
+        <div className="space-y-2">
+          <input
+            type="text"
+            placeholder="Full name"
+            value={profileData.fullName}
+            onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={profileData.email}
+            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <input
+            type="password"
+            placeholder="New password"
+            value={profileData.password}
+            onChange={(e) => setProfileData({ ...profileData, password: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <button
+            onClick={handleProfileSave}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+          >
+            Save
+          </button>
+        </div>
       </div>
       <Footer />
     </div>
