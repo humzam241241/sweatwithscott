@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the booking
-    const bookingId = dbOperations.createBooking(user_id, class_instance_id, payment_method)
+    const bookingId = dbOperations.bookClass(user_id, class_instance_id)
 
     // In production, you would also:
     // 1. Process payment

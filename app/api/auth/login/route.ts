@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { dbOperations } from "@/lib/database"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,14 +18,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    // Simple password verification (in production, use proper hashing)
-    let isValidPassword = false
-
-    if (username === "admin" && password === "admin123") {
-      isValidPassword = true
-    } else if (user.password === password) {
-      isValidPassword = true
-    }
+    // Password verification
+    const isValidPassword = await bcrypt.compare(password, user.password)
 
     if (!isValidPassword) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
