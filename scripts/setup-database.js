@@ -1,23 +1,11 @@
 import Database from "better-sqlite3"
-import fs from "fs"
 import path from "path"
-import { fileURLToPath } from "url"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
 const dbPath = path.join(process.cwd(), "gym.db")
 console.log("Database path:", dbPath)
 
-// Remove existing database to start fresh
-if (fs.existsSync(dbPath)) {
-  fs.unlinkSync(dbPath)
-  console.log("Removed existing database")
-}
-
-// Create new database
+// Open existing database or create a new one if it doesn't exist
 const db = new Database(dbPath)
-console.log("Created new database at:", dbPath)
+console.log("Opened database at:", dbPath)
 
 // Enable foreign keys
 db.pragma("foreign_keys = ON")
@@ -137,8 +125,15 @@ try {
   ]
 
   const insertClass = db.prepare(`
-    INSERT OR REPLACE INTO classes (id, name, description, instructor, duration, max_capacity, price) 
+    INSERT INTO classes (id, name, description, instructor, duration, max_capacity, price)
     VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      name=excluded.name,
+      description=excluded.description,
+      instructor=excluded.instructor,
+      duration=excluded.duration,
+      max_capacity=excluded.max_capacity,
+      price=excluded.price
   `)
 
   classesData.forEach((classData) => {
@@ -148,25 +143,39 @@ try {
 
   // Insert sample users
   const usersData = [
-    [2, "john_doe", "password123", "john@example.com", "John Doe", "555-0101", "premium", 0],
-    [3, "jane_smith", "password123", "jane@example.com", "Jane Smith", "555-0102", "basic", 0],
-    [4, "mike_wilson", "password123", "mike@example.com", "Mike Wilson", "555-0103", "premium", 0],
+    { username: "john_doe", password: "password123", email: "john@example.com", full_name: "John Doe", phone: "555-0101", membership_type: "premium" },
+    { username: "jane_smith", password: "password123", email: "jane@example.com", full_name: "Jane Smith", phone: "555-0102", membership_type: "basic" },
+    { username: "mike_wilson", password: "password123", email: "mike@example.com", full_name: "Mike Wilson", phone: "555-0103", membership_type: "premium" },
   ]
 
   const insertUser = db.prepare(`
-    INSERT OR REPLACE INTO users (id, username, password, email, full_name, phone, membership_type, is_admin) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO users (username, password, email, full_name, phone, membership_type, is_admin)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(username) DO UPDATE SET
+      password=excluded.password,
+      email=excluded.email,
+      full_name=excluded.full_name,
+      phone=excluded.phone,
+      membership_type=excluded.membership_type,
+      is_admin=excluded.is_admin
   `)
 
-  usersData.forEach((userData) => {
-    insertUser.run(...userData)
+  usersData.forEach((u) => {
+    insertUser.run(u.username, u.password, u.email, u.full_name, u.phone, u.membership_type, 0)
   })
   console.log("Sample users inserted")
+
+  // Map usernames to user IDs for later references
+  const userMap = {}
+  usersData.forEach((u) => {
+    const row = db.prepare("SELECT id FROM users WHERE username = ?").get(u.username)
+    if (row) userMap[u.username] = row.id
+  })
 
   // Generate class instances for the next 30 days
   const classes = db.prepare("SELECT * FROM classes").all()
   const insertInstance = db.prepare(`
-    INSERT OR REPLACE INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity) 
+    INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity)
     VALUES (?, ?, ?, ?, ?, ?)
   `)
 
@@ -187,14 +196,21 @@ try {
     classes.forEach((classItem) => {
       const schedule = scheduleMap[classItem.id]
       if (schedule && schedule.days.includes(dayOfWeek)) {
-        insertInstance.run(
-          classItem.id,
-          dateString,
-          schedule.time,
-          schedule.endTime,
-          classItem.instructor,
-          classItem.max_capacity,
-        )
+        const exists = db
+          .prepare(
+            "SELECT id FROM class_instances WHERE class_id = ? AND date = ? AND start_time = ?",
+          )
+          .get(classItem.id, dateString, schedule.time)
+        if (!exists) {
+          insertInstance.run(
+            classItem.id,
+            dateString,
+            schedule.time,
+            schedule.endTime,
+            classItem.instructor,
+            classItem.max_capacity,
+          )
+        }
       }
     })
   }
@@ -210,31 +226,49 @@ try {
     .all()
 
   const insertBooking = db.prepare(`
-    INSERT OR REPLACE INTO class_bookings (user_id, class_instance_id, status, payment_status, attended) 
+    INSERT INTO class_bookings (user_id, class_instance_id, status, payment_status, attended)
     VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, class_instance_id) DO UPDATE SET
+      status=excluded.status,
+      payment_status=excluded.payment_status,
+      attended=excluded.attended
   `)
 
-  classInstances.forEach((instance) => {
-    const attended = new Date(instance.date) < new Date() ? 1 : 0
-    insertBooking.run(2, instance.id, "confirmed", "paid", attended) // John Doe bookings
-  })
-  console.log("Sample bookings inserted")
+  const johnId = userMap["john_doe"]
+  if (johnId) {
+    classInstances.forEach((instance) => {
+      const attended = new Date(instance.date) < new Date() ? 1 : 0
+      insertBooking.run(johnId, instance.id, "confirmed", "paid", attended)
+    })
+    console.log("Sample bookings inserted")
+  } else {
+    console.log("Skipping sample bookings: john_doe not found")
+  }
 
   // Insert sample payments
   const paymentsData = [
-    [2, 150.0, "membership", "credit_card", "Monthly Premium Membership"],
-    [3, 100.0, "membership", "debit_card", "Monthly Basic Membership"],
-    [4, 150.0, "membership", "credit_card", "Monthly Premium Membership"],
-    [2, 25.0, "class", "credit_card", "Boxing Fundamentals Class"],
+    { username: "john_doe", amount: 150.0, type: "membership", method: "credit_card", description: "Monthly Premium Membership" },
+    { username: "jane_smith", amount: 100.0, type: "membership", method: "debit_card", description: "Monthly Basic Membership" },
+    { username: "mike_wilson", amount: 150.0, type: "membership", method: "credit_card", description: "Monthly Premium Membership" },
+    { username: "john_doe", amount: 25.0, type: "class", method: "credit_card", description: "Boxing Fundamentals Class" },
   ]
 
   const insertPayment = db.prepare(`
-    INSERT OR REPLACE INTO payments (user_id, amount, payment_type, payment_method, description) 
+    INSERT INTO payments (user_id, amount, payment_type, payment_method, description)
     VALUES (?, ?, ?, ?, ?)
   `)
 
-  paymentsData.forEach((paymentData) => {
-    insertPayment.run(...paymentData)
+  paymentsData.forEach((p) => {
+    const userId = userMap[p.username]
+    if (!userId) return
+    const exists = db
+      .prepare(
+        "SELECT id FROM payments WHERE user_id = ? AND amount = ? AND payment_type = ? AND description = ?",
+      )
+      .get(userId, p.amount, p.type, p.description)
+    if (!exists) {
+      insertPayment.run(userId, p.amount, p.type, p.method, p.description)
+    }
   })
   console.log("Sample payments inserted")
 
