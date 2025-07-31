@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -76,6 +77,7 @@ interface OutstandingPayment {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const [stats, setStats] = useState<GymStats>({
     total_members: 0,
     total_bookings: 0,
@@ -99,6 +101,10 @@ export default function AdminDashboard() {
     try {
       // Fetch gym statistics
       const statsResponse = await fetch("/api/admin/stats")
+      if (statsResponse.status === 401) {
+        router.push("/login")
+        return
+      }
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setStats(statsData)
@@ -106,6 +112,10 @@ export default function AdminDashboard() {
 
       // Fetch current classes
       const currentResponse = await fetch("/api/admin/classes/current")
+      if (currentResponse.status === 401) {
+        router.push("/login")
+        return
+      }
       if (currentResponse.ok) {
         const currentData = await currentResponse.json()
         setCurrentClasses(currentData)
@@ -113,6 +123,10 @@ export default function AdminDashboard() {
 
       // Fetch future classes
       const futureResponse = await fetch("/api/admin/classes/future")
+      if (futureResponse.status === 401) {
+        router.push("/login")
+        return
+      }
       if (futureResponse.ok) {
         const futureData = await futureResponse.json()
         setFutureClasses(futureData)
@@ -120,6 +134,10 @@ export default function AdminDashboard() {
 
       // Fetch past classes
       const pastResponse = await fetch("/api/admin/classes/past")
+      if (pastResponse.status === 401) {
+        router.push("/login")
+        return
+      }
       if (pastResponse.ok) {
         const pastData = await pastResponse.json()
         setPastClasses(pastData)
@@ -127,6 +145,10 @@ export default function AdminDashboard() {
 
       // Fetch outstanding payments
       const paymentsResponse = await fetch("/api/admin/outstanding-payments")
+      if (paymentsResponse.status === 401) {
+        router.push("/login")
+        return
+      }
       if (paymentsResponse.ok) {
         const paymentsData = await paymentsResponse.json()
         setOutstandingPayments(paymentsData)
@@ -141,6 +163,10 @@ export default function AdminDashboard() {
   const fetchClassAttendees = async (classInstanceId: number) => {
     try {
       const response = await fetch(`/api/admin/classes/${classInstanceId}/attendees`)
+      if (response.status === 401) {
+        router.push("/login")
+        return
+      }
       if (response.ok) {
         const data = await response.json()
         setSelectedClassAttendees(data)
@@ -162,6 +188,11 @@ export default function AdminDashboard() {
           attended,
         }),
       })
+
+      if (response.status === 401) {
+        router.push("/login")
+        return
+      }
 
       if (response.ok) {
         // Refresh data
@@ -190,6 +221,11 @@ export default function AdminDashboard() {
           paymentMethod: "cash",
         }),
       })
+
+      if (response.status === 401) {
+        router.push("/login")
+        return
+      }
 
       if (response.ok) {
         // Refresh data

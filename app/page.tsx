@@ -46,6 +46,38 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Featured Training Images */}
+      <section className="py-16 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="relative h-64">
+              <Image
+                src="/images/boxing-training.png"
+                alt="Intense boxing training"
+                fill
+                className="object-cover rounded-lg shadow-lg"
+              />
+            </div>
+            <div className="relative h-64">
+              <Image
+                src="/images/strength-conditioning.png"
+                alt="Strength and conditioning"
+                fill
+                className="object-cover rounded-lg shadow-lg"
+              />
+            </div>
+            <div className="relative h-64">
+              <Image
+                src="/images/gym-training.png"
+                alt="Training at the gym"
+                fill
+                className="object-cover rounded-lg shadow-lg"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
       <section className="py-20 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
