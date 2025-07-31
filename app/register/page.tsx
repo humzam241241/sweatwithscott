@@ -29,8 +29,16 @@ export default function RegisterPage() {
     setLoading(true)
     setError("")
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
+    const pwErrors: string[] = []
+    if (formData.password.length < 8) pwErrors.push("Minimum 8 characters")
+    if (!/[A-Z]/.test(formData.password)) pwErrors.push("At least one uppercase letter")
+    if (!/[a-z]/.test(formData.password)) pwErrors.push("At least one lowercase letter")
+    if (!/[0-9]/.test(formData.password)) pwErrors.push("At least one number")
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(formData.password))
+      pwErrors.push("At least one special character")
+    if (formData.password !== formData.confirmPassword) pwErrors.push("Passwords do not match")
+    if (pwErrors.length > 0) {
+      setError(pwErrors.join(". "))
       setLoading(false)
       return
     }
@@ -43,6 +51,7 @@ export default function RegisterPage() {
           fullName: formData.fullName,
           email: formData.email,
           password: formData.password,
+          confirmPassword: formData.confirmPassword,
         }),
       })
 
@@ -51,7 +60,8 @@ export default function RegisterPage() {
       if (response.ok) {
         router.push("/dashboard")
       } else {
-        setError(data.error || "Registration failed")
+        const err = data.errors ? data.errors.join(". ") : data.error
+        setError(err || "Registration failed")
       }
     } catch (err) {
       setError("An error occurred. Please try again.")

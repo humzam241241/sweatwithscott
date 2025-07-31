@@ -393,6 +393,24 @@ export const dbOperations = {
     }
   },
 
+  updateUser: (userId: number, data: any) => {
+    try {
+      const fields = Object.keys(data)
+      if (fields.length === 0) return
+
+      const setters = fields.map((f) => `${f} = ?`).join(", ")
+      const stmt = db.prepare(
+        `UPDATE users SET ${setters}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      )
+      const params = fields.map((f) => data[f])
+      params.push(userId)
+      return stmt.run(...params)
+    } catch (error) {
+      console.error("Error updating user:", error)
+      throw error
+    }
+  },
+
   getAllUsers: () => {
     try {
       return db.prepare("SELECT * FROM users WHERE is_admin = 0 ORDER BY created_at DESC").all()

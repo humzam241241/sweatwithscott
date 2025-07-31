@@ -45,7 +45,7 @@ export default function Navigation() {
     }
   }
 
-  const navLinks = [
+  const baseLinks = [
     { href: "/", label: "Home" },
     { href: "/classes", label: "Classes" },
     { href: "/coaches", label: "Coaches" },
@@ -55,12 +55,14 @@ export default function Navigation() {
     { href: "/contact", label: "Contact" },
   ]
 
+  const navLinks = user && !user.isAdmin ? [...baseLinks, { href: "/dashboard", label: "Dashboard" }] : baseLinks
+
   return (
     <nav className="bg-black border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo and Links */}
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-8 mr-auto">
             <Link href="/" className="flex items-center">
               <img src="/images/cave-logo.png" alt="The Cave Boxing Logo" className="h-10 w-10 mr-2" />
               <span className="text-xl font-bold text-red-600">The Cave Boxing</span>
