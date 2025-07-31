@@ -5,7 +5,6 @@ import ContactForm from "@/components/contact-form"
 import ClassSchedule from "@/components/class-schedule"
 import MembershipPackages from "@/components/membership-packages"
 import Testimonials from "@/components/testimonials"
-import FrontPoster from "@/components/front-poster"
 
 export default function Home() {
   return (
@@ -14,19 +13,16 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center">
-<<<<<<< HEAD
         <div className="absolute inset-0">
           <Image
-            src="/images/frontpic.png" // ✅ Your uploaded fight photo
+            src="/images/frontpic.png"
             alt="Intense boxing match"
             fill
             className="object-cover"
             priority
           />
         </div>
-=======
-        <FrontPoster />
->>>>>>> ea2a8739ecf0ae94551f5d9a0d00496e913c3ad4
+
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-red-500">THE CAVE</h1>
           <p className="text-2xl md:text-3xl mb-8 font-light">WHERE CHAMPIONS ARE FORGED</p>
