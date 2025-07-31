@@ -1,42 +1,12 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
 
 export default function CoachKylePage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <img src="/images/cave-logo.png" alt="The Cave Boxing Logo" className="h-10 w-10 mr-2" />
-                <span className="text-2xl font-bold text-red-600">The Cave Boxing Gym</span>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-gray-700 hover:text-red-600">
-                Home
-              </Link>
-              <Link href="/classes" className="text-gray-700 hover:text-red-600">
-                Classes
-              </Link>
-              <Link href="/coaches" className="text-red-600 font-semibold">
-                Coaches
-              </Link>
-              <Link href="/contact" className="text-gray-700 hover:text-red-600">
-                Contact
-              </Link>
-              <Link href="/about" className="text-gray-700 hover:text-red-600">
-                About
-              </Link>
-              <Link href="/login">
-                <Button variant="outline">Login</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
@@ -114,11 +84,7 @@ export default function CoachKylePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p>&copy; 2025 The Cave Boxing Gym. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

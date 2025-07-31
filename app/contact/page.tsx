@@ -2,40 +2,13 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import ContactForm from "@/components/contact-form"
+import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="cave-navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <img src="/images/cave-logo.png" alt="The Cave Boxing Logo" className="cave-logo mr-9" />
-                <span className="text-2xl font-bold text-white">The Cave Boxing Gym</span>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-6">
-              <Link href="/" className="cave-nav-link">
-                HOME
-              </Link>
-              <Link href="/classes" className="cave-nav-link">
-                CLASSES
-              </Link>
-              <Link href="/men" className="cave-nav-link">
-                MEN
-              </Link>
-              <Link href="/women" className="cave-nav-link">
-                WOMEN
-              </Link>
-              <Link href="/kids" className="cave-nav-link">
-                KIDS
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Phone Banner */}
       <div className="bg-red-600 text-white text-center py-2 px-4">
@@ -151,9 +124,7 @@ export default function ContactPage() {
       </section>
 
       {/* Footer */}
-      <footer className="text-center py-8">
-        <p className="text-gray-500">&copy; 2025 The Cave Boxing Gym. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   )
 }

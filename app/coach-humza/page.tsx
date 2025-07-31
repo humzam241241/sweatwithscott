@@ -1,47 +1,12 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
 
 export default function CoachHumzaPage() {
   return (
     <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="cave-navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center">
-                <img src="/images/cave-logo.png" alt="The Cave Boxing Logo" className="cave-logo mr-9" />
-                <span className="text-2xl font-bold text-white">The Cave Boxing Gym</span>
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="cave-nav-link">
-                Home
-              </Link>
-              <Link href="/classes" className="cave-nav-link">
-                Classes
-              </Link>
-              <Link href="/coaches" className="cave-nav-link bg-red-600">
-                Coaches
-              </Link>
-              <Link href="/contact" className="cave-nav-link">
-                Contact
-              </Link>
-              <Link href="/about" className="cave-nav-link">
-                About
-              </Link>
-              <Link href="/login">
-                <Button
-                  variant="outline"
-                  className="border-white text-white hover:bg-white hover:text-gray-900 bg-transparent"
-                >
-                  Login
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       {/* Hero Section */}
       <header className="cave-hero py-20">
@@ -105,9 +70,7 @@ export default function CoachHumzaPage() {
       </section>
 
       {/* Footer */}
-      <footer className="text-center py-8">
-        <p className="text-gray-500">&copy; 2025 The Cave Boxing Gym. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   )
 }
