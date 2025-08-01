@@ -34,7 +34,9 @@ import {
   UserCheck,
   CalendarDays,
   History,
+  Image as ImageIcon,
 } from "lucide-react";
+import MediaManager from "@/components/media-manager";
 
 interface GymStats {
   total_members: number;
@@ -420,7 +422,7 @@ export default function AdminDashboard() {
 
         {/* Admin Tabs */}
         <Tabs defaultValue="current" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-900">
+          <TabsList className="grid w-full grid-cols-6 bg-gray-900">
             <TabsTrigger
               value="current"
               className="data-[state=active]:bg-red-600"
@@ -455,6 +457,13 @@ export default function AdminDashboard() {
             >
               <Users className="h-4 w-4 mr-2" />
               Members
+            </TabsTrigger>
+            <TabsTrigger
+              value="media"
+              className="data-[state=active]:bg-red-600"
+            >
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Media Manager
             </TabsTrigger>
           </TabsList>
 
@@ -1019,6 +1028,20 @@ export default function AdminDashboard() {
                       ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          {/* Media Manager */}
+          <TabsContent value="media" className="space-y-6">
+            <Card className="bg-gray-900 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-red-500">Media Manager</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Upload and manage media files
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MediaManager />
               </CardContent>
             </Card>
           </TabsContent>
