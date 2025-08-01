@@ -136,6 +136,12 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-4 text-center">
+            <Link href="/reset-password" className="text-sm text-red-400 hover:text-red-300">
+              Forgot your password?
+            </Link>
+          </div>
+
+          <div className="mt-4 text-center">
             <p className="text-xs text-gray-500">Demo: admin/admin123 (Admin) or create a new account</p>
           </div>
         </CardContent>
