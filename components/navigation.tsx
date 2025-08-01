@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,14 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [active, setActive] = useState<string>(pathname);
+  const [logoExists, setLogoExists] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
+    // Check for logo image
+    fetch("/images/logo.png").then((res) => {
+      if (res.ok) setLogoExists(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -115,7 +121,19 @@ export default function Navigation() {
       <nav
         className={`fixed left-0 top-0 h-screen w-56 bg-black text-white flex flex-col z-40 transition-transform duration-300 transform ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
-        <div className="p-4 font-bold text-red-600">The Cave</div>
+        <div className="p-4 font-bold text-red-600 flex items-center space-x-2">
+          {logoExists && (
+            <Link href="/">
+              <Image
+                src="/images/logo.png"
+                alt="The Cave Boxing logo"
+                width={32}
+                height={32}
+              />
+            </Link>
+          )}
+          <Link href="/">The Cave Boxing</Link>
+        </div>
         <ul className="flex-1 space-y-2 px-2 overflow-y-auto">
           {navLinks.map((link) => {
             const isActive = active === link.sectionId || active === link.href;
