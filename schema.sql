@@ -84,3 +84,16 @@ CREATE TABLE users (
     password TEXT,
     role TEXT
   );
+
+ALTER TABLE classes ADD COLUMN coach_id INT;
+ALTER TABLE classes ADD COLUMN coach_email VARCHAR(255);
+ALTER TABLE classes ADD COLUMN booked_spots INT DEFAULT 0;
+
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    class_id INT NOT NULL,
+    member_name VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    recipient_email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

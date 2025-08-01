@@ -41,6 +41,9 @@ export function initializeDatabase() {
           day_of_week TEXT,
           start_time TEXT,
           end_time TEXT,
+          coach_id INTEGER,
+          coach_email TEXT,
+          booked_spots INTEGER DEFAULT 0,
           is_active INTEGER DEFAULT 1,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
@@ -108,6 +111,15 @@ export function initializeDatabase() {
           attended INTEGER DEFAULT 1,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS notifications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          class_id INT NOT NULL,
+          member_name TEXT NOT NULL,
+          message TEXT NOT NULL,
+          recipient_email TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
@@ -706,7 +718,8 @@ export const dbOperations = {
     try {
       return db
         .prepare(
-          `SELECT ci.*, c.name as class_name FROM class_instances ci JOIN classes c ON ci.class_id = c.id WHERE ci.id = ?`,
+          `SELECT ci.*, c.name as class_name, c.coach_id, c.coach_email
+           FROM class_instances ci JOIN classes c ON ci.class_id = c.id WHERE ci.id = ?`,
         )
         .get(id);
     } catch (error) {
@@ -799,6 +812,11 @@ export const dbOperations = {
       // Update class instance booking count
       db.prepare(
         "UPDATE class_instances SET current_bookings = current_bookings + 1 WHERE id = ?",
+      ).run(classInstanceId);
+
+      // Update total booked spots for the class
+      db.prepare(
+        `UPDATE classes SET booked_spots = booked_spots + 1 WHERE id = (SELECT class_id FROM class_instances WHERE id = ?)`,
       ).run(classInstanceId);
 
       return result;
@@ -910,6 +928,24 @@ export const dbOperations = {
     } catch (error) {
       console.error("Error marking attendance:", error);
       throw error;
+    }
+  },
+
+  // Notification operations
+  createNotification: (
+    classId: number,
+    memberName: string,
+    message: string,
+    recipientEmail: string,
+  ) => {
+    try {
+      const stmt = db.prepare(
+        `INSERT INTO notifications (class_id, member_name, message, recipient_email) VALUES (?, ?, ?, ?)`,
+      );
+      return stmt.run(classId, memberName, message, recipientEmail);
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      return null;
     }
   },
 

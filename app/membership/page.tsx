@@ -3,29 +3,20 @@ import MembershipPackages from "@/components/membership-packages"
 
 export default function MembershipPage() {
   return (
-    <div className="min-h-screen">
-
-      {/* Phone Banner */}
-      <div className="bg-red-600 text-white text-center py-2 px-4">
-        <span className="font-bold">Call Now! (289)892-5430</span>
-      </div>
-
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <header className="cave-hero py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-black mb-6">Membership Options</h1>
-          <p className="text-xl">
-            Choose the membership that fits your lifestyle and goals. All memberships include access to our world-class
-            facilities.
-          </p>
-        </div>
+      <header className="bg-black text-white py-32 text-center animate-in fade-in">
+        <h1 className="text-5xl font-bold mb-4">Membership Options</h1>
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          Choose the membership that fits your lifestyle and goals. All memberships include access to our world-class
+          facilities.
+        </p>
       </header>
 
       {/* Membership Content */}
-      <section className="max-w-7xl mx-auto py-16 px-4">
+      <section className="max-w-7xl mx-auto py-20 px-4 animate-in fade-in slide-in-from-bottom-8">
         <MembershipPackages />
       </section>
-
     </div>
   )
 }

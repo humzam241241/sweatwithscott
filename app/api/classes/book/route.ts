@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { dbOperations } from "@/lib/database"
+import nodemailer from "nodemailer"
 
 // Mock booking storage - in production, this would be in the database
 const bookings = new Map<string, any>()
@@ -57,10 +58,21 @@ export async function POST(request: NextRequest) {
     // Create the booking
     const bookingId = dbOperations.bookClass(user_id, class_instance_id)
 
-    // In production, you would also:
-    // 1. Process payment
-    // 2. Send confirmation email
-    // 3. Update member statistics
+    // Send notifications
+    const memberName = user.full_name || user.username
+    const coachEmail = classInstance.coach_email
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@caveboxing.com"
+    const message = `${memberName} booked ${classInstance.class_name} on ${classInstance.date} at ${classInstance.start_time}.`
+
+    const transporter = nodemailer.createTransport({ jsonTransport: true })
+
+    if (coachEmail) {
+      await transporter.sendMail({ to: coachEmail, subject: "New Class Booking", text: message })
+      dbOperations.createNotification(classInstance.class_id, memberName, message, coachEmail)
+    }
+
+    await transporter.sendMail({ to: adminEmail, subject: "New Class Booking", text: message })
+    dbOperations.createNotification(classInstance.class_id, memberName, message, adminEmail)
 
     return NextResponse.json({
       message: "Class booked successfully! You'll receive a confirmation email shortly.",

@@ -20,11 +20,11 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className="flex bg-white text-black">
+      <body className="bg-white text-black">
         <Navigation />
         <ClientWrapper>
-          <div className="flex-1 md:ml-56 min-h-screen flex flex-col">
-            <main className="flex-1">{children}</main>
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1 pt-16">{children}</main>
             <Footer />
           </div>
         </ClientWrapper>

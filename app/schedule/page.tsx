@@ -4,23 +4,17 @@ import WeeklySchedule from "@/components/weekly-schedule"
 
 export default function SchedulePage() {
   return (
-    <div className="min-h-screen">
-
-      {/* Phone Banner */}
-      <div className="bg-red-600 text-white text-center py-2 px-4">
-        <span className="font-bold">Call Now! (289)892-5430</span>
-      </div>
-
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <header className="cave-hero py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-black mb-6">Class Schedule</h1>
-          <p className="text-xl">Find the perfect class time that fits your schedule and start your boxing journey.</p>
-        </div>
+      <header className="bg-black text-white py-32 text-center animate-in fade-in">
+        <h1 className="text-5xl font-bold mb-4">Class Schedule</h1>
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          Find the perfect class time that fits your schedule and start your boxing journey.
+        </p>
       </header>
 
       {/* Gym Hours */}
-      <section className="max-w-3xl mx-auto py-12 px-4">
+      <section className="max-w-3xl mx-auto py-20 px-4 animate-in fade-in slide-in-from-bottom-8">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -47,10 +41,9 @@ export default function SchedulePage() {
       </section>
 
       {/* Schedule */}
-      <section className="max-w-6xl mx-auto pb-16 px-4">
+      <section className="max-w-6xl mx-auto pb-20 px-4 animate-in fade-in slide-in-from-bottom-8">
         <WeeklySchedule />
       </section>
-
     </div>
   )
 }
