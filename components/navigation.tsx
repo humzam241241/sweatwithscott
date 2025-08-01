@@ -27,13 +27,22 @@ export default function Navigation() {
   const [user, setUser] = useState<User | null>(null);
   const [active, setActive] = useState<string>(pathname);
   const [logoExists, setLogoExists] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
+
     // Check for logo image
     fetch("/images/logo.png").then((res) => {
       if (res.ok) setLogoExists(true);
     });
+
+    // Scroll listener for background fade
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -111,21 +120,32 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 w-full bg-black text-white z-50">
+    <nav
+      className={`cave-navbar fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${
+        isScrolled ? "bg-[var(--cave-dark)] shadow-lg" : "bg-transparent"
+      }`}
+    >
       <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
-        <div className="flex items-center space-x-2">
+        
+        {/* Logo + Title */}
+        <div className="flex items-center space-x-3">
           {logoExists && (
             <Link href="/">
               <Image
                 src="/images/logo.png"
                 alt="The Cave Boxing logo"
-                width={32}
-                height={32}
+                width={60}
+                height={60}
+                className="cave-logo"
               />
             </Link>
           )}
-          <Link href="/">The Cave Boxing</Link>
+          <Link href="/" className="text-white text-xl font-bold">
+            The Cave Boxing
+          </Link>
         </div>
+
+        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-4">
           <ul className="flex space-x-4">
             {navLinks.map((link) => {
@@ -135,7 +155,9 @@ export default function Navigation() {
                   <Link
                     href={link.href}
                     onClick={(e) => handleLinkClick(e, link)}
-                    className={`px-3 py-2 rounded hover:text-red-500 ${isActive ? "text-red-500 font-bold" : "text-gray-300"}`}
+                    className={`px-3 py-2 rounded hover:text-red-500 ${
+                      isActive ? "text-red-500 font-bold" : "text-gray-300"
+                    }`}
                   >
                     {link.label}
                   </Link>
@@ -158,12 +180,16 @@ export default function Navigation() {
             </Link>
           )}
         </div>
+
+        {/* Mobile Hamburger */}
         <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
+
+      {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-black border-t border-gray-800">
+        <div className="md:hidden bg-[var(--cave-dark)] border-t border-gray-800">
           <ul className="flex flex-col space-y-2 p-4">
             {navLinks.map((link) => {
               const isActive = active === link.sectionId || active === link.href;
@@ -172,7 +198,9 @@ export default function Navigation() {
                   <Link
                     href={link.href}
                     onClick={(e) => handleLinkClick(e, link)}
-                    className={`block px-3 py-2 rounded hover:text-red-500 ${isActive ? "text-red-500 font-bold" : "text-gray-300"}`}
+                    className={`block px-3 py-2 rounded hover:text-red-500 ${
+                      isActive ? "text-red-500 font-bold" : "text-gray-300"
+                    }`}
                   >
                     {link.label}
                   </Link>
@@ -201,4 +229,3 @@ export default function Navigation() {
     </nav>
   );
 }
-
