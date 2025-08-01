@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 
 export default function ClassesPage() {
   return (
@@ -42,67 +41,48 @@ export default function ClassesPage() {
       </header>
 
       {/* Classes Grid */}
-      <section className="max-w-7xl mx-auto py-16 px-4">
+      <section className="py-16">
         <h2 className="text-3xl font-bold text-center mb-12">Available Classes</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <Link href="/boxing">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                <img src="/images/boxing-training.png" alt="Boxing Classes" className="w-full h-full object-cover" />
+        <div className="card-grid">
+          {[
+            {
+              name: "Boxing",
+              img: "/images/boxing-training.png",
+              description: "Master the fundamentals and improve your technique",
+              link: "/boxing",
+            },
+            {
+              name: "Strength & Conditioning",
+              img: "/images/strength-conditioning.png",
+              description: "Build power and endurance for boxing",
+              link: "/strength",
+            },
+            {
+              name: "Junior Jabbers",
+              img: "/images/junior-jabbers.png",
+              description: "Boxing classes for young athletes",
+              link: "/juniors",
+            },
+            {
+              name: "Beginner Boxing",
+              img: "/images/gym-training.png",
+              description: "Perfect for those new to boxing",
+              link: "/beginner",
+            },
+          ].map((cls) => (
+            <Link key={cls.name} href={cls.link} className="card">
+              <img src={cls.img} alt={cls.name} />
+              <div className="card-info">
+                <h3>{cls.name}</h3>
               </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-2">Boxing</h3>
-                <p className="text-gray-600 mb-4">Master the fundamentals and improve your technique</p>
-                <p className="text-2xl font-bold text-red-600">$15 / drop-in</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/strength">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                <img
-                  src="/images/strength-conditioning.png"
-                  alt="Strength & Conditioning"
-                  className="w-full h-full object-cover"
-                />
+              <div className="card-overlay">
+                <p className="mb-4">{cls.description}</p>
+                <span className="underline">Learn More</span>
               </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-2">Strength & Conditioning</h3>
-                <p className="text-gray-600 mb-4">Build power and endurance for boxing</p>
-                <p className="text-2xl font-bold text-red-600">$15 / drop-in</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/juniors">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                <img src="/images/junior-jabbers.png" alt="Junior Jabbers" className="w-full h-full object-cover" />
-              </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-2">Junior Jabbers</h3>
-                <p className="text-gray-600 mb-4">Boxing classes for young athletes</p>
-                <p className="text-2xl font-bold text-red-600">$85 / 4-week program</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/beginner">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="aspect-video bg-gray-200 rounded-t-lg overflow-hidden">
-                <img src="/images/gym-training.png" alt="Beginner Boxing" className="w-full h-full object-cover" />
-              </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-2">Beginner Boxing</h3>
-                <p className="text-gray-600 mb-4">Perfect for those new to boxing</p>
-                <p className="text-2xl font-bold text-red-600">$15 / drop-in</p>
-              </CardContent>
-            </Card>
-          </Link>
+            </Link>
+          ))}
         </div>
       </section>
-
-      </div>
-    )
-  }
+    </div>
+  )
+}

@@ -28,26 +28,17 @@ export default function MediaGallery() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="media-grid">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="relative cursor-pointer group"
+            className="card"
             onClick={() => setActive(item)}
           >
             {item.type === "image" ? (
-              <img
-                src={item.src}
-                alt=""
-                className="w-full h-48 object-cover rounded"
-              />
+              <img src={item.src} alt="" />
             ) : (
-              <video
-                src={item.src}
-                className="w-full h-48 object-cover rounded"
-                muted
-                loop
-              />
+              <video src={item.src} muted loop />
             )}
           </div>
         ))}
