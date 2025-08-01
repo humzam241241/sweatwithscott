@@ -53,15 +53,15 @@ export default function LocationPage() {
                 <div className="space-y-2 text-gray-700">
                   <div className="flex justify-between">
                     <span>Monday - Friday:</span>
-                    <span>6:00 AM - 10:00 PM</span>
+                    <span>6:00 AM - 9:00 PM</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Saturday:</span>
-                    <span>8:00 AM - 8:00 PM</span>
+                    <span>8:00 AM - 5:00 PM</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Sunday:</span>
-                    <span>8:00 AM - 8:00 PM</span>
+                    <span>Closed</span>
                   </div>
                 </div>
               </CardContent>

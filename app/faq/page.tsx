@@ -23,7 +23,7 @@ export default function FAQPage() {
           <AccordionItem value="item-1">
             <AccordionTrigger className="text-left">What are your opening hours?</AccordionTrigger>
             <AccordionContent>
-              We are open Monday to Friday from 6 AM to 10 PM, and weekends from 8 AM to 8 PM.
+              We are open Monday to Friday from 6 AM to 9 PM, Saturday from 8 AM to 5 PM, and closed on Sundays.
             </AccordionContent>
           </AccordionItem>
 

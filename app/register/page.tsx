@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Check, X } from "lucide-react"
+import PasswordRequirements from "@/components/password-requirements"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 
@@ -143,31 +143,10 @@ export default function RegisterPage() {
             />
           </div>
 
-            <ul className="space-y-1 text-sm">
-              {[
-                { label: "Minimum 8 characters", valid: checks.length },
-                { label: "At least 1 uppercase letter", valid: checks.upper },
-                { label: "At least 1 lowercase letter", valid: checks.lower },
-                { label: "At least 1 number", valid: checks.number },
-                {
-                  label: "At least 1 special character (!@#$%^&*)",
-                  valid: checks.special,
-                },
-                { label: "Passwords match", valid: checks.match },
-              ].map((rule) => (
-                <li
-                  key={rule.label}
-                  className={`flex items-center ${rule.valid ? "text-green-600" : "text-red-600"}`}
-                >
-                  {rule.valid ? (
-                    <Check className="mr-2 h-4 w-4" />
-                  ) : (
-                    <X className="mr-2 h-4 w-4" />
-                  )}
-                  {rule.label}
-                </li>
-              ))}
-            </ul>
+            <PasswordRequirements
+              password={formData.password}
+              confirmPassword={formData.confirmPassword}
+            />
 
             <Button
               type="submit"

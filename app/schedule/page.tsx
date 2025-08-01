@@ -1,7 +1,7 @@
-import Link from "next/link"
-import BookableSchedule from "@/components/bookable-schedule"
 import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Clock } from "lucide-react"
 
 export default function SchedulePage() {
   return (
@@ -21,9 +21,45 @@ export default function SchedulePage() {
         </div>
       </header>
 
-      {/* Schedule Content */}
-      <section className="max-w-6xl mx-auto py-16 px-4">
-        <BookableSchedule />
+      {/* Gym Hours */}
+      <section className="max-w-3xl mx-auto py-12 px-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Clock className="h-5 w-5 text-red-600 mr-2" /> Hours
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-gray-700">
+              <div className="flex justify-between">
+                <span>Monday - Friday:</span>
+                <span>6:00 AM - 9:00 PM</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Saturday:</span>
+                <span>8:00 AM - 5:00 PM</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Sunday:</span>
+                <span>Closed</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Zen Planner Embed */}
+      <section className="max-w-6xl mx-auto pb-16 px-4">
+        <div className="w-full">
+          <iframe
+            src="https://caveboxing.zenplanner.com/zenplanner/portal/calendar.cfm?embed=true"
+            width="100%"
+            height="800"
+            frameBorder="0"
+            scrolling="yes"
+            className="w-full h-[800px] border-0"
+          ></iframe>
+        </div>
       </section>
 
       {/* Footer */}
