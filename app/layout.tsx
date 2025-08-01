@@ -3,6 +3,9 @@ import './globals.css';
 import ClientWrapper from './client-wrapper';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -20,10 +23,10 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </head>
-      <body className="flex bg-white text-black">
+      <body className={`${inter.className} bg-white text-black`}>
         <Navigation />
         <ClientWrapper>
-          <div className="flex-1 md:ml-56 min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col">
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
