@@ -151,17 +151,13 @@ try {
   const insertUser = db.prepare(`
     INSERT INTO users (username, password, email, full_name, phone, membership_type, is_admin)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(username) DO UPDATE SET
-      password=excluded.password,
-      email=excluded.email,
-      full_name=excluded.full_name,
-      phone=excluded.phone,
-      membership_type=excluded.membership_type,
-      is_admin=excluded.is_admin
   `)
 
   usersData.forEach((u) => {
-    insertUser.run(u.username, u.password, u.email, u.full_name, u.phone, u.membership_type, 0)
+    const exists = db.prepare("SELECT id FROM users WHERE username = ?").get(u.username)
+    if (!exists) {
+      insertUser.run(u.username, u.password, u.email, u.full_name, u.phone, u.membership_type, 0)
+    }
   })
   console.log("Sample users inserted")
 
@@ -202,14 +198,17 @@ try {
           )
           .get(classItem.id, dateString, schedule.time)
         if (!exists) {
-          insertInstance.run(
-            classItem.id,
-            dateString,
-            schedule.time,
-            schedule.endTime,
-            classItem.instructor,
-            classItem.max_capacity,
-          )
+          const classExists = db.prepare("SELECT id FROM classes WHERE id = ?").get(classItem.id)
+          if (classExists) {
+            insertInstance.run(
+              classItem.id,
+              dateString,
+              schedule.time,
+              schedule.endTime,
+              classItem.instructor,
+              classItem.max_capacity,
+            )
+          }
         }
       }
     })
@@ -219,7 +218,7 @@ try {
   // Insert sample bookings
   const classInstances = db
     .prepare(`
-    SELECT * FROM class_instances 
+    SELECT * FROM class_instances
     WHERE date >= date('now', '-7 days') AND date <= date('now', '+7 days')
     LIMIT 5
   `)
@@ -228,22 +227,25 @@ try {
   const insertBooking = db.prepare(`
     INSERT INTO class_bookings (user_id, class_instance_id, status, payment_status, attended)
     VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(user_id, class_instance_id) DO UPDATE SET
-      status=excluded.status,
-      payment_status=excluded.payment_status,
-      attended=excluded.attended
   `)
 
-  const johnId = userMap["john_doe"]
-  if (johnId) {
+  usersData.forEach((u) => {
+    const userId = userMap[u.username]
+    if (!userId) return
     classInstances.forEach((instance) => {
-      const attended = new Date(instance.date) < new Date() ? 1 : 0
-      insertBooking.run(johnId, instance.id, "confirmed", "paid", attended)
+      const userExists = db.prepare("SELECT id FROM users WHERE id = ?").get(userId)
+      const instanceExists = db.prepare("SELECT id FROM class_instances WHERE id = ?").get(instance.id)
+      if (!userExists || !instanceExists) return
+      const exists = db
+        .prepare("SELECT id FROM class_bookings WHERE user_id = ? AND class_instance_id = ?")
+        .get(userId, instance.id)
+      if (!exists) {
+        const attended = new Date(instance.date) < new Date() ? 1 : 0
+        insertBooking.run(userId, instance.id, "confirmed", "paid", attended)
+      }
     })
-    console.log("Sample bookings inserted")
-  } else {
-    console.log("Skipping sample bookings: john_doe not found")
-  }
+  })
+  console.log("Sample bookings inserted")
 
   // Insert sample payments
   const paymentsData = [
@@ -261,6 +263,8 @@ try {
   paymentsData.forEach((p) => {
     const userId = userMap[p.username]
     if (!userId) return
+    const userExists = db.prepare("SELECT id FROM users WHERE id = ?").get(userId)
+    if (!userExists) return
     const exists = db
       .prepare(
         "SELECT id FROM payments WHERE user_id = ? AND amount = ? AND payment_type = ? AND description = ?",
