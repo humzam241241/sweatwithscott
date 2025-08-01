@@ -1,12 +1,9 @@
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 
 export default function MenPage() {
   return (
     <div className="min-h-screen">
-      <Navigation />
 
       {/* Phone Banner */}
       <div className="bg-red-600 text-white text-center py-2 px-4">
@@ -97,8 +94,6 @@ export default function MenPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

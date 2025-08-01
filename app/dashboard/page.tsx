@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 import BookableSchedule from "@/components/bookable-schedule"
 
 interface Booking {
@@ -113,7 +111,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
       <div className="max-w-4xl mx-auto p-4">
         {user && (
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
@@ -219,7 +216,6 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

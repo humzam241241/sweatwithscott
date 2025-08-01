@@ -11,8 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import PasswordRequirements from "@/components/password-requirements"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -76,7 +74,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
       <div className="flex items-center justify-center px-4 py-12">
         <Card className="w-full max-w-md bg-gray-100 text-black shadow-lg border border-gray-300">
         <CardHeader className="space-y-1">
@@ -166,7 +163,6 @@ export default function RegisterPage() {
         </CardContent>
         </Card>
       </div>
-      <Footer />
     </div>
   )
 }

@@ -8,6 +8,7 @@
   --cave-red-dark: #a70011;
   --cave-dark: #181818;
   --cave-gray: #f8f8fa;
+  --spacing-section: 4rem;
 }
 
 html {
@@ -24,6 +25,32 @@ img,
 video {
   max-width: 100%;
   height: auto;
+}
+
+@layer base {
+  h1 {
+    @apply text-4xl font-bold leading-tight;
+  }
+  h2 {
+    @apply text-3xl font-bold leading-snug;
+  }
+  h3 {
+    @apply text-2xl font-semibold leading-snug;
+  }
+  button {
+    @apply px-6 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-700;
+  }
+  img {
+    @apply rounded-md;
+  }
+  section {
+    @apply py-16 px-4 md:px-8;
+  }
+}
+
+.weekly-schedule-grid {
+  grid-template-columns: 80px repeat(7, minmax(0, 1fr));
+  grid-template-rows: 40px repeat(15, 1fr);
 }
 
 /* Custom Cave Boxing Styles */

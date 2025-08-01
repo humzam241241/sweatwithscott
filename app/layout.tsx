@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
 import './globals.css';
-import ClientWrapper from './client-wrapper'; // <-- NEW import
+import ClientWrapper from './client-wrapper';
+import Navigation from '@/components/navigation';
+import Footer from '@/components/footer';
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -19,17 +19,14 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <style>{`
-          html {
-            font-family: ${GeistSans.style.fontFamily};
-            --font-sans: ${GeistSans.variable};
-            --font-mono: ${GeistMono.variable};
-          }
-        `}</style>
       </head>
-      <body>
+      <body className="flex bg-white text-black">
+        <Navigation />
         <ClientWrapper>
-          {children}
+          <div className="flex-1 md:ml-56 min-h-screen flex flex-col">
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
         </ClientWrapper>
       </body>
     </html>

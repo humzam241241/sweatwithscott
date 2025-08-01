@@ -2,13 +2,10 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import ContactForm from "@/components/contact-form"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen">
-      <Navigation />
 
       {/* Phone Banner */}
       <div className="bg-red-600 text-white text-center py-2 px-4">
@@ -123,8 +120,6 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }
