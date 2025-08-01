@@ -70,16 +70,17 @@ export default function ClassesPage() {
               link: "/beginner",
             },
           ].map((cls) => (
-            <Link key={cls.name} href={cls.link} className="card">
+            <div key={cls.name} className="card">
               <img src={cls.img} alt={cls.name} />
               <div className="card-info">
                 <h3>{cls.name}</h3>
               </div>
               <div className="card-overlay">
-                <p className="mb-4">{cls.description}</p>
-                <span className="underline">Learn More</span>
+                <h3>{cls.name}</h3>
+                <p>{cls.description}</p>
+                <a href={cls.link} className="card-link">Learn More</a>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </section>
