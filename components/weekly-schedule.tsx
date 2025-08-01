@@ -39,6 +39,7 @@ const schedule: ClassItem[] = [
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const times = Array.from({ length: 15 }, (_, i) => 9 + i); // 9AM to 11PM
+const MAX_CAPACITY = 30;
 
 function hourLabel(h: number) {
   const suffix = h >= 12 ? "PM" : "AM";
@@ -73,13 +74,14 @@ export default function WeeklySchedule() {
             const rowStart = cls.start - 9 + 2; // +1 for header row, +1 because grid rows start at 1
             const rowEnd = cls.end - 9 + 2;
             const color = classColors[cls.name] || "bg-gray-300";
+            const remaining = Math.max(MAX_CAPACITY - cls.count, 0);
             return (
               <div
                 key={idx}
-                className={`${color} p-1 text-center text-xs flex items-center justify-center rounded`}
+                className={`${color} p-1 text-center text-xs flex items-center justify-center rounded shadow-sm transition-transform duration-200 hover:shadow-md hover:scale-105`}
                 style={{ gridColumn: dayIndex + 2, gridRow: `${rowStart} / ${rowEnd}` }}
               >
-                {cls.name} ({cls.count}/30)
+                {cls.name} ({remaining > 0 ? `${remaining} spots left` : "Full"})
               </div>
             );
           })}
