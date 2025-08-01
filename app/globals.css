@@ -10,6 +10,10 @@
   --cave-gray: #f8f8fa;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: "Montserrat", Arial, sans-serif;
   background: var(--cave-gray);

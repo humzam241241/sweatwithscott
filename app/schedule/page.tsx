@@ -2,6 +2,7 @@ import Navigation from "@/components/navigation"
 import Footer from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock } from "lucide-react"
+import WeeklySchedule from "@/components/weekly-schedule"
 
 export default function SchedulePage() {
   return (
@@ -48,18 +49,9 @@ export default function SchedulePage() {
         </Card>
       </section>
 
-      {/* Zen Planner Embed */}
+      {/* Schedule */}
       <section className="max-w-6xl mx-auto pb-16 px-4">
-        <div className="w-full">
-          <iframe
-            src="https://caveboxing.zenplanner.com/zenplanner/portal/calendar.cfm?embed=true"
-            width="100%"
-            height="800"
-            frameBorder="0"
-            scrolling="yes"
-            className="w-full h-[800px] border-0"
-          ></iframe>
-        </div>
+        <WeeklySchedule />
       </section>
 
       {/* Footer */}

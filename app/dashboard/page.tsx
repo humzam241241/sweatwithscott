@@ -24,6 +24,7 @@ interface Membership {
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [upcoming, setUpcoming] = useState<Booking[]>([])
   const [past, setPast] = useState<Booking[]>([])
@@ -40,8 +41,9 @@ export default function Dashboard() {
         loadBookings(session.userId)
         loadMembership(session.userId)
       } else {
-        router.push("/login")
+        router.replace("/login")
       }
+      setCheckingAuth(false)
     }
     fetchSession()
   }, [])
@@ -103,6 +105,10 @@ export default function Dashboard() {
     if (resp.ok) {
       loadBookings(user.userId)
     }
+  }
+
+  if (checkingAuth) {
+    return <div className="min-h-screen bg-black" />
   }
 
   return (
