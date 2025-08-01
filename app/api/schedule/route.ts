@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
 import { cookies } from "next/headers";
+import { getDb } from "@/lib/db";
 
 async function getSession() {
   const cookieStore = await cookies();
@@ -14,11 +14,21 @@ async function getSession() {
 }
 
 export async function GET() {
-  const db = getDb();
-  const classes = db
-    .prepare("SELECT * FROM classes ORDER BY day, time")
-    .all();
-  return NextResponse.json(classes);
+  try {
+    const db = getDb();
+    const rows = db
+      .prepare("SELECT * FROM classes ORDER BY day, time")
+      .all();
+    const grouped: Record<string, any[]> = {};
+    rows.forEach((row) => {
+      if (!grouped[row.day]) grouped[row.day] = [];
+      grouped[row.day].push(row);
+    });
+    return NextResponse.json(grouped);
+  } catch (err) {
+    console.error("Error loading schedule", err);
+    return NextResponse.json({ error: "Failed to load schedule" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -27,28 +37,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const data = await request.json();
-  const db = getDb();
+  try {
+    const { id, day, name, time, spots = 0, coach, color } = await request.json();
+    const db = getDb();
 
-  if (data.action === "delete") {
-    if (!data.id) {
-      return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    if (id) {
+      db.prepare(
+        "UPDATE classes SET day = ?, name = ?, time = ?, spots = ?, coach = ?, color = ? WHERE id = ?"
+      ).run(day, name, time, spots, coach, color, id);
+      const row = db.prepare("SELECT * FROM classes WHERE id = ?").get(id);
+      return NextResponse.json(row);
+    } else {
+      const info = db
+        .prepare(
+          "INSERT INTO classes (day, name, time, spots, coach, color) VALUES (?, ?, ?, ?, ?, ?)"
+        )
+        .run(day, name, time, spots, coach, color);
+      const row = db
+        .prepare("SELECT * FROM classes WHERE id = ?")
+        .get(info.lastInsertRowid as number);
+      return NextResponse.json(row, { status: 201 });
     }
-    db.prepare("DELETE FROM classes WHERE id = ?").run(data.id);
-  } else if (data.id) {
-    const { id, day, name, time, spots = 0, coach, color } = data;
-    db.prepare(
-      "UPDATE classes SET day = ?, name = ?, time = ?, spots = ?, coach = ?, color = ? WHERE id = ?"
-    ).run(day, name, time, spots, coach, color, id);
-  } else {
-    const { day, name, time, spots = 0, coach, color } = data;
-    db.prepare(
-      "INSERT INTO classes (day, name, time, spots, coach, color) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(day, name, time, spots, coach, color);
+  } catch (err) {
+    console.error("Error saving class", err);
+    return NextResponse.json({ error: "Failed to save class" }, { status: 500 });
   }
-
-  const classes = db
-    .prepare("SELECT * FROM classes ORDER BY day, time")
-    .all();
-  return NextResponse.json(classes);
 }
+

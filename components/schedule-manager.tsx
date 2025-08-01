@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { mutate } from "swr";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +50,9 @@ export default function ScheduleManager() {
   const load = async () => {
     const resp = await fetch("/api/schedule");
     if (resp.ok) {
-      setClasses(await resp.json());
+      const data: Record<string, ClassItem[]> = await resp.json();
+      const flat = Object.values(data).flat();
+      setClasses(flat);
     }
   };
 
@@ -58,16 +62,19 @@ export default function ScheduleManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/schedule", {
+    const res = await fetch("/api/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setClasses(data);
-        setForm(emptyForm);
-      });
+    });
+    if (res.ok) {
+      toast.success(form.id ? "Class updated" : "Class added");
+      setForm(emptyForm);
+      await load();
+      mutate("/api/schedule");
+    } else {
+      toast.error("Failed to save class");
+    }
   };
 
   const handleEdit = (cls: ClassItem) => {
@@ -76,13 +83,14 @@ export default function ScheduleManager() {
 
   const handleDelete = async (id?: number) => {
     if (!id) return;
-    await fetch("/api/schedule", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", id }),
-    })
-      .then((res) => res.json())
-      .then((data) => setClasses(data));
+    const res = await fetch(`/api/schedule/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Class deleted");
+      await load();
+      mutate("/api/schedule");
+    } else {
+      toast.error("Failed to delete class");
+    }
   };
 
   return (
