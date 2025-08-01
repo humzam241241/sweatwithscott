@@ -1,5 +1,3 @@
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock } from "lucide-react"
 import WeeklySchedule from "@/components/weekly-schedule"
@@ -7,7 +5,6 @@ import WeeklySchedule from "@/components/weekly-schedule"
 export default function SchedulePage() {
   return (
     <div className="min-h-screen">
-      <Navigation />
 
       {/* Phone Banner */}
       <div className="bg-red-600 text-white text-center py-2 px-4">
@@ -54,8 +51,6 @@ export default function SchedulePage() {
         <WeeklySchedule />
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

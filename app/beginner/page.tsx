@@ -1,12 +1,9 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 
 export default function BeginnerPage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
 
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
@@ -61,8 +58,6 @@ export default function BeginnerPage() {
         </Link>
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

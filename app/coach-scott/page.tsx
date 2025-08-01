@@ -1,12 +1,9 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 
 export default function CoachScottPage() {
   return (
     <div className="min-h-screen">
-      <Navigation />
 
       {/* Hero Section */}
       <header className="cave-hero py-20">
@@ -72,8 +69,6 @@ export default function CoachScottPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

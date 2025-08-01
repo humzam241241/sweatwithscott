@@ -2,13 +2,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MapPin, Clock, Car, Train, Phone } from "lucide-react"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
 
 export default function LocationPage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
 
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
@@ -143,8 +140,6 @@ export default function LocationPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

@@ -49,10 +49,7 @@ function hourLabel(h: number) {
 export default function WeeklySchedule() {
   return (
     <div className="overflow-x-auto">
-      <div
-        className="grid text-sm"
-        style={{ gridTemplateColumns: `80px repeat(${days.length}, minmax(0, 1fr))`, gridTemplateRows: `40px repeat(${times.length}, 1fr)` }}
-      >
+      <div className="grid text-sm weekly-schedule-grid">
         <div className="border-b" />
         {days.map((d) => (
           <div key={d} className="border-b text-center font-semibold py-2">
