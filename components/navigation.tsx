@@ -111,17 +111,9 @@ export default function Navigation() {
   };
 
   return (
-    <>
-      <button
-        className="fixed top-4 left-4 z-50 text-white md:hidden"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </button>
-      <nav
-        className={`fixed left-0 top-0 h-screen w-56 bg-black text-white flex flex-col z-40 transition-transform duration-300 transform ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
-      >
-        <div className="p-4 font-bold text-red-600 flex items-center space-x-2">
+    <nav className="fixed top-0 left-0 w-full bg-black text-white z-50">
+      <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
+        <div className="flex items-center space-x-2">
           {logoExists && (
             <Link href="/">
               <Image
@@ -134,40 +126,79 @@ export default function Navigation() {
           )}
           <Link href="/">The Cave Boxing</Link>
         </div>
-        <ul className="flex-1 space-y-2 px-2 overflow-y-auto">
-          {navLinks.map((link) => {
-            const isActive = active === link.sectionId || active === link.href;
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={(e) => handleLinkClick(e, link)}
-                  className={`block px-3 py-2 rounded hover:text-red-500 ${isActive ? "text-red-500 font-bold" : "text-gray-300"}`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-        <div className="p-4 border-t border-gray-800">
+        <div className="hidden md:flex items-center space-x-4">
+          <ul className="flex space-x-4">
+            {navLinks.map((link) => {
+              const isActive = active === link.sectionId || active === link.href;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={(e) => handleLinkClick(e, link)}
+                    className={`px-3 py-2 rounded hover:text-red-500 ${isActive ? "text-red-500 font-bold" : "text-gray-300"}`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
           {user ? (
             <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="w-full text-gray-300 border-gray-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+              className="text-gray-300 border-gray-600 hover:bg-red-600 hover:text-white hover:border-red-600"
             >
               <LogOut className="h-4 w-4 mr-2" /> Logout
             </Button>
           ) : (
-            <Link href="/login" onClick={() => setIsOpen(false)}>
-              <Button className="w-full bg-red-600 hover:bg-red-700">SIGN IN</Button>
+            <Link href="/login">
+              <Button className="bg-red-600 hover:bg-red-700">SIGN IN</Button>
             </Link>
           )}
         </div>
-      </nav>
-    </>
+        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+      {isOpen && (
+        <div className="md:hidden bg-black border-t border-gray-800">
+          <ul className="flex flex-col space-y-2 p-4">
+            {navLinks.map((link) => {
+              const isActive = active === link.sectionId || active === link.href;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={(e) => handleLinkClick(e, link)}
+                    className={`block px-3 py-2 rounded hover:text-red-500 ${isActive ? "text-red-500 font-bold" : "text-gray-300"}`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="p-4 border-t border-gray-800">
+            {user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="w-full text-gray-300 border-gray-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+              >
+                <LogOut className="h-4 w-4 mr-2" /> Logout
+              </Button>
+            ) : (
+              <Link href="/login" onClick={() => setIsOpen(false)}>
+                <Button className="w-full bg-red-600 hover:bg-red-700">SIGN IN</Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }
 

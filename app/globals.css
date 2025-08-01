@@ -25,6 +25,9 @@ img,
 video {
   max-width: 100%;
   height: auto;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 @layer base {
@@ -46,11 +49,6 @@ video {
   section {
     @apply py-16 px-4 md:px-8 scroll-mt-16;
   }
-}
-
-.weekly-schedule-grid {
-  grid-template-columns: 80px repeat(7, minmax(0, 1fr));
-  grid-template-rows: 40px repeat(15, 1fr);
 }
 
 /* Custom Cave Boxing Styles */
@@ -205,4 +203,58 @@ video {
   .cave-nav-link {
     padding: 0.6em 1.1em;
   }
+}
+
+/* Apple-inspired schedule styles */
+.schedule {
+  max-width: 900px;
+  margin: 100px auto 50px auto;
+  padding: 20px;
+  font-family: 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.time-slot {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  gap: 15px;
+}
+
+.time {
+  flex: 0 0 60px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.event {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.event:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.beginner-boxing {
+  background-color: #8B1E1E;
+}
+
+.sparring {
+  background-color: #F57C00;
+}
+
+.strength-conditioning {
+  background-color: #FBC02D;
+  color: #333;
+}
+
+.open-gym {
+  background-color: #29B6F6;
 }

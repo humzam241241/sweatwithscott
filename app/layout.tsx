@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-white text-black`}>
         <Navigation />
         <ClientWrapper>
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col pt-16">
             <main className="flex-1">{children}</main>
             <Footer />
           </div>
