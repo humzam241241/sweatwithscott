@@ -4,6 +4,7 @@ import ClientWrapper from './client-wrapper';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import { Inter } from 'next/font/google';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <Footer />
           </div>
         </ClientWrapper>
+        <Toaster />
       </body>
     </html>
   );
