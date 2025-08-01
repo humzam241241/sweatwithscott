@@ -6,17 +6,15 @@ export default function AboutPage() {
     <div className="min-h-screen bg-white">
 
       {/* Hero Section */}
-      <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">About The Cave Boxing Gym</h1>
-          <p className="text-xl">
-            Discover our story, values, and what makes us the go-to gym for boxing and fitness enthusiasts.
-          </p>
-        </div>
+      <header className="bg-black text-white py-32 text-center animate-in fade-in">
+        <h1 className="text-5xl font-bold mb-4">About The Cave Boxing Gym</h1>
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          Discover our story, values, and what makes us the go-to gym for boxing and fitness enthusiasts.
+        </p>
       </header>
 
       {/* Content */}
-      <section className="max-w-4xl mx-auto py-16 px-4">
+      <section className="max-w-4xl mx-auto py-20 px-4 animate-in fade-in slide-in-from-bottom-8">
         <div className="space-y-12">
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>

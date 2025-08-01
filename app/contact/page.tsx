@@ -5,30 +5,24 @@ import ContactForm from "@/components/contact-form"
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen">
-
-      {/* Phone Banner */}
-      <div className="bg-red-600 text-white text-center py-2 px-4">
-        <span className="font-bold">Call Now! (289)892-5430</span>
-      </div>
-
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <header className="cave-hero py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-black mb-6">Contact Us</h1>
-          <p className="text-xl">Get in touch with us to start your boxing journey or ask any questions.</p>
-        </div>
+      <header className="bg-black text-white py-32 text-center animate-in fade-in">
+        <h1 className="text-5xl font-bold mb-4">Contact Us</h1>
+        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          Get in touch with us to start your boxing journey or ask any questions.
+        </p>
       </header>
 
       {/* Contact Info */}
-      <section className="max-w-6xl mx-auto py-16 px-4">
+      <section className="max-w-6xl mx-auto py-20 px-4 animate-in fade-in slide-in-from-bottom-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card>
-            <CardHeader className="text-center">
+          <Card className="text-center rounded-lg shadow-md transition-transform hover:scale-105">
+            <CardHeader>
               <MapPin className="h-8 w-8 text-red-600 mx-auto mb-2" />
               <CardTitle>Location</CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent>
               <p className="text-gray-600">
                 91 Station St Unit 8
                 <br />
@@ -39,12 +33,12 @@ export default function ContactPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="text-center">
+          <Card className="text-center rounded-lg shadow-md transition-transform hover:scale-105">
+            <CardHeader>
               <Phone className="h-8 w-8 text-red-600 mx-auto mb-2" />
               <CardTitle>Phone</CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent>
               <p className="text-gray-600">
                 <a href="tel:2898925430" className="hover:text-red-600">
                   (289) 892-5430
@@ -53,12 +47,12 @@ export default function ContactPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="text-center">
+          <Card className="text-center rounded-lg shadow-md transition-transform hover:scale-105">
+            <CardHeader>
               <Mail className="h-8 w-8 text-red-600 mx-auto mb-2" />
               <CardTitle>Email</CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent>
               <p className="text-gray-600">
                 <a href="mailto:info@caveboxing.com" className="hover:text-red-600">
                   info@caveboxing.com
@@ -67,12 +61,12 @@ export default function ContactPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="text-center">
+          <Card className="text-center rounded-lg shadow-md transition-transform hover:scale-105">
+            <CardHeader>
               <Clock className="h-8 w-8 text-red-600 mx-auto mb-2" />
               <CardTitle>Hours</CardTitle>
             </CardHeader>
-            <CardContent className="text-center">
+            <CardContent>
               <p className="text-gray-600">
                 Mon-Fri: 6AM-10PM
                 <br />
@@ -119,7 +113,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-
     </div>
   )
 }

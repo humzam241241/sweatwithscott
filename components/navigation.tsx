@@ -105,18 +105,10 @@ export default function Navigation() {
   };
 
   return (
-    <>
-      <button
-        className="fixed top-4 left-4 z-50 text-white md:hidden"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-      </button>
-      <nav
-        className={`fixed left-0 top-0 h-screen w-56 bg-black text-white flex flex-col z-40 transition-transform duration-300 transform ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
-      >
-        <div className="p-4 font-bold text-red-600">The Cave</div>
-        <ul className="flex-1 space-y-2 px-2 overflow-y-auto">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-black/60 backdrop-blur text-white">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-4">
+        <div className="font-bold text-red-600">The Cave</div>
+        <ul className="hidden md:flex space-x-6">
           {navLinks.map((link) => {
             const isActive = active === link.sectionId || active === link.href;
             return (
@@ -124,7 +116,7 @@ export default function Navigation() {
                 <Link
                   href={link.href}
                   onClick={(e) => handleLinkClick(e, link)}
-                  className={`block px-3 py-2 rounded hover:text-red-500 ${isActive ? "text-red-500 font-bold" : "text-gray-300"}`}
+                  className={`transition-colors hover:text-red-500 ${isActive ? "text-red-500" : "text-gray-300"}`}
                 >
                   {link.label}
                 </Link>
@@ -132,24 +124,63 @@ export default function Navigation() {
             );
           })}
         </ul>
-        <div className="p-4 border-t border-gray-800">
+        <div className="hidden md:block">
           {user ? (
             <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}
-              className="w-full text-gray-300 border-gray-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+              className="text-gray-300 border-gray-600 hover:bg-red-600 hover:text-white hover:border-red-600"
             >
               <LogOut className="h-4 w-4 mr-2" /> Logout
             </Button>
           ) : (
-            <Link href="/login" onClick={() => setIsOpen(false)}>
-              <Button className="w-full bg-red-600 hover:bg-red-700">SIGN IN</Button>
+            <Link href="/login">
+              <Button className="bg-red-600 hover:bg-red-700">SIGN IN</Button>
             </Link>
           )}
         </div>
-      </nav>
-    </>
+        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+      {isOpen && (
+        <div className="md:hidden bg-black/80 px-4 pb-4">
+          <ul className="flex flex-col space-y-2">
+            {navLinks.map((link) => {
+              const isActive = active === link.sectionId || active === link.href;
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    onClick={(e) => handleLinkClick(e, link)}
+                    className={`block py-2 transition-colors hover:text-red-500 ${isActive ? "text-red-500" : "text-gray-300"}`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="mt-4">
+            {user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="w-full text-gray-300 border-gray-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+              >
+                <LogOut className="h-4 w-4 mr-2" /> Logout
+              </Button>
+            ) : (
+              <Link href="/login" onClick={() => setIsOpen(false)}>
+                <Button className="w-full bg-red-600 hover:bg-red-700">SIGN IN</Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }
 
