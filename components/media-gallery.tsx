@@ -10,11 +10,7 @@ interface MediaItem {
 
 export default function MediaGallery() {
   const [items, setItems] = useState<MediaItem[]>([]);
-  const [loaded, setLoaded] = useState(false);
-  const [lightbox, setLightbox] = useState<{
-    item: MediaItem;
-    closing: boolean;
-  } | null>(null);
+  const [active, setActive] = useState<MediaItem | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -22,7 +18,6 @@ export default function MediaGallery() {
         const res = await fetch("/api/media");
         if (res.ok) {
           setItems(await res.json());
-          setLoaded(true);
         }
       } catch (err) {
         console.error("Failed to load media", err);
@@ -33,27 +28,23 @@ export default function MediaGallery() {
 
   return (
     <div>
-      <div
-        className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 transition-opacity duration-700 ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="relative cursor-pointer group overflow-hidden"
-            onClick={() => setLightbox({ item, closing: false })}
+            className="relative cursor-pointer group"
+            onClick={() => setActive(item)}
           >
             {item.type === "image" ? (
               <img
                 src={item.src}
                 alt=""
-                className="w-full h-48 object-cover rounded transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-48 object-cover rounded"
               />
             ) : (
               <video
                 src={item.src}
-                className="w-full h-48 object-cover rounded transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-48 object-cover rounded"
                 muted
                 loop
               />
@@ -61,25 +52,16 @@ export default function MediaGallery() {
           </div>
         ))}
       </div>
-      {lightbox && (
+      {active && (
         <div
-          className={`fixed inset-0 bg-black/90 flex items-center justify-center z-50 transition-opacity duration-300 ${
-            lightbox.closing ? "opacity-0" : "opacity-100"
-          }`}
-          onClick={() => setLightbox({ item: lightbox.item, closing: true })}
-          onTransitionEnd={() => {
-            if (lightbox.closing) setLightbox(null);
-          }}
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+          onClick={() => setActive(null)}
         >
-          {lightbox.item.type === "image" ? (
-            <img
-              src={lightbox.item.src}
-              alt=""
-              className="max-w-full max-h-full"
-            />
+          {active.type === "image" ? (
+            <img src={active.src} alt="" className="max-w-full max-h-full" />
           ) : (
             <video
-              src={lightbox.item.src}
+              src={active.src}
               controls
               autoPlay
               className="max-w-full max-h-full"
