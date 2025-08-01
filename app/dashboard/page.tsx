@@ -156,7 +156,7 @@ export default function Dashboard() {
                   </div>
                   <button
                     onClick={() => handleCancelBooking(b.classInstanceId)}
-                    className="text-red-500 text-sm hover:underline"
+                    className="text-brand text-sm hover:underline"
                   >
                     Cancel
                   </button>
@@ -185,7 +185,7 @@ export default function Dashboard() {
         )}
 
         <h2 className="text-xl font-bold mt-8 mb-4">Edit Profile</h2>
-        {profileMsg && <p className="mb-2 text-sm text-red-400">{profileMsg}</p>}
+        {profileMsg && <p className="mb-2 text-sm text-brand">{profileMsg}</p>}
         <div className="space-y-2">
           <input
             type="text"
@@ -210,7 +210,7 @@ export default function Dashboard() {
           />
           <button
             onClick={handleProfileSave}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            className="bg-brand hover:bg-brand-dark text-white px-4 py-2 rounded transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(201,0,21,0.5)]"
           >
             Save
           </button>

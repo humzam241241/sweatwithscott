@@ -34,7 +34,9 @@ import {
   UserCheck,
   CalendarDays,
   History,
+  Image as ImageIcon,
 } from "lucide-react";
+import MediaManager from "@/components/media-manager";
 
 interface GymStats {
   total_members: number;
@@ -303,7 +305,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-black text-white">
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
             <p>Loading admin dashboard...</p>
           </div>
         </div>
@@ -317,7 +319,7 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Admin Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-red-500 mb-2">
+          <h1 className="text-4xl font-bold text-brand mb-2">
             Admin Dashboard
           </h1>
           <p className="text-gray-300">
@@ -333,7 +335,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-medium text-gray-300">
                 Total Members
               </CardTitle>
-              <Users className="h-4 w-4 text-red-500" />
+              <Users className="h-4 w-4 text-brand" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -347,7 +349,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-medium text-gray-300">
                 Today's Classes
               </CardTitle>
-              <Calendar className="h-4 w-4 text-red-500" />
+              <Calendar className="h-4 w-4 text-brand" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -361,7 +363,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-medium text-gray-300">
                 Total Revenue
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-red-500" />
+              <DollarSign className="h-4 w-4 text-brand" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -375,7 +377,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-medium text-gray-300">
                 Attendance Rate
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-red-500" />
+              <TrendingUp className="h-4 w-4 text-brand" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -408,7 +410,7 @@ export default function AdminDashboard() {
               <CardTitle className="text-sm font-medium text-gray-300">
                 Total Bookings
               </CardTitle>
-              <UserCheck className="h-4 w-4 text-red-500" />
+              <UserCheck className="h-4 w-4 text-brand" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
@@ -420,41 +422,48 @@ export default function AdminDashboard() {
 
         {/* Admin Tabs */}
         <Tabs defaultValue="current" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-900">
+          <TabsList className="grid w-full grid-cols-6 bg-gray-900">
             <TabsTrigger
               value="current"
-              className="data-[state=active]:bg-red-600"
+              className="data-[state=active]:bg-brand"
             >
               <CalendarDays className="h-4 w-4 mr-2" />
               Today's Classes
             </TabsTrigger>
             <TabsTrigger
               value="future"
-              className="data-[state=active]:bg-red-600"
+              className="data-[state=active]:bg-brand"
             >
               <Calendar className="h-4 w-4 mr-2" />
               Future Classes
             </TabsTrigger>
             <TabsTrigger
               value="past"
-              className="data-[state=active]:bg-red-600"
+              className="data-[state=active]:bg-brand"
             >
               <History className="h-4 w-4 mr-2" />
               Past Classes
             </TabsTrigger>
             <TabsTrigger
               value="payments"
-              className="data-[state=active]:bg-red-600"
+              className="data-[state=active]:bg-brand"
             >
               <CreditCard className="h-4 w-4 mr-2" />
               Outstanding Payments
             </TabsTrigger>
             <TabsTrigger
               value="members"
-              className="data-[state=active]:bg-red-600"
+              className="data-[state=active]:bg-brand"
             >
               <Users className="h-4 w-4 mr-2" />
               Members
+            </TabsTrigger>
+            <TabsTrigger
+              value="media"
+              className="data-[state=active]:bg-brand"
+            >
+              <ImageIcon className="h-4 w-4 mr-2" />
+              Media Manager
             </TabsTrigger>
           </TabsList>
 
@@ -462,7 +471,7 @@ export default function AdminDashboard() {
           <TabsContent value="current" className="space-y-6">
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-red-500">Today's Classes</CardTitle>
+                <CardTitle className="text-brand">Today's Classes</CardTitle>
                 <CardDescription className="text-gray-400">
                   Classes scheduled for {new Date().toLocaleDateString()}
                 </CardDescription>
@@ -499,7 +508,7 @@ export default function AdminDashboard() {
                               className={
                                 classItem.current_bookings >=
                                 classItem.max_capacity
-                                  ? "text-red-400 border-red-400"
+                                  ? "text-brand border-brand"
                                   : "text-green-400 border-green-400"
                               }
                             >
@@ -553,7 +562,7 @@ export default function AdminDashboard() {
             {selectedClassAttendees.length > 0 && (
               <Card className="bg-gray-900 border-gray-700">
                 <CardHeader>
-                  <CardTitle className="text-red-500">
+                  <CardTitle className="text-brand">
                     Class Attendees
                   </CardTitle>
                   <CardDescription className="text-gray-400">
@@ -635,7 +644,7 @@ export default function AdminDashboard() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white bg-transparent"
+                                className="text-brand border-brand hover:bg-brand hover:text-white bg-transparent"
                                 onClick={() =>
                                   markAttendance(attendee.id, false)
                                 }
@@ -658,7 +667,7 @@ export default function AdminDashboard() {
           <TabsContent value="future" className="space-y-6">
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-red-500">Upcoming Classes</CardTitle>
+                <CardTitle className="text-brand">Upcoming Classes</CardTitle>
                 <CardDescription className="text-gray-400">
                   Future scheduled classes and bookings
                 </CardDescription>
@@ -695,7 +704,7 @@ export default function AdminDashboard() {
                               className={
                                 classItem.current_bookings >=
                                 classItem.max_capacity
-                                  ? "text-red-400 border-red-400"
+                                  ? "text-brand border-brand"
                                   : "text-green-400 border-green-400"
                               }
                             >
@@ -750,7 +759,7 @@ export default function AdminDashboard() {
           <TabsContent value="past" className="space-y-6">
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-red-500">Past Classes</CardTitle>
+                <CardTitle className="text-brand">Past Classes</CardTitle>
                 <CardDescription className="text-gray-400">
                   Historical class data and attendance records
                 </CardDescription>
@@ -836,7 +845,7 @@ export default function AdminDashboard() {
           <TabsContent value="payments" className="space-y-6">
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-red-500">
+                <CardTitle className="text-brand">
                   Outstanding Payments
                 </CardTitle>
                 <CardDescription className="text-gray-400">
@@ -932,7 +941,7 @@ export default function AdminDashboard() {
           <TabsContent value="members" className="space-y-6">
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
-                <CardTitle className="text-red-500">Members</CardTitle>
+                <CardTitle className="text-brand">Members</CardTitle>
                 <CardDescription className="text-gray-400">
                   All registered gym members
                 </CardDescription>
@@ -982,7 +991,7 @@ export default function AdminDashboard() {
                       .map((member) => (
                         <TableRow
                           key={member.id}
-                          className={member.overdue ? "bg-red-900/30" : ""}
+                          className={member.overdue ? "bg-brand/20" : ""}
                         >
                           <TableCell className="font-medium text-white">
                             {member.full_name}
@@ -1010,7 +1019,7 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell
                             className={
-                              member.overdue ? "text-red-400" : "text-gray-300"
+                              member.overdue ? "text-brand" : "text-gray-300"
                             }
                           >
                             {member.subscription_status}
@@ -1019,6 +1028,20 @@ export default function AdminDashboard() {
                       ))}
                   </TableBody>
                 </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          {/* Media Manager */}
+          <TabsContent value="media" className="space-y-6">
+            <Card className="bg-gray-900 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-brand">Media Manager</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Upload and manage media files
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MediaManager />
               </CardContent>
             </Card>
           </TabsContent>

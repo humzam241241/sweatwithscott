@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,7 +16,7 @@ html {
 }
 
 body {
-  font-family: "Montserrat", Arial, sans-serif;
+  font-family: "Inter", sans-serif;
   background: var(--cave-gray);
   color: #191919;
 }
@@ -38,13 +38,13 @@ video {
     @apply text-2xl font-semibold leading-snug;
   }
   button {
-    @apply px-6 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-700;
+    @apply px-6 py-2 rounded-md bg-brand text-white font-semibold transition-transform duration-300 ease-out hover:bg-brand-dark hover:scale-105 hover:shadow-[0_0_15px_rgba(201,0,21,0.5)];
   }
   img {
     @apply rounded-md;
   }
   section {
-    @apply py-16 px-4 md:px-8;
+    @apply py-16 px-4 md:px-8 scroll-mt-16;
   }
 }
 

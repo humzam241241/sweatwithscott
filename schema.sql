@@ -84,3 +84,10 @@ CREATE TABLE users (
     password TEXT,
     role TEXT
   );
+
+CREATE TABLE media (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT NOT NULL,
+    type TEXT NOT NULL,
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
