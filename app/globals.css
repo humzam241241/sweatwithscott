@@ -208,7 +208,7 @@ video {
 /* Apple-inspired baseline styles */
 .schedule, .media-grid, .card-grid {
   max-width: 1200px;
-  margin: 100px auto 50px auto;
+  margin: 50px auto;
   padding: 20px;
   font-family: 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
 }
@@ -241,9 +241,9 @@ video {
 
 .card img, .card video {
   width: 100%;
-  height: 250px;
+  height: 300px;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
 .card:hover img, .card:hover video {
@@ -259,21 +259,41 @@ video {
 
 .card-overlay {
   position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.6);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.65);
   color: #fff;
+  padding: 15px;
   opacity: 0;
-  padding: 20px;
-  text-align: center;
-  transition: opacity 0.3s ease;
+  transform: translateY(100%);
+  transition: all 0.3s ease;
 }
 
 .card:hover .card-overlay {
   opacity: 1;
+  transform: translateY(0);
+}
+
+.card-overlay h3 {
+  margin: 0 0 5px;
+  font-size: 1.2rem;
+}
+
+.card-overlay p {
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.card-link {
+  display: inline-block;
+  color: #fff;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.card-link:hover {
+  text-decoration: none;
 }
 
 /* Event blocks */

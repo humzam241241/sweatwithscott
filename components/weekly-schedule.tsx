@@ -45,25 +45,25 @@ interface TooltipData {
 }
 
 export default function WeeklySchedule() {
-  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
   const showTooltip = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     item: ClassItem
   ) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect()
     setTooltip({
       x: rect.left + rect.width / 2,
       y: rect.top + window.scrollY - 10,
-      item
-    });
-  };
+      item,
+    })
+  }
 
-  const hideTooltip = () => setTooltip(null);
+  const hideTooltip = () => setTooltip(null)
 
   return (
-    <div className="schedule relative">
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+    <div className="schedule relative overflow-x-auto">
+      <div className="min-w-[700px] grid grid-cols-7 gap-4">
         {Object.entries(weeklySchedule).map(([day, classes]) => (
           <div key={day}>
             <h3 className="text-center font-semibold mb-2">{day}</h3>
@@ -72,12 +72,13 @@ export default function WeeklySchedule() {
                 <Link
                   key={i}
                   href="/register"
-                  className="event"
+                  className="event flex flex-col rounded-lg"
                   style={{ backgroundColor: c.color || "#c90015" }}
                   onMouseEnter={(e) => showTooltip(e, c)}
                   onMouseLeave={hideTooltip}
                 >
-                  {c.time} - {c.name}
+                  <span className="font-semibold">{c.time}</span>
+                  <span>{c.name}</span>
                 </Link>
               ))}
             </div>
@@ -87,15 +88,20 @@ export default function WeeklySchedule() {
       {tooltip && (
         <div
           className="tooltip"
-          style={{ left: tooltip.x, top: tooltip.y, display: "block", position: "fixed" }}
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+            display: "block",
+            position: "fixed",
+          }}
         >
-          <div>{tooltip.item.name}</div>
+          <div className="font-semibold">{tooltip.item.name}</div>
           <div>{tooltip.item.time}</div>
           <div>{tooltip.item.spots} spots left</div>
           {tooltip.item.coach && <div>Coach: {tooltip.item.coach}</div>}
         </div>
       )}
     </div>
-  );
+  )
 }
 

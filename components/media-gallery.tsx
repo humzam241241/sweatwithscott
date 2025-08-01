@@ -36,9 +36,9 @@ export default function MediaGallery() {
             onClick={() => setActive(item)}
           >
             {item.type === "image" ? (
-              <img src={item.src} alt="" />
+              <img src={item.src} alt="" className="w-full h-full object-cover" />
             ) : (
-              <video src={item.src} muted loop />
+              <video src={item.src} muted loop className="w-full h-full object-cover" />
             )}
           </div>
         ))}

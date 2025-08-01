@@ -1,5 +1,3 @@
-import Link from "next/link"
-
 export default function CoachesPage() {
   return (
     <div className="min-h-screen">
@@ -39,16 +37,18 @@ export default function CoachesPage() {
             link: "/coach-scott",
           },
         ].map((coach) => (
-          <Link key={coach.name} href={coach.link} className="card">
+          <div key={coach.name} className="card">
             <img src={coach.img} alt={coach.name} />
             <div className="card-info">
-              <h4>{coach.name}</h4>
+              <h3>{coach.name}</h3>
               <p className="text-sm text-gray-600">{coach.role}</p>
             </div>
             <div className="card-overlay">
+              <h3>{coach.name}</h3>
               <p>{coach.bio}</p>
+              <a href={coach.link} className="card-link">Learn More</a>
             </div>
-          </Link>
+          </div>
         ))}
       </section>
 
