@@ -51,17 +51,12 @@ CREATE TABLE class_instances (
 
 CREATE TABLE classes (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
+          day TEXT NOT NULL,
           name TEXT NOT NULL,
-          description TEXT,
-          instructor TEXT,
-          duration INTEGER DEFAULT 60,
-          max_capacity INTEGER DEFAULT 20,
-          price DECIMAL(10,2) DEFAULT 25.00,
-          day_of_week TEXT,
-          start_time TEXT,
-          end_time TEXT,
-          is_active INTEGER DEFAULT 1,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          time TEXT NOT NULL,
+          spots INTEGER DEFAULT 0,
+          coach TEXT,
+          color TEXT
       );
 
 CREATE TABLE payments (

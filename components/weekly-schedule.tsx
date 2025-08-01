@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface ClassItem {
+  id: number;
+  day: string;
   name: string;
   time: string;
   spots: number;
@@ -11,66 +13,74 @@ interface ClassItem {
   color?: string;
 }
 
-const weeklySchedule: Record<string, ClassItem[]> = {
-  Monday: [
-    { name: "Beginner Boxing", time: "6:00 AM", spots: 10, coach: "Kyle McLaughlin", color: "#c90015" },
-    { name: "Open Gym", time: "5:00 PM", spots: 20, color: "#555" }
-  ],
-  Tuesday: [
-    { name: "Strength & Conditioning", time: "6:00 AM", spots: 15, coach: "Humza Muhammad", color: "#f57c00" },
-    { name: "Sparring", time: "7:00 PM", spots: 12, coach: "Scott McDonald", color: "#8b1e1e" }
-  ],
-  Wednesday: [
-    { name: "Open Gym", time: "6:00 AM", spots: 20, color: "#555" },
-    { name: "Boxing", time: "6:00 PM", spots: 18, coach: "Kyle McLaughlin", color: "#c90015" }
-  ],
-  Thursday: [
-    { name: "Strength & Conditioning", time: "6:00 AM", spots: 15, coach: "Humza Muhammad", color: "#f57c00" },
-    { name: "Beginner Boxing", time: "7:00 PM", spots: 16, coach: "Kyle McLaughlin", color: "#c90015" }
-  ],
-  Friday: [
-    { name: "Open Gym", time: "6:00 AM", spots: 20, color: "#555" },
-    { name: "Sparring", time: "5:00 PM", spots: 12, coach: "Scott McDonald", color: "#8b1e1e" }
-  ],
-  Saturday: [
-    { name: "Junior Jabbers", time: "10:00 AM", spots: 20, coach: "Kyle McLaughlin", color: "#29b6f6" }
-  ],
-  Sunday: []
-};
-
 interface TooltipData {
   x: number;
   y: number;
   item: ClassItem;
 }
 
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 export default function WeeklySchedule() {
-  const [tooltip, setTooltip] = useState<TooltipData | null>(null)
+  const [schedule, setSchedule] = useState<Record<string, ClassItem[]>>({});
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+
+  useEffect(() => {
+    const loadSchedule = async () => {
+      const resp = await fetch("/api/schedule");
+      if (resp.ok) {
+        const data: ClassItem[] = await resp.json();
+        const grouped: Record<string, ClassItem[]> = {};
+        data.forEach((c) => {
+          if (!grouped[c.day]) grouped[c.day] = [];
+          grouped[c.day].push(c);
+        });
+        // sort classes in each day by time
+        Object.keys(grouped).forEach((d) => {
+          grouped[d].sort(
+            (a, b) =>
+              new Date(`1970-01-01 ${a.time}`).getTime() -
+              new Date(`1970-01-01 ${b.time}`).getTime()
+          );
+        });
+        setSchedule(grouped);
+      }
+    };
+    loadSchedule();
+  }, []);
 
   const showTooltip = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
     item: ClassItem
   ) => {
-    const rect = e.currentTarget.getBoundingClientRect()
+    const rect = e.currentTarget.getBoundingClientRect();
     setTooltip({
       x: rect.left + rect.width / 2,
       y: rect.top + window.scrollY - 10,
       item,
-    })
-  }
+    });
+  };
 
-  const hideTooltip = () => setTooltip(null)
+  const hideTooltip = () => setTooltip(null);
 
   return (
     <div className="schedule relative overflow-x-auto">
       <div className="min-w-[700px] grid grid-cols-7 gap-4">
-        {Object.entries(weeklySchedule).map(([day, classes]) => (
+        {days.map((day) => (
           <div key={day}>
             <h3 className="text-center font-semibold mb-2">{day}</h3>
             <div className="flex flex-col gap-2">
-              {classes.map((c, i) => (
+              {(schedule[day] || []).map((c) => (
                 <Link
-                  key={i}
+                  key={c.id}
                   href="/register"
                   className="event flex flex-col rounded-lg"
                   style={{ backgroundColor: c.color || "#c90015" }}
@@ -102,6 +112,5 @@ export default function WeeklySchedule() {
         </div>
       )}
     </div>
-  )
+  );
 }
-
