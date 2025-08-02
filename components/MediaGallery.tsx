@@ -17,6 +17,7 @@ interface MediaItem {
 export default function MediaGallery() {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [category, setCategory] = useState("all");
+  const [lightbox, setLightbox] = useState<MediaItem | null>(null);
 
   useEffect(() => {
     fetch("/api/media")
@@ -35,10 +36,10 @@ export default function MediaGallery() {
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            className={`rounded-full px-4 py-2 text-sm ${
+            className={`rounded-full px-4 py-2 text-sm transition-colors ${
               category === cat
-                ? "bg-black text-white"
-                : "bg-gray-200 text-gray-600"
+                ? "bg-brand text-white"
+                : "bg-brand-light text-brand-dark"
             }`}
           >
             {cat}
@@ -54,13 +55,16 @@ export default function MediaGallery() {
       >
         {filtered.map((item) => (
           <SwiperSlide key={item.id}>
-            <div className="overflow-hidden rounded-xl">
+            <button
+              onClick={() => setLightbox(item)}
+              className="block w-full overflow-hidden rounded-xl focus:outline-none"
+            >
               <img
                 src={item.fileUrl}
                 alt={item.title}
                 className="h-64 w-full object-cover"
               />
-            </div>
+            </button>
           </SwiperSlide>
         ))}
       </Swiper>
@@ -69,6 +73,18 @@ export default function MediaGallery() {
           View All Media
         </Link>
       </div>
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setLightbox(null)}
+        >
+          <img
+            src={lightbox.fileUrl}
+            alt={lightbox.title}
+            className="max-h-full max-w-full"
+          />
+        </div>
+      )}
     </section>
   );
 }

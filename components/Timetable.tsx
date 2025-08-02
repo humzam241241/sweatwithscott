@@ -44,6 +44,7 @@ export default function Timetable() {
           right: "dayGridMonth,timeGridWeek,timeGridDay",
         }}
         events={events}
+        eventColor="#C90015"
       />
     </div>
   );

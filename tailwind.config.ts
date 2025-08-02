@@ -12,15 +12,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ✅ Your custom brand colors
-        brand: "#c90015",
-        "brand-dark": "#a70011",
+        // Brand palette
+        brand: {
+          DEFAULT: "#C90015",
+          accent: "#FFD700",
+          dark: "#181818",
+          light: "#FFFFFF",
+        },
 
-        // ✅ Keep Tailwind's red shades but override 600/700 for consistency
+        // Keep Tailwind's red shades but override 600/700 for consistency
         red: {
           ...require("tailwindcss/colors").red,
-          600: "#c90015",
-          700: "#a70011",
+          600: "#C90015",
+          700: "#A70011",
         },
 
         // ✅ Existing design system variables
