@@ -42,13 +42,11 @@ export default async function Home() {
   const classes = await getClasses();
   const coaches = await getCoaches();
 
+  // Placeholder future filtering logic for upcoming classes
+  const upcomingClasses = Array.isArray(classes) ? classes : [];
+
   return (
     <main className="bg-white text-black">
-      {/* 🚀 Tailwind Test Box */}
-      <div className="bg-brand text-white p-4 rounded-lg text-center">
-        🚀 Tailwind brand color is working!
-      </div>
-
       {/* Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center">
         {heroType === "video" ? (
@@ -69,15 +67,15 @@ export default async function Home() {
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 to-black/40" />
         <div className="relative z-10 text-center px-4">
-          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white opacity-0 animate-in fade-in slide-in-from-bottom-4">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white">
             Welcome to The Cave Boxing
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-white opacity-0 animate-in fade-in slide-in-from-bottom-4 delay-150">
+          <p className="text-xl md:text-2xl mb-8 text-white">
             Train Hard. Fight Smart. Become Unstoppable.
           </p>
           <Link
             href="#classes"
-            className="inline-block bg-brand hover:bg-brand-dark text-white px-6 py-3 rounded opacity-0 animate-in fade-in slide-in-from-bottom-4 delay-300 transition-brand"
+            className="inline-block bg-brand hover:bg-brand-dark text-white px-6 py-3 rounded"
           >
             Explore Classes
           </Link>
@@ -85,38 +83,37 @@ export default async function Home() {
       </section>
 
       {/* Media Section */}
-      <section
-        id="media"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="media" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-8 text-brand">Media</h2>
         <MediaGallery />
       </section>
 
       {/* Classes Section */}
-      <section
-        id="classes"
-        className="min-h-screen p-8 flex flex-col justify-center"
-      >
+      <section id="classes" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-4 text-brand">Classes</h2>
         <p className="mb-6 text-lg max-w-xl">
           From Bootcamp to Beginner Boxing, our classes are designed for all skill
           levels to build technique and fitness.
         </p>
         <div className="card-grid mb-6">
-          {classes.map((cls: any) => (
-            <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
-              <img
-                src={cls.image || "/images/gym-training.png"}
-                alt={cls.name}
-              />
-              <div className="card-overlay">
-                <h3>{cls.name}</h3>
-                <p>{cls.description}</p>
-                <span className="card-link">Learn More</span>
-              </div>
-            </Link>
-          ))}
+          {upcomingClasses.length > 0 ? (
+            upcomingClasses.map((cls: any) => (
+              <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
+                <img
+                  src={cls.image || "/images/gym-training.png"}
+                  alt={cls.name}
+                  className="card-img"
+                />
+                <div className="card-overlay">
+                  <h3>{cls.name}</h3>
+                  <p>{cls.description}</p>
+                  <span className="card-link">Learn More</span>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <p className="text-gray-500">No classes available at the moment.</p>
+          )}
         </div>
         <Link href="/classes" className="text-brand underline font-semibold">
           View All Classes
@@ -124,55 +121,48 @@ export default async function Home() {
       </section>
 
       {/* Coaches Section */}
-      <section
-        id="coaches"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="coaches" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-4 text-brand">Coaches</h2>
         <p className="mb-6 text-lg max-w-xl">
           Meet the experienced team that will push you to your limits and guide your
           boxing journey.
         </p>
         <div className="card-grid">
-          {coaches.map((coach: any) => (
-            <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="card">
-              <img
-                src={coach.image || "/images/coach-humza.png"}
-                alt={coach.name}
-              />
-              <div className="card-overlay">
-                <h3>{coach.name}</h3>
-                <p>{coach.role}</p>
-                <span className="card-link">View Bio</span>
-              </div>
-            </Link>
-          ))}
+          {coaches.length > 0 ? (
+            coaches.map((coach: any) => (
+              <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="card">
+                <img
+                  src={coach.image || "/images/coach-placeholder.png"}
+                  alt={coach.name}
+                  className="card-img"
+                />
+                <div className="card-overlay">
+                  <h3>{coach.name}</h3>
+                  <p>{coach.role}</p>
+                  <span className="card-link">View Bio</span>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <p className="text-gray-500">No coaches found.</p>
+          )}
         </div>
       </section>
 
       {/* Schedule Section */}
-      <section
-        id="schedule"
-        className="min-h-screen p-8 flex flex-col justify-center"
-      >
+      <section id="schedule" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-8 text-brand">Schedule</h2>
         <WeeklySchedule />
       </section>
 
       {/* Membership Section */}
-      <section
-        id="membership"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="membership" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-8 text-brand">Membership</h2>
         <MembershipPackages />
       </section>
 
       {/* About Section */}
-      <section
-        id="about"
-        className="min-h-screen p-8 flex flex-col justify-center"
-      >
+      <section id="about" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-4 text-brand">About</h2>
         <p className="mb-6 text-lg max-w-2xl">
           The Cave Boxing is a community where fighters of all levels come together
@@ -184,10 +174,7 @@ export default async function Home() {
       </section>
 
       {/* Contact Section */}
-      <section
-        id="contact"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="contact" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-8 text-brand">Contact</h2>
         <ContactForm />
       </section>
