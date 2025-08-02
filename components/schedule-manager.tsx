@@ -62,17 +62,30 @@ export default function ScheduleManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("/api/schedule", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    if (res.ok) {
-      toast.success(form.id ? "Class updated" : "Class added");
-      setForm(emptyForm);
-      await load();
-      mutate("/api/schedule");
-    } else {
+    try {
+      const res = await fetch("/api/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: form.id,
+          day: form.day,
+          name: form.name,
+          time: form.time,
+          spots: form.spots,
+          coach: form.coach,
+          color: form.color,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(form.id ? "Class updated" : "Class added");
+        setForm(emptyForm);
+        await load();
+        mutate("/api/schedule");
+      } else {
+        toast.error(data.error || "Failed to save class");
+      }
+    } catch {
       toast.error("Failed to save class");
     }
   };
