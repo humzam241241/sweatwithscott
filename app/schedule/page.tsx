@@ -47,7 +47,9 @@ export default function SchedulePage() {
       </section>
 
       {/* Schedule */}
-      <WeeklySchedule />
+      <section className="max-w-6xl mx-auto py-12 px-4">
+        <WeeklySchedule />
+      </section>
 
     </div>
   )
