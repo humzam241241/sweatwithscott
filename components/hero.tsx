@@ -14,7 +14,7 @@ export default function Hero() {
       >
         <source src="/videos/hero.mp4" type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-brand-dark/70" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -29,7 +29,7 @@ export default function Hero() {
         </p>
         <Link
           href="/membership"
-          className="mt-8 rounded bg-white/90 px-8 py-3 font-medium text-black hover:bg-white"
+          className="mt-8 rounded bg-brand px-8 py-3 font-medium text-white transition-colors hover:bg-brand-accent hover:text-brand-dark"
         >
           Join Now
         </Link>
