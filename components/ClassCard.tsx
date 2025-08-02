@@ -18,7 +18,7 @@ export default function ClassCard({ cls }: { cls: Class }) {
         className="overflow-hidden rounded-xl bg-white shadow-lg transition-transform duration-300"
       >
         <img
-          src={cls.image || "/images/default.png"}
+          src={cls.image || "/images/boxing-training.png"}
           alt={cls.name}
           className="h-48 w-full object-cover"
         />

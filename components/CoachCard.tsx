@@ -19,7 +19,7 @@ export default function CoachCard({ coach }: { coach: Coach }) {
         className="rounded-xl bg-white p-6 text-center shadow-lg transition-transform duration-300"
       >
         <img
-          src={coach.image || "/images/default.png"}
+          src={coach.image || "/placeholder-user.jpg"}
           alt={coach.name}
           className="mx-auto mb-4 h-32 w-32 rounded-full object-cover border-4 border-brand-accent"
         />

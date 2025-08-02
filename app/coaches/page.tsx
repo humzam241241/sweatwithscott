@@ -8,7 +8,19 @@ async function getCoaches() {
 }
 
 export default async function CoachesPage() {
-  const coaches = await getCoaches();
+  const fetched = await getCoaches();
+  const coaches = fetched.map((coach: any) =>
+    coach.name?.toLowerCase().includes("shannon")
+      ? {
+          ...coach,
+          slug: "humza-muhammad",
+          name: "Humza Muhammad",
+          role: "Coach & Trainer",
+          bio: "Dedicated boxing coach passionate about helping members reach peak performance.",
+          image: "/images/coach-humza.png",
+        }
+      : coach
+  );
   return (
     <div className="min-h-screen">
       <header className="cave-hero py-20">
