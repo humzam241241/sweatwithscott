@@ -30,9 +30,33 @@ export function getDb() {
         image TEXT,
         coach_id INTEGER,
         schedule TEXT,
+        color TEXT,
+        day TEXT,
+        time TEXT,
+        spots INTEGER,
+        price REAL,
         FOREIGN KEY (coach_id) REFERENCES coaches(id)
       );
     `);
+
+    // Ensure new columns exist for older databases
+    const classCols = db.prepare("PRAGMA table_info(classes)").all() as { name: string }[];
+    const colNames = classCols.map((c) => c.name);
+    if (!colNames.includes("price")) {
+      db.exec("ALTER TABLE classes ADD COLUMN price REAL");
+    }
+    if (!colNames.includes("color")) {
+      db.exec("ALTER TABLE classes ADD COLUMN color TEXT");
+    }
+    if (!colNames.includes("day")) {
+      db.exec("ALTER TABLE classes ADD COLUMN day TEXT");
+    }
+    if (!colNames.includes("time")) {
+      db.exec("ALTER TABLE classes ADD COLUMN time TEXT");
+    }
+    if (!colNames.includes("spots")) {
+      db.exec("ALTER TABLE classes ADD COLUMN spots INTEGER");
+    }
 
     seedIfEmpty();
   }
@@ -69,7 +93,7 @@ function seedIfEmpty() {
   if (classCount.count === 0) {
     const coaches = db.prepare("SELECT id FROM coaches LIMIT 2").all() as { id: number }[];
     const insertClass = db.prepare(
-      "INSERT INTO classes (slug, name, description, image, coach_id, schedule) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO classes (slug, name, description, image, coach_id, schedule, color, day, time, spots, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     insertClass.run(
       "beginner-boxing",
@@ -77,7 +101,12 @@ function seedIfEmpty() {
       "Learn boxing fundamentals in a supportive environment.",
       "/images/logo.png",
       coaches[0]?.id ?? null,
-      JSON.stringify([{ day: "Mon", time: "6:00 PM", spots: 10 }])
+      JSON.stringify([{ day: "Mon", time: "6:00 PM", spots: 10 }]),
+      null,
+      "Mon",
+      "6:00 PM",
+      10,
+      0
     );
     insertClass.run(
       "strength-conditioning",
@@ -85,7 +114,12 @@ function seedIfEmpty() {
       "Build strength and improve conditioning.",
       "/images/logo.png",
       coaches[1]?.id ?? null,
-      JSON.stringify([{ day: "Wed", time: "6:00 PM", spots: 10 }])
+      JSON.stringify([{ day: "Wed", time: "6:00 PM", spots: 10 }]),
+      null,
+      "Wed",
+      "6:00 PM",
+      10,
+      0
     );
   }
 }
