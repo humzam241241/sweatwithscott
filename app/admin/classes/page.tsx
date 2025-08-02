@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 
 interface ClassType {
-  id?: number;
   slug: string;
   name: string;
   description: string;
@@ -31,8 +29,10 @@ export default function AdminSchedulePage() {
     time: "",
     spots: 0,
   });
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [editData, setEditData] = useState<Partial<ClassType>>({});
 
-  // Fetch classes from API
+  // Fetch all classes
   const fetchClasses = async () => {
     try {
       setLoading(true);
@@ -47,16 +47,27 @@ export default function AdminSchedulePage() {
     }
   };
 
-  // Create new class
+  // Create a new class instantly
   const createClass = async () => {
     try {
+      const payload = {
+        ...formData,
+        slug: formData.name?.toLowerCase().replace(/\s+/g, "-") || "",
+      };
+
       const res = await fetch("/api/classes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
+
       if (!res.ok) throw new Error("Failed to create class");
-      await fetchClasses();
+      const { slug } = await res.json();
+
+      // Update UI instantly
+      setClasses((prev) => [...prev, { ...payload, slug } as ClassType]);
+
+      // Reset form
       setFormData({
         name: "",
         description: "",
@@ -68,33 +79,43 @@ export default function AdminSchedulePage() {
         time: "",
         spots: 0,
       });
+
+      // Background refresh
+      fetchClasses();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Edit class
-  const editClass = async (id: number, updatedData: Partial<ClassType>) => {
+  // Save inline edit
+  const saveEdit = async (slug: string) => {
     try {
-      const res = await fetch(`/api/classes/${id}`, {
+      const res = await fetch(`/api/classes/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedData),
+        body: JSON.stringify(editData),
       });
       if (!res.ok) throw new Error("Failed to update class");
-      await fetchClasses();
+
+      setClasses((prev) =>
+        prev.map((cls) =>
+          cls.slug === slug ? { ...cls, ...editData } : cls
+        )
+      );
+      setEditingSlug(null);
+      setEditData({});
     } catch (err) {
       console.error(err);
     }
   };
 
   // Delete class
-  const deleteClass = async (id: number) => {
+  const deleteClass = async (slug: string) => {
     if (!confirm("Are you sure you want to delete this class?")) return;
     try {
-      const res = await fetch(`/api/classes/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/classes/${slug}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete class");
-      await fetchClasses();
+      setClasses((prev) => prev.filter((cls) => cls.slug !== slug));
     } catch (err) {
       console.error(err);
     }
@@ -176,27 +197,98 @@ export default function AdminSchedulePage() {
         ) : classes.length > 0 ? (
           <ul className="divide-y">
             {classes.map((cls) => (
-              <li key={cls.id} className="py-4 flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">{cls.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {cls.day} at {cls.time} — {cls.spots} spots
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    href={`/admin/schedule/edit/${cls.id}`}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => deleteClass(cls.id!)}
-                    className="px-3 py-1 bg-red-600 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
+              <li
+                key={cls.slug}
+                className="py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4"
+              >
+                {editingSlug === cls.slug ? (
+                  <div className="flex flex-col gap-2 w-full">
+                    <input
+                      className="border p-2 rounded"
+                      value={editData.name ?? cls.name}
+                      onChange={(e) =>
+                        setEditData({ ...editData, name: e.target.value })
+                      }
+                    />
+                    <textarea
+                      className="border p-2 rounded"
+                      value={editData.description ?? cls.description}
+                      onChange={(e) =>
+                        setEditData({
+                          ...editData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                    <div className="flex gap-2">
+                      <input
+                        className="border p-2 rounded"
+                        value={editData.day ?? cls.day}
+                        onChange={(e) =>
+                          setEditData({ ...editData, day: e.target.value })
+                        }
+                      />
+                      <input
+                        className="border p-2 rounded"
+                        value={editData.time ?? cls.time}
+                        onChange={(e) =>
+                          setEditData({ ...editData, time: e.target.value })
+                        }
+                      />
+                      <input
+                        type="number"
+                        className="border p-2 rounded"
+                        value={editData.spots ?? cls.spots}
+                        onChange={(e) =>
+                          setEditData({
+                            ...editData,
+                            spots: Number(e.target.value),
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => saveEdit(cls.slug)}
+                        className="px-4 py-1 bg-green-600 text-white rounded"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingSlug(null)}
+                        className="px-4 py-1 bg-gray-400 text-white rounded"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="font-semibold">{cls.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {cls.day} at {cls.time} — {cls.spots} spots
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingSlug(cls.slug);
+                          setEditData(cls);
+                        }}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteClass(cls.slug)}
+                        className="px-3 py-1 bg-red-600 text-white rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>
