@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -417,6 +418,14 @@ export default function AdminDashboard() {
             Comprehensive gym management - track classes, attendance, and
             payments
           </p>
+          <div className="flex space-x-4 mt-4">
+            <Link href="/admin/classes" className="text-red-500 underline">
+              Manage Classes
+            </Link>
+            <Link href="/admin/coaches" className="text-red-500 underline">
+              Manage Coaches
+            </Link>
+          </div>
         </div>
 
         {/* Quick Stats */}

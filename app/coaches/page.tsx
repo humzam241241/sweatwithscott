@@ -1,8 +1,16 @@
-export default function CoachesPage() {
+import Link from "next/link";
+
+async function getCoaches() {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export default async function CoachesPage() {
+  const coaches = await getCoaches();
   return (
     <div className="min-h-screen">
-
-      {/* Hero Section */}
       <header className="cave-hero py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-black mb-6">Meet Our Coaches</h1>
@@ -12,46 +20,18 @@ export default function CoachesPage() {
         </div>
       </header>
 
-      {/* Coaches Grid */}
       <section className="card-grid">
-        {[
-          {
-            name: "Kyle McLaughlin",
-            role: "Head Boxing Coach",
-            img: "/images/kyle-mclaughlin.png",
-            bio: "Former national champion with over 15 years of coaching experience.",
-            link: "/coach-kyle",
-          },
-          {
-            name: "Humza Muhammad",
-            role: "Strength & Conditioning Coach",
-            img: "/images/coach-humza.png",
-            bio: "Certified trainer specialising in power development and conditioning.",
-            link: "/coach-humza",
-          },
-          {
-            name: "Scott McDonald",
-            role: "Boxing & Fitness Coach",
-            img: "/images/coach-scott.png",
-            bio: "Professional fighter focused on technique and cardio training.",
-            link: "/coach-scott",
-          },
-        ].map((coach) => (
-          <div key={coach.name} className="card">
-            <img src={coach.img} alt={coach.name} />
-            <div className="card-info">
-              <h3>{coach.name}</h3>
-              <p className="text-sm text-gray-600">{coach.role}</p>
-            </div>
+        {coaches.map((coach: any) => (
+          <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="card">
+            <img src={coach.image || "/images/coach-humza.png"} alt={coach.name} />
             <div className="card-overlay">
               <h3>{coach.name}</h3>
-              <p>{coach.bio}</p>
-              <a href={coach.link} className="card-link">Learn More</a>
+              <p>{coach.role}</p>
+              <span className="card-link">View Bio</span>
             </div>
-          </div>
+          </Link>
         ))}
       </section>
-
     </div>
-  )
+  );
 }

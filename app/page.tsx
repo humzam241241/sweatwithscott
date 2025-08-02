@@ -6,7 +6,21 @@ import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import MediaGallery from "@/components/media-gallery";
 
-export default function Home() {
+async function getClasses() {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+async function getCoaches() {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export default async function Home() {
   const publicDir = path.join(process.cwd(), "public");
   let heroType: "video" | "image" | null = null;
   let heroSrc = "";
@@ -24,6 +38,9 @@ export default function Home() {
       }
     } catch {}
   }
+
+  const classes = await getClasses();
+  const coaches = await getCoaches();
 
   return (
     <main className="bg-white text-black">
@@ -74,6 +91,21 @@ export default function Home() {
         <p className="mb-6 text-lg max-w-xl">
           From Bootcamp to Beginner Boxing, our classes are designed for all skill levels to build technique and fitness.
         </p>
+        <div className="card-grid mb-6">
+          {classes.map((cls: any) => (
+            <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
+              <img
+                src={cls.image || "/images/gym-training.png"}
+                alt={cls.name}
+              />
+              <div className="card-overlay">
+                <h3>{cls.name}</h3>
+                <p>{cls.description}</p>
+                <span className="card-link">Learn More</span>
+              </div>
+            </Link>
+          ))}
+        </div>
         <Link href="/classes" className="text-red-600 underline font-semibold">
           View All Classes
         </Link>
@@ -84,9 +116,21 @@ export default function Home() {
         <p className="mb-6 text-lg max-w-xl">
           Meet the experienced team that will push you to your limits and guide your boxing journey.
         </p>
-        <Link href="/coaches" className="text-red-600 underline font-semibold">
-          Meet Our Coaches
-        </Link>
+        <div className="card-grid">
+          {coaches.map((coach: any) => (
+            <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="card">
+              <img
+                src={coach.image || "/images/coach-humza.png"}
+                alt={coach.name}
+              />
+              <div className="card-overlay">
+                <h3>{coach.name}</h3>
+                <p>{coach.role}</p>
+                <span className="card-link">View Bio</span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section id="schedule" className="min-h-screen p-8 flex flex-col justify-center">
