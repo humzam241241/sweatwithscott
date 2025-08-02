@@ -32,13 +32,15 @@ const days = [
 
 export default function WeeklySchedule() {
   const fetcher = (url: string) => fetch(url).then((r) => r.json());
-  const { data: schedule } = useSWR<Record<string, ClassItem[]>>(
-    "/api/schedule",
-    fetcher,
-    {
-      revalidateOnFocus: true,
-    }
-  );
+  const { data: classes } = useSWR<ClassItem[]>("/api/classes", fetcher, {
+    revalidateOnFocus: true,
+  });
+  const schedule: Record<string, ClassItem[]> = {};
+  days.forEach((d) => (schedule[d] = []));
+  (classes || []).forEach((c) => {
+    if (!schedule[c.day]) schedule[c.day] = [];
+    schedule[c.day].push(c);
+  });
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
   const showTooltip = (

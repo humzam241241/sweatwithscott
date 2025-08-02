@@ -37,7 +37,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import MediaManager from "@/components/media-manager";
-import ScheduleManager from "@/components/schedule-manager";
+import { toast } from "sonner";
 
 interface GymStats {
   total_members: number;
@@ -106,6 +106,26 @@ interface MemberData {
   overdue: boolean;
 }
 
+interface ScheduleClass {
+  id?: number;
+  day: string;
+  name: string;
+  time: string;
+  spots: number;
+  coach?: string;
+  color?: string;
+}
+
+const scheduleDays = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<GymStats>({
@@ -129,9 +149,19 @@ export default function AdminDashboard() {
   const [memberSearch, setMemberSearch] = useState("");
   const [memberSortAsc, setMemberSortAsc] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [classForm, setClassForm] = useState<ScheduleClass>({
+    day: "Monday",
+    name: "",
+    time: "",
+    spots: 0,
+    coach: "",
+    color: "",
+  });
+  const [classes, setClasses] = useState<ScheduleClass[]>([]);
 
   useEffect(() => {
     fetchAdminData();
+    loadClasses();
   }, []);
 
   const fetchAdminData = async () => {
@@ -204,6 +234,66 @@ export default function AdminDashboard() {
       console.error("Error fetching admin data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadClasses = async () => {
+    try {
+      const res = await fetch("/api/classes");
+      if (res.ok) {
+        const data = await res.json();
+        setClasses(data);
+      }
+    } catch (err) {
+      console.error("Failed to load classes", err);
+    }
+  };
+
+  const handleClassSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const method = classForm.id ? "PUT" : "POST";
+    try {
+      const res = await fetch("/api/classes", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(classForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(classForm.id ? "Class updated" : "Class added");
+        setClassForm({
+          day: "Monday",
+          name: "",
+          time: "",
+          spots: 0,
+          coach: "",
+          color: "",
+        });
+        await loadClasses();
+      } else {
+        toast.error(data.error || "Failed to save class");
+      }
+    } catch {
+      toast.error("Failed to save class");
+    }
+  };
+
+  const handleClassEdit = (cls: ScheduleClass) => {
+    setClassForm({ ...cls });
+  };
+
+  const handleClassDelete = async (id?: number) => {
+    if (!id) return;
+    const res = await fetch("/api/classes", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) {
+      toast.success("Class deleted");
+      await loadClasses();
+    } else {
+      toast.error("Failed to delete class");
     }
   };
 
@@ -1049,7 +1139,156 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScheduleManager />
+              <form onSubmit={handleClassSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <div>
+                    <label className="block text-sm mb-1">Day</label>
+                    <select
+                      value={classForm.day}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, day: e.target.value })
+                      }
+                      className="w-full p-2 rounded bg-gray-800 text-white"
+                    >
+                      {scheduleDays.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm mb-1">Class Name</label>
+                    <Input
+                      value={classForm.name}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, name: e.target.value })
+                      }
+                      className="bg-gray-800 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">Time</label>
+                    <Input
+                      value={classForm.time}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, time: e.target.value })
+                      }
+                      placeholder="6:00 AM"
+                      className="bg-gray-800 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">Spots</label>
+                    <Input
+                      type="number"
+                      value={classForm.spots}
+                      onChange={(e) =>
+                        setClassForm({
+                          ...classForm,
+                          spots: parseInt(e.target.value || "0"),
+                        })
+                      }
+                      className="bg-gray-800 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">Coach</label>
+                    <Input
+                      value={classForm.coach}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, coach: e.target.value })
+                      }
+                      className="bg-gray-800 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm mb-1">Color</label>
+                    <input
+                      type="color"
+                      value={classForm.color || "#c90015"}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, color: e.target.value })
+                      }
+                      className="w-full h-10 p-1 rounded bg-gray-800"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" className="bg-red-600 hover:bg-red-700">
+                    {classForm.id ? "Update" : "Add"} Class
+                  </Button>
+                  {classForm.id && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() =>
+                        setClassForm({
+                          day: "Monday",
+                          name: "",
+                          time: "",
+                          spots: 0,
+                          coach: "",
+                          color: "",
+                        })
+                      }
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </form>
+
+              <Table className="bg-gray-900 mt-6">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Day</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Spots</TableHead>
+                    <TableHead>Coach</TableHead>
+                    <TableHead>Color</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {classes.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell>{c.day}</TableCell>
+                      <TableCell>{c.time}</TableCell>
+                      <TableCell>{c.name}</TableCell>
+                      <TableCell>{c.spots}</TableCell>
+                      <TableCell>{c.coach}</TableCell>
+                      <TableCell>
+                        <span
+                          className="inline-block w-4 h-4 rounded"
+                          style={{ backgroundColor: c.color || "#c90015" }}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleClassEdit(c)}
+                          className="text-white"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleClassDelete(c.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
