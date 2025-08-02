@@ -12,6 +12,9 @@ import { useData } from "@/components/ui/data-provider";
 export default function Home() {
   const { classes, coaches, loading } = useData();
 
+  console.log("Fetched classes:", classes);
+  console.log("Fetched coaches:", coaches);
+
   if (loading) return <p>Loading...</p>;
 
   const displayedClasses = classes.slice(0, 4);
@@ -29,6 +32,80 @@ export default function Home() {
         : coach
     )
     .slice(0, 3);
+  const classPlaceholders = [
+    {
+      slug: "boxing-basics",
+      name: "Boxing Basics",
+      image: "/images/boxing-basics.png",
+    },
+    {
+      slug: "strength-conditioning",
+      name: "Strength & Conditioning",
+      image: "/images/strength-conditioning.png",
+    },
+    {
+      slug: "junior-jabbers",
+      name: "Junior Jabbers",
+      image: "/images/junior-jabbers.png",
+    },
+    {
+      slug: "beginner-boxing",
+      name: "Beginner Boxing",
+      image: "/images/beginner-boxing.png",
+    },
+  ];
+
+  const displayedClasses = [...classes];
+  const classNames = new Set(displayedClasses.map((c) => c.name));
+  classPlaceholders.forEach((ph) => {
+    if (displayedClasses.length < 4 && !classNames.has(ph.name)) {
+      displayedClasses.push(ph);
+    }
+  });
+  displayedClasses.splice(4);
+
+  const coachPlaceholders = [
+    {
+      slug: "humza-muhammad",
+      name: "Humza Muhammad",
+      role: "Coach & Trainer",
+      bio: "Dedicated boxing coach passionate about helping members reach peak performance.",
+      image: "/images/coach-humza.png",
+    },
+    {
+      slug: "placeholder-coach-1",
+      name: "Coach Placeholder 1",
+      role: "Coach",
+      image: "/images/coach-placeholder-1.jpg",
+    },
+    {
+      slug: "placeholder-coach-2",
+      name: "Coach Placeholder 2",
+      role: "Coach",
+      image: "/images/coach-placeholder-2.jpg",
+    },
+  ];
+
+  const normalizedCoaches = coaches.map((coach) =>
+    coach.name?.toLowerCase().includes("shannon")
+      ? {
+          ...coach,
+          slug: "humza-muhammad",
+          name: "Humza Muhammad",
+          role: "Coach & Trainer",
+          bio: "Dedicated boxing coach passionate about helping members reach peak performance.",
+          image: "/images/coach-humza.png",
+        }
+      : coach
+  );
+
+  const displayedCoaches = normalizedCoaches.slice(0, 3);
+  const coachNames = new Set(displayedCoaches.map((c) => c.name));
+  coachPlaceholders.forEach((ph) => {
+    if (displayedCoaches.length < 3 && !coachNames.has(ph.name)) {
+      displayedCoaches.push(ph);
+    }
+  });
 
   return (
     <>
@@ -54,26 +131,3 @@ export default function Home() {
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {displayedCoaches.map((coach) => (
-              <CoachCard key={coach.slug} coach={coach} />
-            ))}
-          </div>
-          <div className="mt-6 text-center">
-            <Link href="/coaches" className="text-brand hover:underline">
-              View All Coaches
-            </Link>
-          </div>
-        </section>
-
-        {/* Timetable Section */}
-        <section id="timetable" className="px-4">
-          <h2 className="mb-8 text-center text-3xl font-bold">Schedule</h2>
-          <Timetable />
-        </section>
-
-        {/* Media Section */}
-        <MediaGallery />
-      </main>
-      <Footer />
-    </>
-  );
-}
