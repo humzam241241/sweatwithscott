@@ -17,7 +17,7 @@ interface ClassType {
 }
 
 export default function AdminSchedulePage() {
-  const { classes, refreshData } = useData();
+  const { classes } = useData();
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<Partial<ClassType>>({
     name: "",
@@ -61,8 +61,8 @@ export default function AdminSchedulePage() {
         spots: 0,
       });
 
-      // Refresh global data
-      await refreshData();
+      // Refresh data by reloading the page
+      window.location.reload();
     } catch (err) {
       console.error(err);
     }
@@ -80,7 +80,7 @@ export default function AdminSchedulePage() {
 
       setEditingSlug(null);
       setEditData({});
-      await refreshData();
+      window.location.reload();
     } catch (err) {
       console.error(err);
     }
@@ -92,7 +92,7 @@ export default function AdminSchedulePage() {
     try {
       const res = await fetch(`/api/classes/${slug}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete class");
-      await refreshData();
+      window.location.reload();
     } catch (err) {
       console.error(err);
     }

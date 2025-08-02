@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useData from "@/hooks/use-data";
 
 export default function AdminCoaches() {
-  const { coaches, refreshData } = useData();
+  const { coaches } = useData();
   const [form, setForm] = useState({
     slug: "",
     name: "",
@@ -15,13 +15,6 @@ export default function AdminCoaches() {
     fight_record: "",
   });
   const [editing, setEditing] = useState<string | null>(null);
-
-  useEffect(() => {
-    // ensure data is loaded
-    if (!coaches) {
-      refreshData();
-    }
-  }, [coaches, refreshData]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +27,7 @@ export default function AdminCoaches() {
     });
     setForm({ slug: "", name: "", role: "", bio: "", image: "", certifications: "", fight_record: "" });
     setEditing(null);
-    await refreshData();
+    window.location.reload();
   };
 
   const edit = (c: any) => {
@@ -52,7 +45,7 @@ export default function AdminCoaches() {
 
   const del = async (slug: string) => {
     await fetch(`/api/coaches/${slug}`, { method: "DELETE" });
-    await refreshData();
+    window.location.reload();
   };
 
   return (

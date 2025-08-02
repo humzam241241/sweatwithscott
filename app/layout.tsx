@@ -1,41 +1,13 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import ClientWrapper from './client-wrapper';
-import Navigation from '@/components/navigation';
-import Footer from '@/components/footer';
-import { Inter } from 'next/font/google';
-import { Toaster } from '@/components/ui/sonner';
-import { DataProvider } from '@/components/data-provider';
+import "./globals.css";
+import { DataProvider } from "@/components/ui/data-provider";
 
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
-      <body className={`${inter.className} bg-white text-black`}>
-        <Navigation />
-        <ClientWrapper>
-          <DataProvider>
-            <div className="min-h-screen flex flex-col pt-16">
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </DataProvider>
-        </ClientWrapper>
-        <Toaster />
+      <body>
+        <DataProvider>
+          {children}
+        </DataProvider>
       </body>
     </html>
   );
