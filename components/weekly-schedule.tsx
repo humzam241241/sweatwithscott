@@ -32,14 +32,26 @@ const days = [
 
 export default function WeeklySchedule() {
   const fetcher = (url: string) => fetch(url).then((r) => r.json());
-  const { data: classes } = useSWR<ClassItem[]>("/api/classes", fetcher, {
+  const { data: classes } = useSWR<any[]>("/api/classes", fetcher, {
     revalidateOnFocus: true,
   });
   const schedule: Record<string, ClassItem[]> = {};
   days.forEach((d) => (schedule[d] = []));
   (classes || []).forEach((c) => {
-    if (!schedule[c.day]) schedule[c.day] = [];
-    schedule[c.day].push(c);
+    const entries = c.schedule ? JSON.parse(c.schedule) : [];
+    entries.forEach((s: any) => {
+      const item: ClassItem = {
+        id: c.id,
+        day: s.day,
+        name: c.name,
+        time: s.time,
+        spots: s.spots ?? 0,
+        coach: c.coach_name,
+        color: s.color,
+      };
+      if (!schedule[item.day]) schedule[item.day] = [];
+      schedule[item.day].push(item);
+    });
   });
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
