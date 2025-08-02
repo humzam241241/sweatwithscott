@@ -4,8 +4,20 @@ import { notFound } from "next/navigation";
 async function getCoach(slug: string) {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const res = await fetch(`${base}/api/coaches/${slug}`, { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
+  if (res.ok) {
+    const data = await res.json();
+    if (data) return data;
+  }
+  if (slug === "humza-muhammad") {
+    return {
+      slug: "humza-muhammad",
+      name: "Humza Muhammad",
+      role: "Coach & Trainer",
+      bio: "Dedicated boxing coach passionate about helping members reach peak performance.",
+      image: "/images/coach-humza.png",
+    };
+  }
+  return null;
 }
 
 async function getClassesByCoach(coachSlug: string) {

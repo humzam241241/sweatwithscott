@@ -24,17 +24,12 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-        scrolled ? "bg-white/90 shadow backdrop-blur" : "bg-transparent"
+      className={`fixed top-0 left-0 z-50 w-full transition-colors duration-300 ${
+        scrolled ? "bg-brand-dark/90 backdrop-blur-md shadow" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-        <Link
-          href="/"
-          className={`text-2xl font-semibold transition-colors ${
-            scrolled ? "text-brand-dark" : "text-white"
-          }`}
-        >
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <Link href="/" className="text-2xl font-bold text-white">
           Cave Boxing
         </Link>
         <div className="hidden space-x-8 md:flex">
@@ -42,11 +37,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors ${
-                scrolled
-                  ? "text-brand-dark hover:text-brand"
-                  : "text-white hover:text-brand-accent"
-              }`}
+              className="text-sm font-medium text-white transition-colors hover:text-brand-accent"
             >
               {link.label}
             </Link>
