@@ -44,6 +44,12 @@ export default async function Home() {
 
   return (
     <main className="bg-white text-black">
+      {/* 🚀 Tailwind Test Box */}
+      <div className="bg-brand text-white p-4 rounded-lg text-center">
+        🚀 Tailwind brand color is working!
+      </div>
+
+      {/* Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center">
         {heroType === "video" ? (
           <video
@@ -71,25 +77,31 @@ export default async function Home() {
           </p>
           <Link
             href="#classes"
-            className="inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded opacity-0 animate-in fade-in slide-in-from-bottom-4 delay-300"
+            className="inline-block bg-brand hover:bg-brand-dark text-white px-6 py-3 rounded opacity-0 animate-in fade-in slide-in-from-bottom-4 delay-300 transition-brand"
           >
             Explore Classes
           </Link>
         </div>
       </section>
 
+      {/* Media Section */}
       <section
         id="media"
         className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
       >
-        <h2 className="text-4xl font-bold mb-8 text-red-600">Media</h2>
+        <h2 className="text-4xl font-bold mb-8 text-brand">Media</h2>
         <MediaGallery />
       </section>
 
-      <section id="classes" className="min-h-screen p-8 flex flex-col justify-center">
-        <h2 className="text-4xl font-bold mb-4 text-red-600">Classes</h2>
+      {/* Classes Section */}
+      <section
+        id="classes"
+        className="min-h-screen p-8 flex flex-col justify-center"
+      >
+        <h2 className="text-4xl font-bold mb-4 text-brand">Classes</h2>
         <p className="mb-6 text-lg max-w-xl">
-          From Bootcamp to Beginner Boxing, our classes are designed for all skill levels to build technique and fitness.
+          From Bootcamp to Beginner Boxing, our classes are designed for all skill
+          levels to build technique and fitness.
         </p>
         <div className="card-grid mb-6">
           {classes.map((cls: any) => (
@@ -106,15 +118,20 @@ export default async function Home() {
             </Link>
           ))}
         </div>
-        <Link href="/classes" className="text-red-600 underline font-semibold">
+        <Link href="/classes" className="text-brand underline font-semibold">
           View All Classes
         </Link>
       </section>
 
-      <section id="coaches" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
-        <h2 className="text-4xl font-bold mb-4 text-red-600">Coaches</h2>
+      {/* Coaches Section */}
+      <section
+        id="coaches"
+        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
+      >
+        <h2 className="text-4xl font-bold mb-4 text-brand">Coaches</h2>
         <p className="mb-6 text-lg max-w-xl">
-          Meet the experienced team that will push you to your limits and guide your boxing journey.
+          Meet the experienced team that will push you to your limits and guide your
+          boxing journey.
         </p>
         <div className="card-grid">
           {coaches.map((coach: any) => (
@@ -133,31 +150,47 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="schedule" className="min-h-screen p-8 flex flex-col justify-center">
-        <h2 className="text-4xl font-bold mb-8 text-red-600">Schedule</h2>
+      {/* Schedule Section */}
+      <section
+        id="schedule"
+        className="min-h-screen p-8 flex flex-col justify-center"
+      >
+        <h2 className="text-4xl font-bold mb-8 text-brand">Schedule</h2>
         <WeeklySchedule />
       </section>
 
-      <section id="membership" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
-        <h2 className="text-4xl font-bold mb-8 text-red-600">Membership</h2>
+      {/* Membership Section */}
+      <section
+        id="membership"
+        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
+      >
+        <h2 className="text-4xl font-bold mb-8 text-brand">Membership</h2>
         <MembershipPackages />
       </section>
 
-      <section id="about" className="min-h-screen p-8 flex flex-col justify-center">
-        <h2 className="text-4xl font-bold mb-4 text-red-600">About</h2>
+      {/* About Section */}
+      <section
+        id="about"
+        className="min-h-screen p-8 flex flex-col justify-center"
+      >
+        <h2 className="text-4xl font-bold mb-4 text-brand">About</h2>
         <p className="mb-6 text-lg max-w-2xl">
-          The Cave Boxing is a community where fighters of all levels come together to push their limits and achieve their goals.
+          The Cave Boxing is a community where fighters of all levels come together
+          to push their limits and achieve their goals.
         </p>
-        <Link href="/about" className="text-red-600 underline font-semibold">
+        <Link href="/about" className="text-brand underline font-semibold">
           Learn More
         </Link>
       </section>
 
-      <section id="contact" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
-        <h2 className="text-4xl font-bold mb-8 text-red-600">Contact</h2>
+      {/* Contact Section */}
+      <section
+        id="contact"
+        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
+      >
+        <h2 className="text-4xl font-bold mb-8 text-brand">Contact</h2>
         <ContactForm />
       </section>
     </main>
   );
 }
-

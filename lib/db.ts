@@ -50,7 +50,7 @@ function seedIfEmpty() {
       "John Doe",
       "Head Coach",
       "Former champion with 20 years of experience.",
-      "/images/coach-humza.png",
+      "/images/logo.png",
       "USA Boxing Certified",
       "20-2-0"
     );
@@ -59,7 +59,7 @@ function seedIfEmpty() {
       "Jane Smith",
       "Assistant Coach",
       "Strength and conditioning specialist.",
-      "/images/coach-humza.png",
+      "/images/logo.png",
       "NSCA CPT",
       "5-1-0"
     );
@@ -67,16 +67,25 @@ function seedIfEmpty() {
 
   const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get() as { count: number };
   if (classCount.count === 0) {
-    const coach = db.prepare("SELECT id FROM coaches LIMIT 1").get() as { id: number } | undefined;
-    db.prepare(
+    const coaches = db.prepare("SELECT id FROM coaches LIMIT 2").all() as { id: number }[];
+    const insertClass = db.prepare(
       "INSERT INTO classes (slug, name, description, image, coach_id, schedule) VALUES (?, ?, ?, ?, ?, ?)"
-    ).run(
+    );
+    insertClass.run(
       "beginner-boxing",
       "Beginner Boxing",
       "Learn boxing fundamentals in a supportive environment.",
-      "/images/gym-training.png",
-      coach ? coach.id : null,
+      "/images/logo.png",
+      coaches[0]?.id ?? null,
       JSON.stringify([{ day: "Mon", time: "6:00 PM", spots: 10 }])
+    );
+    insertClass.run(
+      "strength-conditioning",
+      "Strength & Conditioning",
+      "Build strength and improve conditioning.",
+      "/images/logo.png",
+      coaches[1]?.id ?? null,
+      JSON.stringify([{ day: "Wed", time: "6:00 PM", spots: 10 }])
     );
   }
 }
@@ -88,4 +97,3 @@ export function query<T = any>(sql: string, params: any[] = []): T[] {
 export function run(sql: string, params: any[] = []) {
   return getDb().prepare(sql).run(...params);
 }
-

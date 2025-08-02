@@ -6,14 +6,13 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const coach = query("SELECT * FROM coaches WHERE slug = ? LIMIT 1", [params.slug])[0];
-    if (!coach) {
-      return NextResponse.json({ message: "Not found" }, { status: 404 });
-    }
-    return NextResponse.json(coach);
+    const coach = query("SELECT * FROM coaches WHERE slug = ? LIMIT 1", [
+      params.slug,
+    ])[0];
+    return NextResponse.json(coach ?? null);
   } catch (err) {
     console.error("Error fetching coach", err);
-    return NextResponse.json({ error: "Failed to fetch coach" }, { status: 500 });
+    return NextResponse.json(null);
   }
 }
 
@@ -22,7 +21,8 @@ export async function PUT(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const { name, role, bio, image, certifications, fight_record } = await request.json();
+    const { name, role, bio, image, certifications, fight_record } =
+      await request.json();
     run(
       "UPDATE coaches SET name = ?, role = ?, bio = ?, image = ?, certifications = ?, fight_record = ? WHERE slug = ?",
       [name, role, bio, image, certifications, fight_record, params.slug]

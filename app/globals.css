@@ -1,8 +1,33 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ===================================
+   Brand Utilities
+=================================== */
+@layer utilities {
+  .bg-brand {
+    background-color: var(--cave-red);
+  }
+  .bg-brand-dark {
+    background-color: var(--cave-red-dark);
+  }
+  .text-brand {
+    color: var(--cave-red);
+  }
+  .hover\:bg-brand-dark:hover {
+    background-color: var(--cave-red-dark);
+  }
+  .transition-brand {
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+}
+
+/* ===================================
+   Brand Color Variables
+=================================== */
 :root {
   --cave-red: #c90015;
   --cave-red-dark: #a70011;
@@ -225,20 +250,24 @@ video {
 /* ===============================
    Apple-Inspired Baseline Styles
 ================================== */
-.schedule, .media-grid, .card-grid {
+.schedule,
+.media-grid,
+.card-grid {
   max-width: 1200px;
   margin: 50px auto;
   padding: 20px;
   font-family: 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
 }
 
-.media-grid, .card-grid {
+.media-grid,
+.card-grid {
   display: grid;
   gap: 20px;
 }
 
 @media (min-width: 768px) {
-  .media-grid, .card-grid {
+  .media-grid,
+  .card-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
 }
@@ -261,14 +290,16 @@ video {
   box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
-.card img, .card video {
+.card img,
+.card video {
   width: 100%;
   height: 300px;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
 
-.card:hover img, .card:hover video {
+.card:hover img,
+.card:hover video {
   transform: scale(1.05);
 }
 

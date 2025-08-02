@@ -6,10 +6,10 @@ export async function GET() {
     const classes = query(
       "SELECT c.*, co.name as coach_name, co.slug as coach_slug FROM classes c LEFT JOIN coaches co ON c.coach_id = co.id"
     );
-    return NextResponse.json(classes);
+    return NextResponse.json(Array.isArray(classes) ? classes : []);
   } catch (err) {
     console.error("Error fetching classes", err);
-    return NextResponse.json({ error: "Failed to fetch classes" }, { status: 500 });
+    return NextResponse.json([]);
   }
 }
 

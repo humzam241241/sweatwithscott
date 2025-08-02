@@ -10,13 +10,10 @@ export async function GET(
       "SELECT c.*, co.name as coach_name, co.slug as coach_slug FROM classes c LEFT JOIN coaches co ON c.coach_id = co.id WHERE c.slug = ? LIMIT 1",
       [params.slug]
     )[0];
-    if (!cls) {
-      return NextResponse.json({ message: "Not found" }, { status: 404 });
-    }
-    return NextResponse.json(cls);
+    return NextResponse.json(cls ?? null);
   } catch (err) {
     console.error("Error fetching class", err);
-    return NextResponse.json({ error: "Failed to fetch class" }, { status: 500 });
+    return NextResponse.json(null);
   }
 }
 
