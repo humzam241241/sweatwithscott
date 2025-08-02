@@ -5,6 +5,7 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import { Inter } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
+import { DataProvider } from '@/components/data-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,10 +28,12 @@ export default function RootLayout({
       <body className={`${inter.className} bg-white text-black`}>
         <Navigation />
         <ClientWrapper>
-          <div className="min-h-screen flex flex-col pt-16">
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <DataProvider>
+            <div className="min-h-screen flex flex-col pt-16">
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </DataProvider>
         </ClientWrapper>
         <Toaster />
       </body>

@@ -1,39 +1,45 @@
-import fs from "fs";
-import path from "path";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import WeeklySchedule from "@/components/weekly-schedule";
 import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import MediaGallery from "@/components/media-gallery";
-import ClassList from "@/components/ui/class-list"; // ✅ NEW import
+import ClassList from "@/components/ui/class-list";
+import useData from "@/hooks/use-data";
 
-async function getCoaches() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
-}
+export default function Home() {
+  const { coaches } = useData();
+  const [heroType, setHeroType] = useState<"video" | "image" | null>(null);
+  const [heroSrc, setHeroSrc] = useState("");
 
-export default async function Home() {
-  const publicDir = path.join(process.cwd(), "public");
-  let heroType: "video" | "image" | null = null;
-  let heroSrc = "";
+  useEffect(() => {
+    const determineHero = async () => {
+      try {
+        const videoRes = await fetch("/videos/hero.mp4");
+        if (videoRes.ok) {
+          setHeroType("video");
+          setHeroSrc("/videos/hero.mp4");
+          return;
+        }
+      } catch {}
 
-  if (fs.existsSync(path.join(publicDir, "videos", "hero.mp4"))) {
-    heroType = "video";
-    heroSrc = "/videos/hero.mp4";
-  } else {
-    try {
-      const files = fs.readdirSync(path.join(publicDir, "images"));
-      const img = files.find((f) => /\.(jpg|png)$/i.test(f));
-      if (img) {
-        heroType = "image";
-        heroSrc = `/images/${img}`;
+      const imageCandidates = ["/images/hero.jpg", "/images/hero.png"]; // placeholder names
+      for (const img of imageCandidates) {
+        try {
+          const imgRes = await fetch(img);
+          if (imgRes.ok) {
+            setHeroType("image");
+            setHeroSrc(img);
+            return;
+          }
+        } catch {}
       }
-    } catch {}
-  }
+    };
 
-  const coaches = await getCoaches();
+    determineHero();
+  }, []);
 
   return (
     <main className="bg-white text-black">
@@ -54,11 +60,7 @@ export default async function Home() {
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : heroType === "image" ? (
-          <img
-            src={heroSrc}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+          <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 to-black/40" />
         <div className="relative z-10 text-center px-4">
@@ -78,19 +80,13 @@ export default async function Home() {
       </section>
 
       {/* Media Section */}
-      <section
-        id="media"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="media" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-8 text-brand">Media</h2>
         <MediaGallery />
       </section>
 
       {/* Classes Section */}
-      <section
-        id="classes"
-        className="min-h-screen p-8 flex flex-col justify-center"
-      >
+      <section id="classes" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-4 text-brand">Classes</h2>
         <p className="mb-6 text-lg max-w-xl">
           From Bootcamp to Beginner Boxing, our classes are designed for all skill
@@ -106,22 +102,15 @@ export default async function Home() {
       </section>
 
       {/* Coaches Section */}
-      <section
-        id="coaches"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="coaches" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-4 text-brand">Coaches</h2>
         <p className="mb-6 text-lg max-w-xl">
-          Meet the experienced team that will push you to your limits and guide your
-          boxing journey.
+          Meet the experienced team that will push you to your limits and guide your boxing journey.
         </p>
         <div className="card-grid">
-          {coaches.map((coach: any) => (
+          {coaches?.map((coach: any) => (
             <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="card">
-              <img
-                src={coach.image || "/images/coach-humza.png"}
-                alt={coach.name}
-              />
+              <img src={coach.image || "/images/coach-humza.png"} alt={coach.name} />
               <div className="card-overlay">
                 <h3>{coach.name}</h3>
                 <p>{coach.role}</p>
@@ -133,46 +122,32 @@ export default async function Home() {
       </section>
 
       {/* Schedule Section */}
-      <section
-        id="schedule"
-        className="min-h-screen p-8 flex flex-col justify-center"
-      >
+      <section id="schedule" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-8 text-brand">Schedule</h2>
         <WeeklySchedule />
       </section>
 
       {/* Membership Section */}
-      <section
-        id="membership"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
+      <section id="membership" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
         <h2 className="text-4xl font-bold mb-8 text-brand">Membership</h2>
         <MembershipPackages />
       </section>
 
       {/* About Section */}
-      <section
-        id="about"
-        className="min-h-screen p-8 flex flex-col justify-center"
-      >
+      <section id="about" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-4 text-brand">About</h2>
         <p className="mb-6 text-lg max-w-2xl">
           The Cave Boxing is a community where fighters of all levels come together
-          to push their limits and achieve their goals.
+          to push their limits and grow stronger.
         </p>
-        <Link href="/about" className="text-brand underline font-semibold">
-          Learn More
-        </Link>
       </section>
 
       {/* Contact Section */}
-      <section
-        id="contact"
-        className="min-h-screen p-8 flex flex-col justify-center bg-gray-100"
-      >
-        <h2 className="text-4xl font-bold mb-8 text-brand">Contact</h2>
+      <section id="contact" className="min-h-screen p-8 flex flex-col justify-center bg-gray-100">
+        <h2 className="text-4xl font-bold mb-8 text-brand">Contact Us</h2>
         <ContactForm />
       </section>
     </main>
   );
 }
+

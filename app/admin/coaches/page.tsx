@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useData from "@/hooks/use-data";
 
 export default function AdminCoaches() {
-  const [coaches, setCoaches] = useState<any[]>([]);
+  const { coaches, refreshData } = useData();
   const [form, setForm] = useState({
     slug: "",
     name: "",
@@ -15,15 +16,12 @@ export default function AdminCoaches() {
   });
   const [editing, setEditing] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    const res = await fetch("/api/coaches");
-    const data = await res.json();
-    setCoaches(data);
-  };
-
   useEffect(() => {
-    fetchData();
-  }, []);
+    // ensure data is loaded
+    if (!coaches) {
+      refreshData();
+    }
+  }, [coaches, refreshData]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +34,7 @@ export default function AdminCoaches() {
     });
     setForm({ slug: "", name: "", role: "", bio: "", image: "", certifications: "", fight_record: "" });
     setEditing(null);
-    fetchData();
+    await refreshData();
   };
 
   const edit = (c: any) => {
@@ -54,7 +52,7 @@ export default function AdminCoaches() {
 
   const del = async (slug: string) => {
     await fetch(`/api/coaches/${slug}`, { method: "DELETE" });
-    fetchData();
+    await refreshData();
   };
 
   return (
@@ -110,7 +108,7 @@ export default function AdminCoaches() {
         </button>
       </form>
       <ul>
-        {coaches.map((c) => (
+        {coaches?.map((c) => (
           <li key={c.slug} className="mb-2 flex items-center justify-between">
             <span>{c.name}</span>
             <div className="space-x-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useData from "@/hooks/use-data";
 
 interface ClassType {
   slug: string;
@@ -16,7 +17,7 @@ interface ClassType {
 }
 
 export default function AdminSchedulePage() {
-  const [classes, setClasses] = useState<ClassType[]>([]);
+  const { classes, refreshData } = useData();
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<Partial<ClassType>>({
     name: "",
@@ -31,21 +32,6 @@ export default function AdminSchedulePage() {
   });
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<ClassType>>({});
-
-  // Fetch all classes
-  const fetchClasses = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/classes");
-      if (!res.ok) throw new Error("Failed to fetch classes");
-      const data = await res.json();
-      setClasses(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Create a new class instantly
   const createClass = async () => {
@@ -62,11 +48,6 @@ export default function AdminSchedulePage() {
       });
 
       if (!res.ok) throw new Error("Failed to create class");
-      const { slug } = await res.json();
-
-      // Update UI instantly
-      setClasses((prev) => [...prev, { ...payload, slug } as ClassType]);
-
       // Reset form
       setFormData({
         name: "",
@@ -80,8 +61,8 @@ export default function AdminSchedulePage() {
         spots: 0,
       });
 
-      // Background refresh
-      fetchClasses();
+      // Refresh global data
+      await refreshData();
     } catch (err) {
       console.error(err);
     }
@@ -97,13 +78,9 @@ export default function AdminSchedulePage() {
       });
       if (!res.ok) throw new Error("Failed to update class");
 
-      setClasses((prev) =>
-        prev.map((cls) =>
-          cls.slug === slug ? { ...cls, ...editData } : cls
-        )
-      );
       setEditingSlug(null);
       setEditData({});
+      await refreshData();
     } catch (err) {
       console.error(err);
     }
@@ -115,15 +92,17 @@ export default function AdminSchedulePage() {
     try {
       const res = await fetch(`/api/classes/${slug}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete class");
-      setClasses((prev) => prev.filter((cls) => cls.slug !== slug));
+      await refreshData();
     } catch (err) {
       console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchClasses();
-  }, []);
+    if (classes !== null) {
+      setLoading(false);
+    }
+  }, [classes]);
 
   return (
     <div className="p-6">
@@ -194,7 +173,7 @@ export default function AdminSchedulePage() {
         <h2 className="text-xl font-bold mb-4">Existing Classes</h2>
         {loading ? (
           <p>Loading classes...</p>
-        ) : classes.length > 0 ? (
+        ) : classes && classes.length > 0 ? (
           <ul className="divide-y">
             {classes.map((cls) => (
               <li
