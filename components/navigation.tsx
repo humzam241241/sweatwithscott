@@ -104,10 +104,11 @@ export default function Navigation() {
     { href: "/contact", label: "Contact", sectionId: "contact" },
   ];
 
-  const navLinks =
-    user && !user.isAdmin
-      ? [...baseLinks, { href: "/dashboard", label: "Dashboard" }]
-      : baseLinks;
+  const navLinks = user
+    ? user.isAdmin
+      ? [...baseLinks, { href: "/dashboard/admin", label: "Dashboard" }]
+      : [...baseLinks, { href: "/dashboard/member", label: "Dashboard" }]
+    : baseLinks;
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, link: NavLink) => {
     if (pathname === "/" && link.sectionId) {

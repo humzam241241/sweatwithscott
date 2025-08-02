@@ -15,14 +15,14 @@ export default async function ClassPage({ params }: { params: { slug: string } }
   return (
     <div className="min-h-screen bg-white">
       {cls.image && (
-        <img src={cls.image} alt={cls.name} className="w-full h-96 object-cover" />
+        <img src={cls.image} alt={cls.name} className="h-96 w-full object-cover" />
       )}
-      <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-4xl font-bold mb-4 text-red-600">{cls.name}</h1>
-        <p className="mb-6">{cls.description}</p>
+      <div className="mx-auto max-w-4xl p-8">
+        <h1 className="mb-4 text-4xl font-bold text-brand">{cls.name}</h1>
+        <p className="mb-6 text-brand-dark/80">{cls.description}</p>
         {schedule.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold mb-2">Schedule</h2>
+            <h2 className="mb-2 text-2xl font-semibold">Schedule</h2>
             <ul>
               {schedule.map((s: any, idx: number) => (
                 <li key={idx}>{`${s.day} ${s.time} (${s.spots} spots)`}</li>
@@ -32,8 +32,8 @@ export default async function ClassPage({ params }: { params: { slug: string } }
         )}
         {cls.coach_slug && (
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold mb-2">Coach</h2>
-            <Link href={`/coaches/${cls.coach_slug}`} className="text-red-600 underline">
+            <h2 className="mb-2 text-2xl font-semibold">Coach</h2>
+            <Link href={`/coaches/${cls.coach_slug}`} className="text-brand underline">
               {cls.coach_name}
             </Link>
           </div>

@@ -23,29 +23,29 @@ export default async function CoachPage({ params }: { params: { slug: string } }
   return (
     <div className="min-h-screen bg-white">
       {coach.image && (
-        <img src={coach.image} alt={coach.name} className="w-full h-96 object-cover" />
+        <img src={coach.image} alt={coach.name} className="h-96 w-full object-cover" />
       )}
-      <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-4xl font-bold mb-4 text-red-600">{coach.name}</h1>
-        <p className="text-xl mb-2">{coach.role}</p>
-        <p className="mb-6">{coach.bio}</p>
+      <div className="mx-auto max-w-4xl p-8">
+        <h1 className="mb-4 text-4xl font-bold text-brand">{coach.name}</h1>
+        <p className="mb-2 text-xl text-brand-dark/80">{coach.role}</p>
+        <p className="mb-6 text-brand-dark/80">{coach.bio}</p>
         {coach.certifications && (
-          <p className="mb-2">
+          <p className="mb-2 text-brand-dark/80">
             <strong>Certifications:</strong> {coach.certifications}
           </p>
         )}
         {coach.fight_record && (
-          <p className="mb-6">
+          <p className="mb-6 text-brand-dark/80">
             <strong>Fight Record:</strong> {coach.fight_record}
           </p>
         )}
         {classes.length > 0 && (
           <div>
-            <h2 className="text-2xl font-semibold mb-2">Upcoming Classes</h2>
+            <h2 className="mb-2 text-2xl font-semibold">Upcoming Classes</h2>
             <ul>
               {classes.map((cls: any) => (
                 <li key={cls.slug}>
-                  <Link href={`/classes/${cls.slug}`} className="text-red-600 underline">
+                  <Link href={`/classes/${cls.slug}`} className="text-brand underline">
                     {cls.name}
                   </Link>
                 </li>

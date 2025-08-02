@@ -12,20 +12,20 @@ export default async function ClassesPage() {
   const classes = await getClasses();
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">Our Classes</h1>
-          <p className="text-xl mb-8">
+      <header className="bg-gradient-to-r from-brand to-brand-dark py-20 text-white">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <h1 className="mb-6 text-5xl font-bold">Our Classes</h1>
+          <p className="mb-8 text-xl">
             Choose from our wide range of classes to improve your boxing skills, fitness, and strength.
           </p>
-          <div className="flex justify-center space-x-4 mt-6">
-            <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="bg-white text-red-600 hover:bg-gray-100">
+          <div className="mt-6 flex justify-center space-x-4">
+            <Link href="/dashboard/member">
+              <Button size="lg" variant="outline" className="bg-white text-brand hover:bg-brand-light">
                 View My Bookings
               </Button>
             </Link>
-            <Link href="/dashboard">
-              <Button size="lg" variant="outline" className="bg-white text-red-600 hover:bg-gray-100">
+            <Link href="/dashboard/member">
+              <Button size="lg" variant="outline" className="bg-white text-brand hover:bg-brand-light">
                 Book Classes
               </Button>
             </Link>
