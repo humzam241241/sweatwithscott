@@ -1,6 +1,5 @@
 import Link from "next/link";
-import type { ClassRecord } from "@/lib/database";
-import { dbOperations } from "@/lib/database";
+import type { ClassRecord } from "@/lib/types";
 
 const placeholderClasses: ClassRecord[] = [
   {
@@ -21,9 +20,12 @@ export default async function ClassPage({
 }: {
   params: { slug: string };
 }) {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
   let classes: ClassRecord[] = [];
   try {
-    classes = (await dbOperations.getAllClasses?.()) ?? [];
+    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+    classes = (await res.json()) as ClassRecord[];
   } catch {
     classes = [];
   }

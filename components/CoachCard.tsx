@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import type { CoachRecord } from "@/lib/database";
+import type { CoachRecord } from "@/lib/types";
 
 export default function CoachCard({ coach }: { coach: CoachRecord }) {
   const imageSrc =
