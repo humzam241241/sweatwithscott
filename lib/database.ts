@@ -2,6 +2,22 @@ import Database from "better-sqlite3";
 import path from "path";
 import bcrypt from "bcryptjs";
 
+export interface ClassRecord {
+  id: number;
+  slug: string;
+  name: string;
+  description?: string | null;
+  instructor?: string | null;
+  duration?: number | null;
+  max_capacity?: number | null;
+  price?: number | null;
+  day_of_week?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  is_active?: number | null;
+  created_at?: string | null;
+}
+
 // Database connection with proper error handling
 const dbPath = path.join(process.cwd(), "gym.db");
 const db = new Database(dbPath);
@@ -493,6 +509,17 @@ export const dbOperations = {
     } catch (error) {
       console.error("Error getting classes:", error);
       return [];
+    }
+  },
+
+  getClassBySlug: (slug: string): ClassRecord | null => {
+    try {
+      return (
+        db.prepare("SELECT * FROM classes WHERE slug = ?").get(slug) as ClassRecord
+      ) || null;
+    } catch (error) {
+      console.error("Error getting class by slug:", error);
+      return null;
     }
   },
 
