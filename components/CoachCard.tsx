@@ -12,6 +12,11 @@ interface Coach {
 }
 
 export default function CoachCard({ coach }: { coach: Coach }) {
+  const imageSrc =
+    coach.image && coach.image !== "/images/logo.png"
+      ? coach.image
+      : "/images/coach-humza.png";
+
   return (
     <Link href={`/coaches/${coach.slug}`}>
       <motion.div
@@ -19,7 +24,7 @@ export default function CoachCard({ coach }: { coach: Coach }) {
         className="rounded-xl bg-white p-6 text-center shadow-lg transition-transform duration-300"
       >
         <img
-          src={coach.image || "/placeholder-user.jpg"}
+          src={imageSrc}
           alt={coach.name}
           className="mx-auto mb-4 h-32 w-32 rounded-full object-cover border-4 border-brand-accent"
         />

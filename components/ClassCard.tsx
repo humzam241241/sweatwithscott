@@ -11,17 +11,18 @@ interface Class {
 }
 
 export default function ClassCard({ cls }: { cls: Class }) {
+  const imageSrc =
+    cls.image && cls.image !== "/images/logo.png"
+      ? cls.image
+      : "/images/boxing-training.png";
+
   return (
     <Link href={`/classes/${cls.slug}`}>
       <motion.div
         whileHover={{ scale: 1.05 }}
         className="overflow-hidden rounded-xl bg-white shadow-lg transition-transform duration-300"
       >
-        <img
-          src={cls.image || "/images/boxing-training.png"}
-          alt={cls.name}
-          className="h-48 w-full object-cover"
-        />
+        <img src={imageSrc} alt={cls.name} className="h-48 w-full object-cover" />
         <div className="p-6">
           <h3 className="text-xl font-semibold text-brand">{cls.name}</h3>
           {cls.description && (
