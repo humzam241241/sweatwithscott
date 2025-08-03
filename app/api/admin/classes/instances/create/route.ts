@@ -1,5 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 import { dbOperations } from "@/lib/database";
 
 interface CreateClassInstanceRequest {
@@ -7,9 +6,7 @@ interface CreateClassInstanceRequest {
   date: string;
   startTime: string;
   endTime: string;
-  coachName?: string;
-  maxCapacity?: number;
-  status: "scheduled" | "canceled" | "completed";
+  coachName: string;
 }
 
 interface SuccessResponse {
@@ -20,33 +17,19 @@ interface ErrorResponse {
   error: string;
 }
 
-async function getSession() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("session");
-  if (!sessionCookie) return null;
+export async function POST(
+  request: NextRequest,
+): Promise<NextResponse<SuccessResponse | ErrorResponse>> {
   try {
-    return JSON.parse(sessionCookie.value);
-  } catch {
-    return null;
-  }
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse<SuccessResponse | ErrorResponse>> {
-  try {
-    const session = await getSession();
-    if (!session || !session.isAdmin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body: CreateClassInstanceRequest = await request.json();
-    const { classId, date, startTime, endTime, coachName = "", maxCapacity = 20, status } = body;
+    const { classId, date, startTime, endTime, coachName } = body;
 
     if (
       typeof classId !== "number" ||
       typeof date !== "string" ||
       typeof startTime !== "string" ||
       typeof endTime !== "string" ||
-      typeof status !== "string"
+      typeof coachName !== "string"
     ) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
@@ -57,13 +40,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<SuccessRe
       startTime,
       endTime,
       coachName,
-      maxCapacity,
-      status,
+      20,
+      "scheduled",
     );
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error creating class instance:", error);
-    return NextResponse.json({ error: "Failed to create class instance" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create class instance" },
+      { status: 500 },
+    );
   }
 }
