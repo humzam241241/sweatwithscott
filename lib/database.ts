@@ -497,6 +497,36 @@ export const dbOperations = {
   },
 
   // Class instance operations
+  createClassInstance: (
+    classId: number,
+    date: string,
+    startTime: string,
+    endTime: string,
+    instructor: string,
+    maxCapacity: number,
+    status: string,
+  ) => {
+    try {
+      const stmt = db.prepare(
+        `INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      );
+      const result = stmt.run(
+        classId,
+        date,
+        startTime,
+        endTime,
+        instructor,
+        maxCapacity,
+        status,
+      );
+      return result.lastInsertRowid as number;
+    } catch (error) {
+      console.error("Error creating class instance:", error);
+      throw error;
+    }
+  },
+
   getCurrentClasses: () => {
     try {
       const today = new Date().toISOString().split("T")[0];
