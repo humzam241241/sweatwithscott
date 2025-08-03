@@ -5,72 +5,62 @@ import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
+import { dbOperations, type ClassRecord, type CoachRecord } from "@/lib/database";
 
-interface GymClass {
-  slug: string;
-  name: string;
-  description?: string | null;
-  image?: string | null;
-}
+const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
-interface Coach {
-  slug: string;
-  name: string;
-  role?: string | null;
-  bio?: string | null;
-  image?: string | null;
-}
+type GymClass = ClassRecord & { image?: string | null };
 
 interface ScheduleItem {
   id: number;
+  class_id: number;
   class_name: string;
   date: string;
   start_time: string;
   end_time: string;
   coach_name: string;
+  status?: string | null;
 }
 
-async function fetchClasses(): Promise<GymClass[]> {
-  const res = await fetch("/api/classes/all", { next: { revalidate: 60 } });
-  if (!res.ok) return [];
-  return (await res.json()) as GymClass[];
-}
-
-async function fetchCoaches(): Promise<Coach[]> {
-  const urls = ["/api/coaches/all", "/api/coaches"];
-  for (const url of urls) {
-    const res = await fetch(url, { next: { revalidate: 60 } });
-    if (res.ok) {
-      return (await res.json()) as Coach[];
-    }
-  }
-  return [];
-}
-
-async function fetchSchedule(): Promise<ScheduleItem[]> {
-  const res = await fetch("/api/schedule", { next: { revalidate: 60 } });
-  if (!res.ok) return [];
-  return (await res.json()) as ScheduleItem[];
-}
-
-function ensureClassImage(image?: string | null) {
-  return image && image !== "/images/logo.png" ? image : "/images/boxing-training.png";
-}
-
-function ensureCoachImage(image?: string | null) {
-  return image && image !== "/images/logo.png" ? image : "/images/coach-humza.png";
+function withImage<T extends { image?: string | null }>(item: T): T {
+  return {
+    ...item,
+    image:
+      item.image && item.image !== "/images/logo.png" ? item.image : PLACEHOLDER_IMAGE,
+  };
 }
 
 export default async function Home() {
-  const [classes, coaches, schedule] = await Promise.all([
-    fetchClasses(),
-    fetchCoaches(),
-    fetchSchedule(),
-  ]);
+  const classes = (dbOperations.getAllClasses() as GymClass[]) || [];
+  const coaches =
+    ((dbOperations as any).getAllCoaches?.() as CoachRecord[]) || [];
+  const instances =
+    ((dbOperations as any).getAllClassInstances?.() as any[]) || [];
 
-  const displayedClasses = classes.map((c) => ({ ...c, image: ensureClassImage(c.image) }));
-  const displayedCoaches = coaches.map((c) => ({ ...c, image: ensureCoachImage(c.image) }));
-  const upcoming = schedule.slice(0, 5);
+  const schedule: ScheduleItem[] = Array.isArray(instances)
+    ? instances.map((i) => ({
+        id: i.id,
+        class_id: i.class_id,
+        class_name: i.class_name,
+        date: i.date,
+        start_time: i.start_time,
+        end_time: i.end_time,
+        coach_name: i.coach_name || i.instructor || i.class_instructor || "TBA",
+        status: i.status,
+      }))
+    : [];
+
+  const upcoming = schedule
+    .filter((item) => new Date(item.date) >= new Date())
+    .sort(
+      (a, b) =>
+        new Date(`${a.date}T${a.start_time}`).getTime() -
+        new Date(`${b.date}T${b.start_time}`).getTime(),
+    )
+    .slice(0, 5);
+
+  const displayedClasses = classes.map(withImage);
+  const displayedCoaches = coaches.map(withImage);
 
   return (
     <>
@@ -126,8 +116,8 @@ export default async function Home() {
         {/* Media Gallery */}
         <MediaGallery />
 
-        {/* Schedule Section */}
-        <section id="schedule" className="px-4">
+        {/* Timetable Section */}
+        <section id="timetable" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Upcoming Classes</h2>
           <ul className="mx-auto max-w-3xl space-y-4">
             {upcoming.map((item) => (
@@ -183,4 +173,3 @@ export default async function Home() {
     </>
   );
 }
-
