@@ -18,6 +18,17 @@ export interface ClassRecord {
   created_at?: string | null;
 }
 
+export interface CoachRecord {
+  id: number;
+  slug: string;
+  name: string;
+  role?: string | null;
+  bio?: string | null;
+  image?: string | null;
+  certifications?: string | null;
+  fight_record?: string | null;
+}
+
 // Database connection with proper error handling
 const dbPath = path.join(process.cwd(), "gym.db");
 const db = new Database(dbPath);
@@ -519,6 +530,17 @@ export const dbOperations = {
       ) || null;
     } catch (error) {
       console.error("Error getting class by slug:", error);
+      return null;
+    }
+  },
+
+  getCoachBySlug: (slug: string): CoachRecord | null => {
+    try {
+      return (
+        db.prepare("SELECT * FROM coaches WHERE slug = ?").get(slug) as CoachRecord
+      ) || null;
+    } catch (error) {
+      console.error("Error getting coach by slug:", error);
       return null;
     }
   },

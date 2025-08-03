@@ -23,14 +23,14 @@ export default function Home() {
    * Classes
    */
   const classPlaceholders = [
-    { slug: "boxing-basics", name: "Boxing Basics", image: "/images/boxing-basics.png" },
+    { slug: "boxing-basics", name: "Boxing Basics", image: "/images/boxing-training.png" },
     {
       slug: "strength-conditioning",
       name: "Strength & Conditioning",
       image: "/images/strength-conditioning.png",
     },
     { slug: "junior-jabbers", name: "Junior Jabbers", image: "/images/junior-jabbers.png" },
-    { slug: "beginner-boxing", name: "Beginner Boxing", image: "/images/beginner-boxing.png" },
+    { slug: "beginner-boxing", name: "Beginner Boxing", image: "/images/boxing-training.png" },
   ];
 
   const displayedClasses = [...classes];
@@ -46,8 +46,8 @@ export default function Home() {
    * Coaches
    * If any coach named "Shannon" is returned, replace with Humza Muhammad.
    */
-  const normalizedCoaches = coaches.map((coach: any) =>
-    coach.name?.toLowerCase().includes("shannon")
+  const normalizedCoaches = coaches.map((coach: any) => {
+    const adjusted = coach.name?.toLowerCase().includes("shannon")
       ? {
           ...coach,
           slug: "humza-muhammad",
@@ -56,8 +56,15 @@ export default function Home() {
           bio: "Dedicated boxing coach passionate about helping members reach peak performance.",
           image: "/images/coach-humza.png",
         }
-      : coach
-  );
+      : coach;
+    return {
+      ...adjusted,
+      image:
+        adjusted.image && adjusted.image !== "/images/logo.png"
+          ? adjusted.image
+          : "/images/coach-humza.png",
+    };
+  });
 
   const coachPlaceholders = [
     {
@@ -71,13 +78,13 @@ export default function Home() {
       slug: "placeholder-coach-1",
       name: "Coach Placeholder 1",
       role: "Coach",
-      image: "/images/coach-placeholder-1.jpg",
+      image: "/images/coach-scott.png",
     },
     {
       slug: "placeholder-coach-2",
       name: "Coach Placeholder 2",
       role: "Coach",
-      image: "/images/coach-placeholder-2.jpg",
+      image: "/images/kyle-mclaughlin.png",
     },
   ];
 

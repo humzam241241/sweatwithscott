@@ -9,8 +9,8 @@ async function getCoaches() {
 
 export default async function CoachesPage() {
   const fetched = await getCoaches();
-  const coaches = fetched.map((coach: any) =>
-    coach.name?.toLowerCase().includes("shannon")
+  const coaches = fetched.map((coach: any) => {
+    const adjusted = coach.name?.toLowerCase().includes("shannon")
       ? {
           ...coach,
           slug: "humza-muhammad",
@@ -19,8 +19,15 @@ export default async function CoachesPage() {
           bio: "Dedicated boxing coach passionate about helping members reach peak performance.",
           image: "/images/coach-humza.png",
         }
-      : coach
-  );
+      : coach;
+    return {
+      ...adjusted,
+      image:
+        adjusted.image && adjusted.image !== "/images/logo.png"
+          ? adjusted.image
+          : "/images/coach-humza.png",
+    };
+  });
   return (
     <div className="min-h-screen">
       <header className="cave-hero py-20">

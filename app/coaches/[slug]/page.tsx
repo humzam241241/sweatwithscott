@@ -1,19 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import fs from "fs";
+import path from "path";
 
 import { Button } from "@/components/ui/button";
-import { dbOperations } from "@/lib/database";
-
-interface CoachRecord {
-  id: number;
-  slug: string;
-  name: string;
-  role?: string | null;
-  bio?: string | null;
-  image?: string | null;
-  certifications?: string | null;
-  fight_record?: string | null;
-}
+import { dbOperations, type CoachRecord } from "@/lib/database";
 
 interface CoachPageProps {
   params: {
@@ -25,12 +16,16 @@ export default function CoachPage({ params }: CoachPageProps) {
   const coach: CoachRecord | null = dbOperations.getCoachBySlug(params.slug);
   if (!coach) notFound();
 
+  const imagePath =
+    coach.image &&
+    fs.existsSync(path.join(process.cwd(), "public", coach.image.replace(/^\/+/, "")))
+      ? coach.image
+      : "/images/coach-humza.png";
+
   return (
     <div className="min-h-screen bg-white">
-      {coach.image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={coach.image} alt={coach.name} className="h-96 w-full object-cover" />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={imagePath} alt={coach.name} className="h-96 w-full object-cover" />
       <div className="mx-auto max-w-4xl p-8">
         <h1 className="mb-4 text-4xl font-bold text-brand">{coach.name}</h1>
         {coach.role && (
