@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link";
 import ClassCard from "@/components/ClassCard";
 import CoachCard from "@/components/CoachCard";
