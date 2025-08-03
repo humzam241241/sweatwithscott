@@ -9,46 +9,103 @@ import { dbOperations, type ClassRecord, type CoachRecord } from "@/lib/database
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
-type GymClass = ClassRecord & { image?: string | null };
+// ----- FALLBACK DEMO DATA -----
+const fallbackClasses: ClassRecord[] = [
+  {
+    id: 1,
+    slug: "boxing-basics",
+    name: "Boxing Basics",
+    description: "Learn the fundamentals of boxing in a fun, friendly environment.",
+    coach_name: "Coach Kyle",
+    duration: 60,
+    max_capacity: 20,
+    price: 25,
+    day_of_week: "Monday",
+    start_time: "18:00",
+    end_time: "19:00",
+    active: 1,
+    created_at: "",
+    updated_at: "",
+  },
+  {
+    id: 2,
+    slug: "strength-conditioning",
+    name: "Strength & Conditioning",
+    description: "Boost your strength and endurance with guided training.",
+    coach_name: "Coach Sarah",
+    duration: 60,
+    max_capacity: 15,
+    price: 20,
+    day_of_week: "Wednesday",
+    start_time: "17:00",
+    end_time: "18:00",
+    active: 1,
+    created_at: "",
+    updated_at: "",
+  },
+];
 
-interface ScheduleItem {
-  id: number;
-  class_id: number;
-  class_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  coach_name: string;
-  status?: string | null;
-}
+const fallbackCoaches: CoachRecord[] = [
+  {
+    id: 1,
+    slug: "coach-kyle",
+    name: "Coach Kyle",
+    bio: "Professional boxer and certified trainer with 10+ years of experience.",
+    certifications: "Certified Level 1 Boxing Coach",
+    image: null,
+    created_at: "",
+    updated_at: "",
+  },
+  {
+    id: 2,
+    slug: "coach-sarah",
+    name: "Coach Sarah",
+    bio: "Strength and conditioning specialist focused on improving performance.",
+    certifications: "Certified Personal Trainer",
+    image: null,
+    created_at: "",
+    updated_at: "",
+  },
+];
 
+// ----- IMAGE HELPER -----
 function withImage<T extends { image?: string | null }>(item: T): T {
   return {
     ...item,
     image:
-      item.image && item.image !== "/images/logo.png" ? item.image : PLACEHOLDER_IMAGE,
+      item.image && item.image !== "/images/logo.png"
+        ? item.image
+        : PLACEHOLDER_IMAGE,
   };
 }
 
 export default async function Home() {
-  const classes = (dbOperations.getAllClasses() as GymClass[]) || [];
+  // Try to load from DB, otherwise fallback
+  const classes =
+    (dbOperations.getAllClasses?.() as ClassRecord[]) || fallbackClasses;
   const coaches =
-    ((dbOperations as any).getAllCoaches?.() as CoachRecord[]) || [];
+    (dbOperations.getAllCoaches?.() as CoachRecord[]) || fallbackCoaches;
   const instances =
-    ((dbOperations as any).getAllClassInstances?.() as any[]) || [];
+    (dbOperations.getAllClassInstances?.() as any[]) || [];
 
-  const schedule: ScheduleItem[] = Array.isArray(instances)
-    ? instances.map((i) => ({
-        id: i.id,
-        class_id: i.class_id,
-        class_name: i.class_name,
-        date: i.date,
-        start_time: i.start_time,
-        end_time: i.end_time,
-        coach_name: i.coach_name || i.instructor || i.class_instructor || "TBA",
-        status: i.status,
-      }))
-    : [];
+  // If DB returns empty arrays, replace with fallback demo data
+  const finalClasses = (classes.length ? classes : fallbackClasses).map(withImage);
+  const finalCoaches = (coaches.length ? coaches : fallbackCoaches).map(withImage);
+
+  const schedule =
+    Array.isArray(instances) && instances.length
+      ? instances.map((i) => ({
+          id: i.id,
+          class_id: i.class_id,
+          class_name: i.class_name,
+          date: i.date,
+          start_time: i.start_time,
+          end_time: i.end_time,
+          coach_name:
+            i.coach_name || i.instructor || i.class_instructor || "TBA",
+          status: i.status,
+        }))
+      : [];
 
   const upcoming = schedule
     .filter((item) => new Date(item.date) >= new Date())
@@ -59,9 +116,6 @@ export default async function Home() {
     )
     .slice(0, 5);
 
-  const displayedClasses = classes.map(withImage);
-  const displayedCoaches = coaches.map(withImage);
-
   return (
     <>
       {/* Hero Section */}
@@ -71,7 +125,9 @@ export default async function Home() {
       >
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 space-y-6 text-center">
-          <h1 className="text-4xl font-bold md:text-6xl">The Cave Boxing Gym</h1>
+          <h1 className="text-4xl font-bold md:text-6xl">
+            The Cave Boxing Gym
+          </h1>
           <p className="text-lg md:text-2xl">Train like a champion.</p>
           <Link
             href="/membership"
@@ -87,7 +143,7 @@ export default async function Home() {
         <section id="classes" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {displayedClasses.map((cls) => (
+            {finalClasses.map((cls) => (
               <ClassCard key={cls.slug} cls={cls} />
             ))}
           </div>
@@ -102,7 +158,7 @@ export default async function Home() {
         <section id="coaches" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {displayedCoaches.map((coach) => (
+            {finalCoaches.map((coach) => (
               <CoachCard key={coach.slug} coach={coach} />
             ))}
           </div>
@@ -117,30 +173,38 @@ export default async function Home() {
         <MediaGallery />
 
         {/* Timetable Section */}
-        <section id="timetable" className="px-4">
-          <h2 className="mb-8 text-center text-3xl font-bold">Upcoming Classes</h2>
-          <ul className="mx-auto max-w-3xl space-y-4">
-            {upcoming.map((item) => (
-              <li
-                key={item.id}
-                className="flex flex-col justify-between gap-2 border-b pb-4 sm:flex-row sm:gap-0"
-              >
-                <div>
-                  <p className="font-semibold text-brand">{item.class_name}</p>
-                  <p className="text-sm text-brand-dark/70">
-                    {item.date} {item.start_time}-{item.end_time}
-                  </p>
-                </div>
-                <span className="text-sm text-brand-dark/70">{item.coach_name}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-6 text-center">
-            <Link href="/schedule" className="text-brand hover:underline">
-              View Full Schedule
-            </Link>
-          </div>
-        </section>
+        {upcoming.length > 0 && (
+          <section id="timetable" className="px-4">
+            <h2 className="mb-8 text-center text-3xl font-bold">
+              Upcoming Classes
+            </h2>
+            <ul className="mx-auto max-w-3xl space-y-4">
+              {upcoming.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex flex-col justify-between gap-2 border-b pb-4 sm:flex-row sm:gap-0"
+                >
+                  <div>
+                    <p className="font-semibold text-brand">
+                      {item.class_name}
+                    </p>
+                    <p className="text-sm text-brand-dark/70">
+                      {item.date} {item.start_time}-{item.end_time}
+                    </p>
+                  </div>
+                  <span className="text-sm text-brand-dark/70">
+                    {item.coach_name}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 text-center">
+              <Link href="/schedule" className="text-brand hover:underline">
+                View Full Schedule
+              </Link>
+            </div>
+          </section>
+        )}
 
         {/* Membership Section */}
         <section id="membership" className="px-4">
@@ -158,7 +222,10 @@ export default async function Home() {
               </a>
             </p>
             <p>
-              <a href="mailto:info@caveboxing.com" className="text-brand hover:underline">
+              <a
+                href="mailto:info@caveboxing.com"
+                className="text-brand hover:underline"
+              >
                 info@caveboxing.com
               </a>
             </p>
