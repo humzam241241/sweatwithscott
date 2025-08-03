@@ -1,56 +1,63 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { dbOperations } from "@/lib/database";
+import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 
 interface LoggedInResponse {
-  isLoggedIn: true;
+  isLoggedIn: true
   user: {
-    username: string;
-    email: string;
-    isAdmin: boolean;
-  };
+    username: string
+    email?: string
+    isAdmin: boolean
+  }
 }
 
 interface LoggedOutResponse {
-  isLoggedIn: false;
+  isLoggedIn: false
 }
 
-interface ErrorResponse {
-  error: string;
-}
-
-export async function GET(_: NextRequest): Promise<NextResponse<LoggedInResponse | LoggedOutResponse | ErrorResponse>> {
+export async function GET(): Promise<
+  NextResponse<LoggedInResponse | LoggedOutResponse>
+> {
   try {
-    const session = await getServerSession();
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get("session")
 
-    const userInfo = session?.user as
-      | { username?: string | null; name?: string | null; email?: string | null }
-      | undefined;
-
-    const username = userInfo?.username || userInfo?.name;
-    const email = userInfo?.email;
-
-    if (!username || !email) {
-      return NextResponse.json({ isLoggedIn: false });
+    if (!sessionCookie) {
+      return NextResponse.json({ isLoggedIn: false })
     }
 
-    const dbUser = dbOperations.getUserByUsername(username);
-    const isAdmin = dbUser?.is_admin === 1;
+    try {
+      const parsed = JSON.parse(sessionCookie.value) as {
+        username?: unknown
+        email?: unknown
+        isAdmin?: unknown
+      }
 
-    return NextResponse.json({
-      isLoggedIn: true,
-      user: {
-        username,
-        email,
-        isAdmin,
-      },
-    });
+      if (
+        typeof parsed.username === "string" &&
+        typeof parsed.isAdmin === "boolean"
+      ) {
+        const user: LoggedInResponse["user"] = {
+          username: parsed.username,
+          isAdmin: parsed.isAdmin,
+        }
+
+        if (typeof parsed.email === "string") {
+          user.email = parsed.email
+        }
+
+        return NextResponse.json({
+          isLoggedIn: true,
+          user,
+        })
+      }
+    } catch (error) {
+      console.error("Invalid session cookie:", error)
+    }
+
+    return NextResponse.json({ isLoggedIn: false })
   } catch (error) {
-    console.error("Failed to fetch session:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch session" },
-      { status: 500 }
-    );
+    console.error("Failed to read session cookie:", error)
+    return NextResponse.json({ isLoggedIn: false })
   }
 }
 
