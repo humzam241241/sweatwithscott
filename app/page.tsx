@@ -33,24 +33,24 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 }
 
 export default async function Home() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
   const [settings, classesData, coachesData, scheduleData, mediaData, packagesData] =
     await Promise.all([
-      fetch(`${base}/api/settings`).then((r) => r.json()).catch(() => ({} as Record<string, string>)),
-      fetch(`${base}/api/classes`, { cache: "no-store" })
+      fetch("/api/settings")
+        .then((r) => r.json())
+        .catch(() => ({} as Record<string, string>)),
+      fetch("/api/classes", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as ClassRecord[]),
-      fetch(`${base}/api/coaches`, { cache: "no-store" })
+      fetch("/api/coaches", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as CoachRecord[]),
-      fetch(`${base}/api/schedule`, { cache: "no-store" })
+      fetch("/api/schedule", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => []),
-      fetch(`${base}/api/media`, { cache: "no-store" })
+      fetch("/api/media", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as MediaRecord[]),
-      fetch(`${base}/api/packages`, { cache: "no-store" })
+      fetch("/api/packages", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as MembershipPackageRecord[]),
     ]);
