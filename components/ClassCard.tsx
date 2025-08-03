@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import type { ClassRecord } from "@/lib/database";
+import type { ClassRecord } from "@/lib/types";
 
 export default function ClassCard({ cls }: { cls: ClassRecord }) {
   const imageSrc =

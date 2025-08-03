@@ -1,4 +1,3 @@
-'use client';
 import Link from "next/link";
 import ClassCard from "@/components/ClassCard";
 import CoachCard from "@/components/CoachCard";
@@ -6,13 +5,12 @@ import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
-import {
-  dbOperations,
-  type ClassRecord,
-  type CoachRecord,
-  type MediaRecord,
-  type MembershipPackageRecord,
-} from "@/lib/database";
+import type {
+  ClassRecord,
+  CoachRecord,
+  MediaRecord,
+  MembershipPackageRecord,
+} from "@/lib/types";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
@@ -104,39 +102,59 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 }
 
 export default async function Home() {
-  const heroTitle =
-    (await dbOperations.getSiteSetting?.("hero_title")) ?? fallbackHero.title;
-  const heroSubtitle =
-    (await dbOperations.getSiteSetting?.("hero_subtitle")) ??
-    fallbackHero.subtitle;
-  const heroBg =
-    (await dbOperations.getSiteSetting?.("hero_bg")) ?? fallbackHero.bg;
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
+  const [settings, classesData, coachesData, scheduleData, mediaData, packagesData] =
+    await Promise.all([
+      fetch(`${base}/api/settings`).then((r) => r.json()).catch(() => ({} as Record<string, string>)),
+      fetch(`${base}/api/classes`, { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => [] as ClassRecord[]),
+      fetch(`${base}/api/coaches`, { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => [] as CoachRecord[]),
+      fetch(`${base}/api/schedule`, { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => []),
+      fetch(`${base}/api/media`, { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => [] as MediaRecord[]),
+      fetch(`${base}/api/packages`, { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => [] as MembershipPackageRecord[]),
+    ]);
+
+  const heroTitle = (settings as any).hero_title ?? fallbackHero.title;
+  const heroSubtitle = (settings as any).hero_subtitle ?? fallbackHero.subtitle;
+  const heroBg = (settings as any).hero_bg ?? fallbackHero.bg;
 
   const classes =
-    (await dbOperations.getAllClasses?.()) ?? fallbackClasses;
+    Array.isArray(classesData) && classesData.length
+      ? classesData
+      : fallbackClasses;
   const coaches =
-    (await dbOperations.getAllCoaches?.()) ?? fallbackCoaches;
-  const scheduleData =
-    (await dbOperations.getSchedule?.()) ?? [];
-  const media = (await dbOperations.getMedia?.()) ?? [];
+    Array.isArray(coachesData) && coachesData.length
+      ? coachesData
+      : fallbackCoaches;
+  const media =
+    Array.isArray(mediaData) && mediaData.length ? mediaData : fallbackMedia;
   const packages =
-    (await dbOperations.getMembershipPackages?.()) ?? [];
+    Array.isArray(packagesData) && packagesData.length
+      ? packagesData
+      : fallbackPackages;
 
   const contactAddress =
-    (await dbOperations.getSiteSetting?.("contact_address")) ??
-    "123 Fight St, Hamilton, ON";
+    (settings as any).contact_address ?? "123 Fight St, Hamilton, ON";
   const contactPhone =
-    (await dbOperations.getSiteSetting?.("contact_phone")) ??
-    "(289) 892-5430";
+    (settings as any).contact_phone ?? "(289) 892-5430";
   const contactEmail =
-    (await dbOperations.getSiteSetting?.("contact_email")) ??
-    "info@caveboxing.com";
+    (settings as any).contact_email ?? "info@caveboxing.com";
 
-  // If DB returns empty arrays, replace with fallback demo data
-  const finalClasses = (classes.length ? classes : fallbackClasses).map(withImage);
-  const finalCoaches = (coaches.length ? coaches : fallbackCoaches).map(withImage);
-  const finalMedia = media.length ? media : fallbackMedia;
-  const finalPackages = packages.length ? packages : fallbackPackages;
+  // Prepare data with images and fallbacks
+  const finalClasses = classes.map(withImage);
+  const finalCoaches = coaches.map(withImage);
+  const finalMedia = media;
+  const finalPackages = packages;
 
   const schedule =
     Array.isArray(scheduleData) && scheduleData.length
