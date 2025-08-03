@@ -5,7 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Check, Star } from "lucide-react"
 import Link from "next/link"
 
-const membershipPlans = [
+export interface MembershipPlan {
+  name: string
+  price: string
+  period: string
+  description: string
+  features: string[]
+  popular?: boolean
+  buttonText: string
+  buttonLink: string
+}
+
+const membershipPlans: MembershipPlan[] = [
   {
     name: "Drop-In",
     price: "$25",
@@ -82,7 +93,8 @@ const specialPrograms = [
   },
 ]
 
-export default function MembershipPackages() {
+export default function MembershipPackages({ packages }: { packages?: MembershipPlan[] }) {
+  const plans = packages && packages.length ? packages : membershipPlans
   return (
     <div className="w-full">
       <div className="text-center mb-12">
@@ -95,7 +107,7 @@ export default function MembershipPackages() {
 
       {/* Main Membership Plans */}
       <div className="grid md:grid-cols-3 gap-8 mb-16">
-        {membershipPlans.map((plan, index) => (
+        {plans.map((plan, index) => (
           <Card
             key={index}
             className={`relative overflow-hidden ${

@@ -31,6 +31,24 @@ export interface CoachRecord {
   updated_at?: string | null;
 }
 
+export interface MediaRecord {
+  id: number;
+  type?: string | null;
+  url: string;
+  title?: string | null;
+  created_at?: string | null;
+}
+
+export interface MembershipPackageRecord {
+  id: number;
+  name: string;
+  description?: string | null;
+  price?: number | null;
+  features?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 // Database connection with proper error handling
 const dbPath = path.join(process.cwd(), "gym.db");
 const db = new Database(dbPath);
@@ -140,6 +158,64 @@ export function initializeDatabase() {
       );
     `);
 
+    // Additional tables for homepage content
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS coaches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT UNIQUE,
+        name TEXT NOT NULL,
+        bio TEXT,
+        certifications TEXT,
+        image TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS schedule (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        class_id INTEGER NOT NULL,
+        date DATE NOT NULL,
+        start_time TIME NOT NULL,
+        end_time TIME NOT NULL,
+        coach_name TEXT,
+        status TEXT,
+        FOREIGN KEY(class_id) REFERENCES classes(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS media (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT,
+        url TEXT,
+        title TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS membership_packages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        description TEXT,
+        price REAL,
+        features TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS site_settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key TEXT UNIQUE,
+        value TEXT
+      );
+    `);
+
+    // Ensure newer columns exist on classes
+    const classCols = db.prepare("PRAGMA table_info(classes)").all() as { name: string }[];
+    const classNames = classCols.map((c) => c.name);
+    if (!classNames.includes("slug")) db.exec("ALTER TABLE classes ADD COLUMN slug TEXT");
+    if (!classNames.includes("coach_name")) db.exec("ALTER TABLE classes ADD COLUMN coach_name TEXT");
+    if (!classNames.includes("active")) db.exec("ALTER TABLE classes ADD COLUMN active INTEGER DEFAULT 1");
+    if (!classNames.includes("image")) db.exec("ALTER TABLE classes ADD COLUMN image TEXT");
+    if (!classNames.includes("updated_at")) db.exec("ALTER TABLE classes ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP");
+
     // Add membership_expiry column for existing installations
     try {
       db.prepare("ALTER TABLE users ADD COLUMN membership_expiry DATE").run();
@@ -174,6 +250,71 @@ export function initializeDatabase() {
 
     // Replace class schedule with updated classes
     resetClassSchedule();
+
+    // Seed coaches if empty
+    const coachCount = db.prepare("SELECT COUNT(*) as count FROM coaches").get() as { count: number };
+    if (coachCount.count === 0) {
+      const insertCoach = db.prepare(
+        `INSERT INTO coaches (slug, name, bio, certifications, image) VALUES (?, ?, ?, ?, ?)`,
+      );
+      insertCoach.run(
+        "coach-kyle",
+        "Coach Kyle",
+        "Professional boxer and certified trainer with 10+ years of experience.",
+        "Certified Level 1 Boxing Coach",
+        "/images/logo.png",
+      );
+      insertCoach.run(
+        "coach-sarah",
+        "Coach Sarah",
+        "Strength and conditioning specialist focused on improving performance.",
+        "Certified Personal Trainer",
+        "/images/logo.png",
+      );
+    }
+
+    // Seed membership packages if empty
+    const pkgCount = db
+      .prepare("SELECT COUNT(*) as count FROM membership_packages")
+      .get() as { count: number };
+    if (pkgCount.count === 0) {
+      const insertPkg = db.prepare(
+        `INSERT INTO membership_packages (name, description, price, features) VALUES (?, ?, ?, ?)`,
+      );
+      insertPkg.run(
+        "Drop-In",
+        "Perfect for trying us out or occasional visits",
+        25,
+        JSON.stringify(["Access to any class", "No commitment required", "Pay as you go", "Valid for 30 days from purchase"]),
+      );
+      insertPkg.run(
+        "Monthly Unlimited",
+        "Best value for regular training",
+        150,
+        JSON.stringify([
+          "Unlimited classes",
+          "All class types included",
+          "Priority booking",
+          "Guest pass (1 per month)",
+          "Locker rental discount",
+          "Nutrition consultation",
+        ]),
+      );
+    }
+
+    // Seed site settings if empty
+    const settingsCount = db.prepare("SELECT COUNT(*) as count FROM site_settings").get() as { count: number };
+    if (settingsCount.count === 0) {
+      const insertSetting = db.prepare(
+        `INSERT INTO site_settings (key, value) VALUES (?, ?)`,
+      );
+      insertSetting.run("hero_title", "The Cave Boxing Gym");
+      insertSetting.run("hero_subtitle", "Train like a champion.");
+      insertSetting.run("hero_bg", "/images/frontpic.png");
+      insertSetting.run("contact_address", "123 Fight St, Hamilton, ON");
+      insertSetting.run("contact_phone", "(289) 892-5430");
+      insertSetting.run("contact_email", "info@caveboxing.com");
+    }
 
     // Insert sample users if none exist (excluding admin)
     const userCount = db
@@ -542,6 +683,55 @@ export const dbOperations = {
     } catch (error) {
       console.error("Error getting coaches:", error);
       return [];
+    }
+  },
+
+  getSchedule: async (): Promise<any[]> => {
+    try {
+      return db
+        .prepare(
+          `SELECT * FROM schedule ORDER BY date, start_time`,
+        )
+        .all();
+    } catch (error) {
+      console.error("Error getting schedule:", error);
+      return [];
+    }
+  },
+
+  getMedia: async (): Promise<MediaRecord[]> => {
+    try {
+      return db
+        .prepare(`SELECT id, type, url, title, created_at FROM media ORDER BY id DESC`)
+        .all() as MediaRecord[];
+    } catch (error) {
+      console.error("Error getting media:", error);
+      return [];
+    }
+  },
+
+  getMembershipPackages: async (): Promise<MembershipPackageRecord[]> => {
+    try {
+      return db
+        .prepare(
+          `SELECT id, name, description, price, features, created_at, updated_at FROM membership_packages ORDER BY price`,
+        )
+        .all() as MembershipPackageRecord[];
+    } catch (error) {
+      console.error("Error getting membership packages:", error);
+      return [];
+    }
+  },
+
+  getSiteSetting: (key: string): string | null => {
+    try {
+      const row = db
+        .prepare(`SELECT value FROM site_settings WHERE key = ?`)
+        .get(key) as { value: string } | undefined;
+      return row?.value ?? null;
+    } catch (error) {
+      console.error("Error getting site setting:", error);
+      return null;
     }
   },
 
