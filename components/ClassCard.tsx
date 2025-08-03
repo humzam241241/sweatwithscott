@@ -10,8 +10,10 @@ export default function ClassCard({ cls }: { cls: ClassRecord }) {
       ? cls.image
       : "/images/boxing-training.png";
 
+  const slug = cls.slug || "unknown-class";
+
   return (
-    <Link href={`/classes/${cls.slug}`}>
+    <Link href={`/classes/${slug}`}>
       <motion.div
         whileHover={{ scale: 1.05 }}
         className="overflow-hidden rounded-xl bg-white shadow-lg transition-transform duration-300"
