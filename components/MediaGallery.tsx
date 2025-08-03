@@ -14,16 +14,17 @@ interface MediaItem {
   category: string;
 }
 
-export default function MediaGallery() {
-  const [media, setMedia] = useState<MediaItem[]>([]);
+export default function MediaGallery({ items = [] }: { items?: MediaItem[] }) {
+  const [media, setMedia] = useState<MediaItem[]>(items);
   const [category, setCategory] = useState("all");
   const [lightbox, setLightbox] = useState<MediaItem | null>(null);
 
   useEffect(() => {
+    if (items.length) return;
     fetch("/api/media")
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setMedia(Array.isArray(data) ? data : []));
-  }, []);
+  }, [items.length]);
 
   const filtered =
     category === "all" ? media : media.filter((m) => m.category === category);

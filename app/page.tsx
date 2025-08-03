@@ -6,11 +6,23 @@ import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
-import { dbOperations, type ClassRecord, type CoachRecord } from "@/lib/database";
+import {
+  dbOperations,
+  type ClassRecord,
+  type CoachRecord,
+  type MediaRecord,
+  type MembershipPackageRecord,
+} from "@/lib/database";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
 // ----- FALLBACK DEMO DATA -----
+const fallbackHero = {
+  title: "The Cave Boxing Gym",
+  subtitle: "Train like a champion.",
+  bg: "/images/frontpic.png",
+};
+
 const fallbackClasses: ClassRecord[] = [
   {
     id: 1,
@@ -69,6 +81,17 @@ const fallbackCoaches: CoachRecord[] = [
   },
 ];
 
+const fallbackMedia: MediaRecord[] = [
+  {
+    id: 1,
+    type: "Training",
+    url: "/images/frontpic.png",
+    title: "Gym Photo",
+  },
+];
+
+const fallbackPackages: MembershipPackageRecord[] = [];
+
 // ----- IMAGE HELPER -----
 function withImage<T extends { image?: string | null }>(item: T): T {
   return {
@@ -81,32 +104,75 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 }
 
 export default async function Home() {
-  // Try to load from DB, otherwise fallback
+  const heroTitle =
+    (await dbOperations.getSiteSetting?.("hero_title")) ?? fallbackHero.title;
+  const heroSubtitle =
+    (await dbOperations.getSiteSetting?.("hero_subtitle")) ??
+    fallbackHero.subtitle;
+  const heroBg =
+    (await dbOperations.getSiteSetting?.("hero_bg")) ?? fallbackHero.bg;
+
   const classes =
     (await dbOperations.getAllClasses?.()) ?? fallbackClasses;
   const coaches =
     (await dbOperations.getAllCoaches?.()) ?? fallbackCoaches;
-  const instances =
-    (await dbOperations.getAllClassInstances?.()) ?? [];
+  const scheduleData =
+    (await dbOperations.getSchedule?.()) ?? [];
+  const media = (await dbOperations.getMedia?.()) ?? [];
+  const packages =
+    (await dbOperations.getMembershipPackages?.()) ?? [];
+
+  const contactAddress =
+    (await dbOperations.getSiteSetting?.("contact_address")) ??
+    "123 Fight St, Hamilton, ON";
+  const contactPhone =
+    (await dbOperations.getSiteSetting?.("contact_phone")) ??
+    "(289) 892-5430";
+  const contactEmail =
+    (await dbOperations.getSiteSetting?.("contact_email")) ??
+    "info@caveboxing.com";
 
   // If DB returns empty arrays, replace with fallback demo data
   const finalClasses = (classes.length ? classes : fallbackClasses).map(withImage);
   const finalCoaches = (coaches.length ? coaches : fallbackCoaches).map(withImage);
+  const finalMedia = media.length ? media : fallbackMedia;
+  const finalPackages = packages.length ? packages : fallbackPackages;
 
   const schedule =
-    Array.isArray(instances) && instances.length
-      ? instances.map((i) => ({
+    Array.isArray(scheduleData) && scheduleData.length
+      ? scheduleData.map((i: any) => ({
           id: i.id,
           class_id: i.class_id,
           class_name: i.class_name,
           date: i.date,
           start_time: i.start_time,
           end_time: i.end_time,
-          coach_name:
-            i.coach_name || i.instructor || i.class_instructor || "TBA",
+          coach_name: i.coach_name || "TBA",
           status: i.status,
         }))
       : [];
+
+  const mediaItems = finalMedia.length
+    ? finalMedia.map((m) => ({
+        id: m.id,
+        fileUrl: (m as any).url ?? (m as any).fileUrl,
+        title: m.title ?? "",
+        category: (m as any).type ?? "all",
+      }))
+    : [];
+
+  const packageItems = finalPackages.length
+    ? finalPackages.map((p) => ({
+        name: p.name,
+        price: `$${p.price ?? 0}`,
+        period: "",
+        description: p.description ?? "",
+        features: p.features ? JSON.parse(p.features) : [],
+        popular: false,
+        buttonText: "Join Now",
+        buttonLink: "/membership",
+      }))
+    : undefined;
 
   const upcoming = schedule
     .filter((item) => new Date(item.date) >= new Date())
@@ -122,14 +188,12 @@ export default async function Home() {
       {/* Hero Section */}
       <section
         className="relative flex h-[80vh] items-center justify-center bg-cover bg-center text-white"
-        style={{ backgroundImage: "url('/images/frontpic.png')" }}
+        style={{ backgroundImage: `url('${heroBg}')` }}
       >
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 space-y-6 text-center">
-          <h1 className="text-4xl font-bold md:text-6xl">
-            The Cave Boxing Gym
-          </h1>
-          <p className="text-lg md:text-2xl">Train like a champion.</p>
+          <h1 className="text-4xl font-bold md:text-6xl">{heroTitle}</h1>
+          <p className="text-lg md:text-2xl">{heroSubtitle}</p>
           <Link
             href="/membership"
             className="inline-block rounded bg-brand px-8 py-3 font-medium text-white transition-colors hover:bg-brand-accent"
@@ -171,7 +235,7 @@ export default async function Home() {
         </section>
 
         {/* Media Gallery */}
-        <MediaGallery />
+        <MediaGallery items={mediaItems} />
 
         {/* Timetable Section */}
         {upcoming.length > 0 && (
@@ -209,25 +273,25 @@ export default async function Home() {
 
         {/* Membership Section */}
         <section id="membership" className="px-4">
-          <MembershipPackages />
+          <MembershipPackages packages={packageItems} />
         </section>
 
         {/* Contact Section */}
         <section id="contact" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Contact</h2>
           <div className="mx-auto max-w-xl space-y-4 text-center">
-            <p>123 Fight St, Hamilton, ON</p>
+            <p>{contactAddress}</p>
             <p>
-              <a href="tel:2898925430" className="text-brand hover:underline">
-                (289) 892-5430
+              <a href={`tel:${contactPhone}`} className="text-brand hover:underline">
+                {contactPhone}
               </a>
             </p>
             <p>
               <a
-                href="mailto:info@caveboxing.com"
+                href={`mailto:${contactEmail}`}
                 className="text-brand hover:underline"
               >
-                info@caveboxing.com
+                {contactEmail}
               </a>
             </p>
           </div>
