@@ -83,11 +83,11 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 export default async function Home() {
   // Try to load from DB, otherwise fallback
   const classes =
-    (dbOperations.getAllClasses?.() as ClassRecord[]) || fallbackClasses;
+    (await dbOperations.getAllClasses?.()) ?? fallbackClasses;
   const coaches =
-    (dbOperations.getAllCoaches?.() as CoachRecord[]) || fallbackCoaches;
+    (await dbOperations.getAllCoaches?.()) ?? fallbackCoaches;
   const instances =
-    (dbOperations.getAllClassInstances?.() as any[]) || [];
+    (await dbOperations.getAllClassInstances?.()) ?? [];
 
   // If DB returns empty arrays, replace with fallback demo data
   const finalClasses = (classes.length ? classes : fallbackClasses).map(withImage);
