@@ -7,26 +7,28 @@ export interface ClassRecord {
   slug: string;
   name: string;
   description?: string | null;
-  instructor?: string | null;
+  coach_name?: string | null;
   duration?: number | null;
   max_capacity?: number | null;
   price?: number | null;
   day_of_week?: string | null;
   start_time?: string | null;
   end_time?: string | null;
-  is_active?: number | null;
+  active?: number | null;
   created_at?: string | null;
+  updated_at?: string | null;
+  image?: string | null;
 }
 
 export interface CoachRecord {
   id: number;
   slug: string;
   name: string;
-  role?: string | null;
   bio?: string | null;
-  image?: string | null;
   certifications?: string | null;
-  fight_record?: string | null;
+  image?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 // Database connection with proper error handling
@@ -512,13 +514,50 @@ export const dbOperations = {
   },
 
   // Class operations
-  getAllClasses: () => {
+  getAllClasses: async (): Promise<ClassRecord[]> => {
     try {
-      return db
-        .prepare("SELECT * FROM classes WHERE is_active = 1 ORDER BY name")
+      const rows = db
+        .prepare(
+          `SELECT id, slug, name, description, instructor as coach_name, duration, max_capacity, price,
+                  day_of_week, start_time, end_time, is_active as active, created_at, updated_at, image
+           FROM classes
+           ORDER BY name`,
+        )
         .all();
+      return rows as ClassRecord[];
     } catch (error) {
       console.error("Error getting classes:", error);
+      return [];
+    }
+  },
+
+  getAllCoaches: async (): Promise<CoachRecord[]> => {
+    try {
+      const rows = db
+        .prepare(
+          `SELECT id, slug, name, bio, certifications, image, created_at, updated_at FROM coaches ORDER BY name`,
+        )
+        .all();
+      return rows as CoachRecord[];
+    } catch (error) {
+      console.error("Error getting coaches:", error);
+      return [];
+    }
+  },
+
+  getAllClassInstances: async (): Promise<any[]> => {
+    try {
+      const rows = db
+        .prepare(
+          `SELECT ci.*, c.name as class_name, c.instructor as coach_name
+           FROM class_instances ci
+           JOIN classes c ON ci.class_id = c.id
+           ORDER BY ci.date, ci.start_time`,
+        )
+        .all();
+      return rows as any[];
+    } catch (error) {
+      console.error("Error getting class instances:", error);
       return [];
     }
   },
