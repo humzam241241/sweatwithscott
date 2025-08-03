@@ -10,8 +10,10 @@ export default function CoachCard({ coach }: { coach: CoachRecord }) {
       ? coach.image
       : "/images/coach-humza.png";
 
+  const slug = coach.slug || "unknown-coach";
+
   return (
-    <Link href={`/coaches/${coach.slug}`}>
+    <Link href={`/coaches/${slug}`}>
       <motion.div
         whileHover={{ scale: 1.05 }}
         className="rounded-xl bg-white p-6 text-center shadow-lg transition-transform duration-300"
