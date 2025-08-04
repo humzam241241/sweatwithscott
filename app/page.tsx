@@ -72,7 +72,7 @@ export default async function Home() {
     (settings as any).contact_email ?? "info@caveboxing.com";
 
   // Prepare data with images and fallbacks
-  const seen = new Set<string>();
+  const seen = new Set();
   const uniqueClasses = classes.filter((cls) => {
     const lowerName = cls.name?.toLowerCase();
     if (!lowerName) return false;
@@ -180,6 +180,46 @@ export default async function Home() {
               View All Classes
             </Link>
           </div>
+        </section>
+
+        <section id="weekly-schedule" className="px-4 mt-16">
+          <h2 className="mb-8 text-center text-3xl font-bold">Weekly Schedule</h2>
+          {schedule.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-300 text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Day</th>
+                    <th className="px-4 py-2 text-left">Class</th>
+                    <th className="px-4 py-2 text-left">Time</th>
+                    <th className="px-4 py-2 text-left">Coach</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedule.map((item) => (
+                    <tr key={item.id} className="border-t">
+                      <td className="px-4 py-2">
+                        {item.date
+                          ? new Date(item.date).toLocaleDateString("en-US", {
+                              weekday: "long",
+                            })
+                          : item.day_of_week}
+                      </td>
+                      <td className="px-4 py-2">{item.class_name}</td>
+                      <td className="px-4 py-2">
+                        {item.start_time} - {item.end_time}
+                      </td>
+                      <td className="px-4 py-2">{item.coach_name}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-center text-sm text-gray-500">
+              No schedule available.
+            </p>
+          )}
         </section>
 
         {/* Coaches Section */}
