@@ -5,6 +5,7 @@ import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
+import DebugLogger from "@/components/DebugLogger";
 import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches";
 import type {
   ClassRecord,
@@ -141,6 +142,13 @@ export default async function Home() {
 
   return (
     <>
+      <DebugLogger
+        settings={settings}
+        classes={classes}
+        coaches={coaches}
+        media={media}
+        packages={packages}
+      />
       {/* Hero Section */}
       <section
         className="relative flex h-[80vh] items-center justify-center bg-cover bg-center text-white"
@@ -170,7 +178,7 @@ export default async function Home() {
               ))
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
-                No classes available.
+                No classes available
               </p>
             )}
           </div>
@@ -232,7 +240,7 @@ export default async function Home() {
               ))
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
-                No coaches available.
+                No coaches available
               </p>
             )}
           </div>
@@ -247,17 +255,18 @@ export default async function Home() {
         {mediaItems.length ? (
           <MediaGallery items={mediaItems} />
         ) : (
-          <p className="text-center text-sm text-brand-dark/70">
-            No media available.
-          </p>
+          <section id="media" className="px-4 py-24">
+            <h2 className="mb-8 text-center text-3xl font-bold">Media</h2>
+            <p className="text-center text-sm text-brand-dark/70">
+              No media available
+            </p>
+          </section>
         )}
 
         {/* Timetable */}
-        {upcoming.length > 0 && (
-          <section id="timetable" className="px-4">
-            <h2 className="mb-8 text-center text-3xl font-bold">
-              Upcoming Classes
-            </h2>
+        <section id="timetable" className="px-4">
+          <h2 className="mb-8 text-center text-3xl font-bold">Upcoming Classes</h2>
+          {upcoming.length ? (
             <ul className="mx-auto max-w-3xl space-y-4">
               {upcoming.map((item) => (
                 <li
@@ -278,13 +287,17 @@ export default async function Home() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 text-center">
-              <Link href="/schedule" className="text-brand hover:underline">
-                View Full Schedule
-              </Link>
-            </div>
-          </section>
-        )}
+          ) : (
+            <p className="text-center text-sm text-brand-dark/70">
+              No upcoming classes
+            </p>
+          )}
+          <div className="mt-6 text-center">
+            <Link href="/schedule" className="text-brand hover:underline">
+              View Full Schedule
+            </Link>
+          </div>
+        </section>
 
         {/* Membership Section */}
         <section id="membership" className="px-4">
