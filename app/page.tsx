@@ -5,6 +5,7 @@ import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
+import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches";
 import type {
   ClassRecord,
   CoachRecord,
@@ -88,7 +89,7 @@ export default async function Home() {
   });
 
   const finalClasses = uniqueClasses.map(withImage).slice(0, 4);
-  const finalCoaches = coaches.map(withImage);
+  const finalCoaches = filterUniqueCoaches(coaches).map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
 
