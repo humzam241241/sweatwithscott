@@ -10,6 +10,14 @@ async function getClasses() {
 
 export default async function ClassesPage() {
   const classes = await getClasses();
+  const seen = new Set();
+  const uniqueClasses = classes.filter((cls: any) => {
+    const lowerName = cls.name?.toLowerCase();
+    if (!lowerName) return false;
+    if (seen.has(lowerName)) return false;
+    seen.add(lowerName);
+    return true;
+  });
   return (
     <div className="min-h-screen bg-white">
       <header className="bg-gradient-to-r from-brand to-brand-dark py-20 text-white">
@@ -36,7 +44,7 @@ export default async function ClassesPage() {
       <section className="py-16">
         <h2 className="text-3xl font-bold text-center mb-12">Available Classes</h2>
         <div className="card-grid">
-          {classes.map((cls: any) => (
+          {uniqueClasses.map((cls: any) => (
             <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
               <img src={cls.image || "/images/gym-training.png"} alt={cls.name} />
               <div className="card-overlay">
