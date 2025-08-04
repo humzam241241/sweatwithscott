@@ -77,29 +77,17 @@ export default async function Home() {
   const contactEmail =
     (settings as any).contact_email ?? "info@caveboxing.com";
 
-<<<<<<< HEAD
-  // Prepare data with images and fallbacks
-  // Show only one unique class per name
-  const seen = new Set();
-  const uniqueClasses = classes.filter(cls => {
-=======
   // Ensure homepage only shows one card per class name
   const seen = new Set();
   const uniqueClasses = classes.filter((cls) => {
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
     const lowerName = cls.name?.toLowerCase();
     if (!lowerName) return false;
     if (seen.has(lowerName)) return false;
     seen.add(lowerName);
     return true;
   });
-<<<<<<< HEAD
-  const finalClasses = uniqueClasses.map(withImage);
 
-=======
-
-  const finalClasses = uniqueClasses.map(withImage);
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
+  const finalClasses = uniqueClasses.map(withImage).slice(0, 4);
   const finalCoaches = coaches.map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
@@ -176,13 +164,9 @@ export default async function Home() {
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {finalClasses.length ? (
-<<<<<<< HEAD
-              finalClasses.map((cls) => <ClassCard key={cls.slug ?? cls.name} cls={cls} />)
-=======
               finalClasses.map((cls) => (
                 <ClassCard key={cls.slug ?? cls.name} cls={cls} />
               ))
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
                 No classes available.
@@ -242,13 +226,9 @@ export default async function Home() {
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {finalCoaches.length ? (
-<<<<<<< HEAD
-              finalCoaches.map((coach) => <CoachCard key={coach.slug ?? coach.name} coach={coach} />)
-=======
               finalCoaches.map((coach) => (
                 <CoachCard key={coach.slug ?? coach.name} coach={coach} />
               ))
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
                 No coaches available.
