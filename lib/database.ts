@@ -371,7 +371,11 @@ export function initializeDatabase() {
     }
 
     // Generate class instances for the next 30 days
-    generateClassInstances();
+    const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get().count;
+    if (classCount === 0) {
+      console.log("Seeding initial data...");
+      generateClassInstances();
+    }
 
     console.log("Database initialized successfully");
   } catch (error) {
