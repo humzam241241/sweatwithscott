@@ -4,7 +4,10 @@ import type { ClassRecord } from "@/lib/types";
 
 export async function GET() {
   try {
-    const classes = (await dbOperations.getAllClasses?.()) as ClassRecord[] | undefined;
+    // Always call the function directly — no optional chaining
+    const classes = (await dbOperations.getAllClasses()) as ClassRecord[];
+
+    // Return an empty array if somehow no data
     return NextResponse.json(classes ?? []);
   } catch (error) {
     console.error("Error fetching classes:", error);

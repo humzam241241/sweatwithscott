@@ -14,46 +14,52 @@ import type {
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
-// ----- FALLBACK HERO DATA -----
+// Fallback hero section
 const fallbackHero = {
   title: "The Cave Boxing Gym",
   subtitle: "Train like a champion.",
   bg: "/images/frontpic.png",
 };
 
-// ----- IMAGE HELPER -----
+// Adds placeholder image if missing
 function withImage<T extends { image?: string | null }>(item: T): T {
   return {
     ...item,
     image:
-      item.image && item.image !== "/images/logo.png"
+      item.image && item.image.trim() && item.image !== "/images/logo.png"
         ? item.image
         : PLACEHOLDER_IMAGE,
   };
 }
 
 export default async function Home() {
-  const [settings, classesData, coachesData, scheduleData, mediaData, packagesData] =
-    await Promise.all([
-      fetch("/api/settings")
-        .then((r) => r.json())
-        .catch(() => ({} as Record<string, string>)),
-      fetch("/api/classes", { cache: "no-store" })
-        .then((r) => r.json())
-        .catch(() => [] as ClassRecord[]),
-      fetch("/api/coaches", { cache: "no-store" })
-        .then((r) => r.json())
-        .catch(() => [] as CoachRecord[]),
-      fetch("/api/schedule", { cache: "no-store" })
-        .then((r) => r.json())
-        .catch(() => []),
-      fetch("/api/media", { cache: "no-store" })
-        .then((r) => r.json())
-        .catch(() => [] as MediaRecord[]),
-      fetch("/api/packages", { cache: "no-store" })
-        .then((r) => r.json())
-        .catch(() => [] as MembershipPackageRecord[]),
-    ]);
+  const [
+    settings,
+    classesData,
+    coachesData,
+    scheduleData,
+    mediaData,
+    packagesData,
+  ] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/settings`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => ({} as Record<string, string>)),
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/classes`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => [] as ClassRecord[]),
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/coaches`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => [] as CoachRecord[]),
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/schedule`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => []),
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/media`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => [] as MediaRecord[]),
+    fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ""}/api/packages`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => [] as MembershipPackageRecord[]),
+  ]);
 
   const heroTitle = (settings as any).hero_title ?? fallbackHero.title;
   const heroSubtitle = (settings as any).hero_subtitle ?? fallbackHero.subtitle;
@@ -71,18 +77,29 @@ export default async function Home() {
   const contactEmail =
     (settings as any).contact_email ?? "info@caveboxing.com";
 
+<<<<<<< HEAD
   // Prepare data with images and fallbacks
   // Show only one unique class per name
   const seen = new Set();
   const uniqueClasses = classes.filter(cls => {
+=======
+  // Ensure homepage only shows one card per class name
+  const seen = new Set();
+  const uniqueClasses = classes.filter((cls) => {
+>>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
     const lowerName = cls.name?.toLowerCase();
     if (!lowerName) return false;
     if (seen.has(lowerName)) return false;
     seen.add(lowerName);
     return true;
   });
+<<<<<<< HEAD
   const finalClasses = uniqueClasses.map(withImage);
 
+=======
+
+  const finalClasses = uniqueClasses.map(withImage);
+>>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
   const finalCoaches = coaches.map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
@@ -129,7 +146,7 @@ export default async function Home() {
     .sort(
       (a, b) =>
         new Date(`${a.date}T${a.start_time}`).getTime() -
-        new Date(`${b.date}T${b.start_time}`).getTime(),
+        new Date(`${b.date}T${b.start_time}`).getTime()
     )
     .slice(0, 5);
 
@@ -159,7 +176,13 @@ export default async function Home() {
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {finalClasses.length ? (
+<<<<<<< HEAD
               finalClasses.map((cls) => <ClassCard key={cls.slug ?? cls.name} cls={cls} />)
+=======
+              finalClasses.map((cls) => (
+                <ClassCard key={cls.slug ?? cls.name} cls={cls} />
+              ))
+>>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
                 No classes available.
@@ -219,7 +242,13 @@ export default async function Home() {
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {finalCoaches.length ? (
+<<<<<<< HEAD
               finalCoaches.map((coach) => <CoachCard key={coach.slug ?? coach.name} coach={coach} />)
+=======
+              finalCoaches.map((coach) => (
+                <CoachCard key={coach.slug ?? coach.name} coach={coach} />
+              ))
+>>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
                 No coaches available.
@@ -242,7 +271,7 @@ export default async function Home() {
           </p>
         )}
 
-        {/* Timetable Section */}
+        {/* Timetable */}
         {upcoming.length > 0 && (
           <section id="timetable" className="px-4">
             <h2 className="mb-8 text-center text-3xl font-bold">
@@ -292,10 +321,7 @@ export default async function Home() {
               </a>
             </p>
             <p>
-              <a
-                href={`mailto:${contactEmail}`}
-                className="text-brand hover:underline"
-              >
+              <a href={`mailto:${contactEmail}`} className="text-brand hover:underline">
                 {contactEmail}
               </a>
             </p>
