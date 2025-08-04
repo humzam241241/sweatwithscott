@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ClassCard from "@/components/ClassCard";
 import CoachCard from "@/components/CoachCard";
 import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
@@ -14,81 +13,12 @@ import type {
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
-// ----- FALLBACK DEMO DATA -----
+// ----- FALLBACK HERO DATA -----
 const fallbackHero = {
   title: "The Cave Boxing Gym",
   subtitle: "Train like a champion.",
   bg: "/images/frontpic.png",
 };
-
-const fallbackClasses: ClassRecord[] = [
-  {
-    id: 1,
-    slug: "boxing-basics",
-    name: "Boxing Basics",
-    description: "Learn the fundamentals of boxing in a fun, friendly environment.",
-    coach_name: "Coach Kyle",
-    duration: 60,
-    max_capacity: 20,
-    price: 25,
-    day_of_week: "Monday",
-    start_time: "18:00",
-    end_time: "19:00",
-    active: 1,
-    created_at: "",
-    updated_at: "",
-  },
-  {
-    id: 2,
-    slug: "strength-conditioning",
-    name: "Strength & Conditioning",
-    description: "Boost your strength and endurance with guided training.",
-    coach_name: "Coach Sarah",
-    duration: 60,
-    max_capacity: 15,
-    price: 20,
-    day_of_week: "Wednesday",
-    start_time: "17:00",
-    end_time: "18:00",
-    active: 1,
-    created_at: "",
-    updated_at: "",
-  },
-];
-
-const fallbackCoaches: CoachRecord[] = [
-  {
-    id: 1,
-    slug: "coach-kyle",
-    name: "Coach Kyle",
-    bio: "Professional boxer and certified trainer with 10+ years of experience.",
-    certifications: "Certified Level 1 Boxing Coach",
-    image: null,
-    created_at: "",
-    updated_at: "",
-  },
-  {
-    id: 2,
-    slug: "coach-sarah",
-    name: "Coach Sarah",
-    bio: "Strength and conditioning specialist focused on improving performance.",
-    certifications: "Certified Personal Trainer",
-    image: null,
-    created_at: "",
-    updated_at: "",
-  },
-];
-
-const fallbackMedia: MediaRecord[] = [
-  {
-    id: 1,
-    type: "Training",
-    url: "/images/frontpic.png",
-    title: "Gym Photo",
-  },
-];
-
-const fallbackPackages: MembershipPackageRecord[] = [];
 
 // ----- IMAGE HELPER -----
 function withImage<T extends { image?: string | null }>(item: T): T {
@@ -103,10 +33,11 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 
 export default async function Home() {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
   const [settings, classesData, coachesData, scheduleData, mediaData, packagesData] =
     await Promise.all([
-      fetch(`${base}/api/settings`).then((r) => r.json()).catch(() => ({} as Record<string, string>)),
+      fetch(`${base}/api/settings`)
+        .then((r) => r.json())
+        .catch(() => ({} as Record<string, string>)),
       fetch(`${base}/api/classes`, { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as ClassRecord[]),
@@ -128,20 +59,10 @@ export default async function Home() {
   const heroSubtitle = (settings as any).hero_subtitle ?? fallbackHero.subtitle;
   const heroBg = (settings as any).hero_bg ?? fallbackHero.bg;
 
-  const classes =
-    Array.isArray(classesData) && classesData.length
-      ? classesData
-      : fallbackClasses;
-  const coaches =
-    Array.isArray(coachesData) && coachesData.length
-      ? coachesData
-      : fallbackCoaches;
-  const media =
-    Array.isArray(mediaData) && mediaData.length ? mediaData : fallbackMedia;
-  const packages =
-    Array.isArray(packagesData) && packagesData.length
-      ? packagesData
-      : fallbackPackages;
+  const classes = Array.isArray(classesData) ? classesData : [];
+  const coaches = Array.isArray(coachesData) ? coachesData : [];
+  const media = Array.isArray(mediaData) ? mediaData : [];
+  const packages = Array.isArray(packagesData) ? packagesData : [];
 
   const contactAddress =
     (settings as any).contact_address ?? "123 Fight St, Hamilton, ON";
@@ -151,7 +72,6 @@ export default async function Home() {
     (settings as any).contact_email ?? "info@caveboxing.com";
 
   // Prepare data with images and fallbacks
-  const finalClasses = classes.map(withImage);
   const finalCoaches = coaches.map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
@@ -225,11 +145,27 @@ export default async function Home() {
         {/* Classes Section */}
         <section id="classes" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {finalClasses.map((cls) => (
-              <ClassCard key={cls.slug} cls={cls} />
-            ))}
-          </div>
+          {classes.length ? (
+            <div className="card-grid">
+              {classes.map((cls: any) => (
+                <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
+                  <img
+                    src={cls.image || "/images/gym-training.png"}
+                    alt={cls.name}
+                  />
+                  <div className="card-overlay">
+                    <h3>{cls.name}</h3>
+                    <p>{cls.description}</p>
+                    <span className="card-link">Learn More</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-brand-dark/70">
+              No classes available.
+            </p>
+          )}
           <div className="mt-6 text-center">
             <Link href="/classes" className="text-brand hover:underline">
               View All Classes
@@ -241,9 +177,13 @@ export default async function Home() {
         <section id="coaches" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {finalCoaches.map((coach) => (
-              <CoachCard key={coach.slug} coach={coach} />
-            ))}
+            {finalCoaches.length ? (
+              finalCoaches.map((coach) => <CoachCard key={coach.slug} coach={coach} />)
+            ) : (
+              <p className="col-span-full text-center text-sm text-brand-dark/70">
+                No coaches available.
+              </p>
+            )}
           </div>
           <div className="mt-6 text-center">
             <Link href="/coaches" className="text-brand hover:underline">
@@ -253,7 +193,13 @@ export default async function Home() {
         </section>
 
         {/* Media Gallery */}
-        <MediaGallery items={mediaItems} />
+        {mediaItems.length ? (
+          <MediaGallery items={mediaItems} />
+        ) : (
+          <p className="text-center text-sm text-brand-dark/70">
+            No media available.
+          </p>
+        )}
 
         {/* Timetable Section */}
         {upcoming.length > 0 && (
