@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ClassCard from "@/components/ClassCard";
 import CoachCard from "@/components/CoachCard";
 import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
@@ -32,25 +33,24 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 }
 
 export default async function Home() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const [settings, classesData, coachesData, scheduleData, mediaData, packagesData] =
     await Promise.all([
-      fetch(`${base}/api/settings`)
+      fetch("/api/settings")
         .then((r) => r.json())
         .catch(() => ({} as Record<string, string>)),
-      fetch(`${base}/api/classes`, { cache: "no-store" })
+      fetch("/api/classes", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as ClassRecord[]),
-      fetch(`${base}/api/coaches`, { cache: "no-store" })
+      fetch("/api/coaches", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as CoachRecord[]),
-      fetch(`${base}/api/schedule`, { cache: "no-store" })
+      fetch("/api/schedule", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => []),
-      fetch(`${base}/api/media`, { cache: "no-store" })
+      fetch("/api/media", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as MediaRecord[]),
-      fetch(`${base}/api/packages`, { cache: "no-store" })
+      fetch("/api/packages", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as MembershipPackageRecord[]),
     ]);
@@ -72,8 +72,9 @@ export default async function Home() {
     (settings as any).contact_email ?? "info@caveboxing.com";
 
   // Prepare data with images and fallbacks
+  // Show only one unique class per name
   const seen = new Set();
-  const uniqueClasses = classes.filter((cls) => {
+  const uniqueClasses = classes.filter(cls => {
     const lowerName = cls.name?.toLowerCase();
     if (!lowerName) return false;
     if (seen.has(lowerName)) return false;
@@ -81,6 +82,7 @@ export default async function Home() {
     return true;
   });
   const finalClasses = uniqueClasses.map(withImage);
+
   const finalCoaches = coaches.map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
@@ -92,6 +94,7 @@ export default async function Home() {
           class_id: i.class_id,
           class_name: i.class_name,
           date: i.date,
+          day_of_week: i.day_of_week ?? "",
           start_time: i.start_time,
           end_time: i.end_time,
           coach_name: i.coach_name || "TBA",
@@ -154,27 +157,15 @@ export default async function Home() {
         {/* Classes Section */}
         <section id="classes" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
-          {finalClasses.length ? (
-            <div className="card-grid">
-              {finalClasses.map((cls: any) => (
-                <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
-                  <img
-                    src={cls.image || "/images/gym-training.png"}
-                    alt={cls.name}
-                  />
-                  <div className="card-overlay">
-                    <h3>{cls.name}</h3>
-                    <p>{cls.description}</p>
-                    <span className="card-link">Learn More</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-sm text-brand-dark/70">
-              No classes available.
-            </p>
-          )}
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {finalClasses.length ? (
+              finalClasses.map((cls) => <ClassCard key={cls.slug ?? cls.name} cls={cls} />)
+            ) : (
+              <p className="col-span-full text-center text-sm text-brand-dark/70">
+                No classes available.
+              </p>
+            )}
+          </div>
           <div className="mt-6 text-center">
             <Link href="/classes" className="text-brand hover:underline">
               View All Classes
@@ -182,6 +173,7 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* Weekly Schedule Section */}
         <section id="weekly-schedule" className="px-4 mt-16">
           <h2 className="mb-8 text-center text-3xl font-bold">Weekly Schedule</h2>
           {schedule.length ? (
@@ -216,9 +208,7 @@ export default async function Home() {
               </table>
             </div>
           ) : (
-            <p className="text-center text-sm text-gray-500">
-              No schedule available.
-            </p>
+            <p className="text-center text-sm text-gray-500">No schedule available.</p>
           )}
         </section>
 
@@ -227,7 +217,7 @@ export default async function Home() {
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {finalCoaches.length ? (
-              finalCoaches.map((coach) => <CoachCard key={coach.slug} coach={coach} />)
+              finalCoaches.map((coach) => <CoachCard key={coach.slug ?? coach.name} coach={coach} />)
             ) : (
               <p className="col-span-full text-center text-sm text-brand-dark/70">
                 No coaches available.
