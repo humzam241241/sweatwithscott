@@ -1,5 +1,4 @@
 import Link from "next/link";
-import ClassCard from "@/components/ClassCard";
 import CoachCard from "@/components/CoachCard";
 import MediaGallery from "@/components/MediaGallery";
 import MembershipPackages from "@/components/membership-packages";
@@ -33,24 +32,25 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 }
 
 export default async function Home() {
+  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const [settings, classesData, coachesData, scheduleData, mediaData, packagesData] =
     await Promise.all([
-      fetch("/api/settings")
+      fetch(`${base}/api/settings`)
         .then((r) => r.json())
         .catch(() => ({} as Record<string, string>)),
-      fetch("/api/classes", { cache: "no-store" })
+      fetch(`${base}/api/classes`, { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as ClassRecord[]),
-      fetch("/api/coaches", { cache: "no-store" })
+      fetch(`${base}/api/coaches`, { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as CoachRecord[]),
-      fetch("/api/schedule", { cache: "no-store" })
+      fetch(`${base}/api/schedule`, { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => []),
-      fetch("/api/media", { cache: "no-store" })
+      fetch(`${base}/api/media`, { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as MediaRecord[]),
-      fetch("/api/packages", { cache: "no-store" })
+      fetch(`${base}/api/packages`, { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => [] as MembershipPackageRecord[]),
     ]);
@@ -72,7 +72,6 @@ export default async function Home() {
     (settings as any).contact_email ?? "info@caveboxing.com";
 
   // Prepare data with images and fallbacks
-  const finalClasses = classes.map(withImage);
   const finalCoaches = coaches.map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
@@ -146,15 +145,27 @@ export default async function Home() {
         {/* Classes Section */}
         <section id="classes" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {finalClasses.length ? (
-              finalClasses.map((cls) => <ClassCard key={cls.slug} cls={cls} />)
-            ) : (
-              <p className="col-span-full text-center text-sm text-brand-dark/70">
-                No classes available.
-              </p>
-            )}
-          </div>
+          {classes.length ? (
+            <div className="card-grid">
+              {classes.map((cls: any) => (
+                <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
+                  <img
+                    src={cls.image || "/images/gym-training.png"}
+                    alt={cls.name}
+                  />
+                  <div className="card-overlay">
+                    <h3>{cls.name}</h3>
+                    <p>{cls.description}</p>
+                    <span className="card-link">Learn More</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-brand-dark/70">
+              No classes available.
+            </p>
+          )}
           <div className="mt-6 text-center">
             <Link href="/classes" className="text-brand hover:underline">
               View All Classes
