@@ -572,7 +572,11 @@ function addSampleBookingsAndPayments() {
 }
 
 // Initialize on import
-initializeDatabase();
+const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get().count;
+if (classCount === 0) {
+  console.log("Seeding initial data...");
+  generateClassInstances();
+}
 
 // Database operations
 export const dbOperations = {
