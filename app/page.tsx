@@ -182,6 +182,55 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* Weekly Schedule */}
+        <section id="weekly-schedule" className="px-4">
+          <h2 className="mb-8 text-center text-3xl font-bold">Weekly Schedule</h2>
+          {schedule.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="border-b">
+                    <th className="p-2">Day of Week</th>
+                    <th className="p-2">Class Name</th>
+                    <th className="p-2">Time</th>
+                    <th className="p-2">Coach Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedule
+                    .slice()
+                    .sort(
+                      (a, b) =>
+                        new Date(`${a.date}T${a.start_time}`).getTime() -
+                        new Date(`${b.date}T${b.start_time}`).getTime(),
+                    )
+                    .map((item, idx) => (
+                      <tr
+                        key={`${item.id}-${item.date}-${item.start_time}`}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <td className="p-2">
+                          {new Date(item.date).toLocaleDateString("en-US", {
+                            weekday: "long",
+                          })}
+                        </td>
+                        <td className="p-2 font-semibold">{item.class_name}</td>
+                        <td className="p-2">
+                          {item.start_time} - {item.end_time}
+                        </td>
+                        <td className="p-2">{item.coach_name}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-center text-sm text-brand-dark/70">
+              No scheduled classes.
+            </p>
+          )}
+        </section>
+
         {/* Coaches Section */}
         <section id="coaches" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Coaches</h2>
