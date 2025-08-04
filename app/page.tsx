@@ -72,6 +72,15 @@ export default async function Home() {
     (settings as any).contact_email ?? "info@caveboxing.com";
 
   // Prepare data with images and fallbacks
+  const seen = new Set<string>();
+  const uniqueClasses = classes.filter((cls) => {
+    const lowerName = cls.name?.toLowerCase();
+    if (!lowerName) return false;
+    if (seen.has(lowerName)) return false;
+    seen.add(lowerName);
+    return true;
+  });
+  const finalClasses = uniqueClasses.map(withImage);
   const finalCoaches = coaches.map(withImage);
   const finalMedia = media;
   const finalPackages = packages;
@@ -145,9 +154,9 @@ export default async function Home() {
         {/* Classes Section */}
         <section id="classes" className="px-4">
           <h2 className="mb-8 text-center text-3xl font-bold">Classes</h2>
-          {classes.length ? (
+          {finalClasses.length ? (
             <div className="card-grid">
-              {classes.map((cls: any) => (
+              {finalClasses.map((cls: any) => (
                 <Link key={cls.slug} href={`/classes/${cls.slug}`} className="card">
                   <img
                     src={cls.image || "/images/gym-training.png"}
