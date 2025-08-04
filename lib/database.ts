@@ -151,8 +151,6 @@ export function initializeDatabase() {
 
     // Reset & seed
     resetClassSchedule();
-<<<<<<< HEAD
-
     // Seed coaches if empty
     const coachCount = db.prepare("SELECT COUNT(*) as count FROM coaches").get() as { count: number };
     if (coachCount.count === 0) {
@@ -279,30 +277,21 @@ export function initializeDatabase() {
       generateClassInstances();
     }
 
-    console.log("Database initialized successfully");
-  } catch (error) {
-    console.error("Database initialization error:", error);
-=======
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log(`📊 Seeded ${db.prepare("SELECT COUNT(*) AS c FROM classes").get().c} unique classes`);
+    console.log("Database initialized successfully");
   } catch (err) {
     console.error("❌ DB Init Error:", err);
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
   }
 }
 
 // ==== RESET CLASS SCHEDULE ====
 function resetClassSchedule() {
-<<<<<<< HEAD
   const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get().count;
   if (classCount === 0) {
     // Clear existing classes and instances
     db.prepare("DELETE FROM class_instances").run();
     db.prepare("DELETE FROM classes").run();
-=======
-  db.prepare("DELETE FROM class_instances").run();
-  db.prepare("DELETE FROM classes").run();
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
 
     const capacities: Record<string, number> = {
       Bootcamp: 30,
@@ -314,7 +303,6 @@ function resetClassSchedule() {
       "Open Gym": 9999,
     };
 
-<<<<<<< HEAD
     const schedule = [
       { day: "Monday", time: "12:00", name: "Bootcamp" },
       { day: "Monday", time: "17:00", name: "Boxing Tech" },
@@ -350,29 +338,12 @@ function resetClassSchedule() {
       const endHour = (h + 1).toString().padStart(2, "0");
       return `${endHour}:${m.toString().padStart(2, "0")}`;
     };
-=======
-  const schedule = [
-    { day: "Monday", time: "12:00", name: "Bootcamp" },
-    { day: "Monday", time: "17:00", name: "Boxing Tech" },
-    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
-    { day: "Wednesday", time: "17:00", name: "Boxing Tech" },
-    { day: "Friday", time: "18:00", name: "Bootcamp" },
-    { day: "Saturday", time: "12:00", name: "Beginner Boxing" },
-    { day: "Saturday", time: "13:00", name: "Sparring" }
-  ];
-
-  const addHour = (t: string) => {
-    const [h, m] = t.split(":").map(Number);
-    return `${(h + 1).toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-  };
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
 
     const insertClass = db.prepare(`
       INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-<<<<<<< HEAD
     schedule.forEach((cls) => {
       insertClass.run(
         cls.name,
@@ -384,6 +355,22 @@ function resetClassSchedule() {
         0,
       );
     });
+
+    db.prepare(`
+      UPDATE classes
+      SET slug = LOWER(
+        REPLACE(REPLACE(REPLACE(REPLACE(name, '&', 'and'), '(', ''), ')', ''), ' ', '-')
+      ) || '-' || id
+    `).run();
+
+    db.prepare(`
+      DELETE FROM classes
+      WHERE id NOT IN (
+        SELECT MIN(id)
+        FROM classes
+        GROUP BY LOWER(name)
+      )
+    `).run();
   }
 }
 
@@ -518,30 +505,6 @@ if (classCount === 0) {
 }
 
 // Database operations
-=======
-  schedule.forEach(cls => {
-    insertClass.run(cls.name, "", cls.day, cls.time, addHour(cls.time), capacities[cls.name] || 30, 0);
-  });
-
-  db.prepare(`
-    UPDATE classes
-    SET slug = LOWER(
-      REPLACE(REPLACE(REPLACE(REPLACE(name, '&', 'and'), '(', ''), ')', ''), ' ', '-')
-    ) || '-' || id
-  `).run();
-
-  db.prepare(`
-    DELETE FROM classes
-    WHERE id NOT IN (
-      SELECT MIN(id)
-      FROM classes
-      GROUP BY LOWER(name)
-    )
-  `).run();
-}
-
-// ==== dbOperations ====
->>>>>>> 09f4045 (Auto-deploy: 2025-08-04 01:36:00)
 export const dbOperations = {
   // Cleaned getAllClasses
   getAllClasses: (): ClassRecord[] => {
