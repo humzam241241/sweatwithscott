@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches";
 
 async function getCoaches() {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -10,14 +11,7 @@ async function getCoaches() {
 export default async function CoachesPage() {
   const fetched = await getCoaches();
 
-  // Unique filter for coaches
-  const seenCoaches = new Set();
-  const filtered = fetched.filter((coach: any) => {
-    const lowerName = coach.name?.toLowerCase();
-    if (!lowerName || seenCoaches.has(lowerName)) return false;
-    seenCoaches.add(lowerName);
-    return true;
-  });
+  const filtered = filterUniqueCoaches(fetched);
 
   // Apply Humza override & image defaults
   const coaches = filtered.map((coach: any) => {
