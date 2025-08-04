@@ -195,7 +195,7 @@ export default async function Home() {
                           ? new Date(item.date).toLocaleDateString("en-US", {
                               weekday: "long",
                             })
-                          : item.day_of_week}
+                          : item.day_of_week || "TBA"}
                       </td>
                       <td className="px-4 py-2">{item.class_name}</td>
                       <td className="px-4 py-2">
@@ -208,7 +208,9 @@ export default async function Home() {
               </table>
             </div>
           ) : (
-            <p className="text-center text-sm text-gray-500">No schedule available.</p>
+            <p className="text-center text-sm text-gray-500">
+              No schedule available yet — check back soon!
+            </p>
           )}
         </section>
 
