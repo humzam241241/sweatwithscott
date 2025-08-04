@@ -9,7 +9,18 @@ async function getCoaches() {
 
 export default async function CoachesPage() {
   const fetched = await getCoaches();
-  const coaches = fetched.map((coach: any) => {
+
+  // Unique filter for coaches
+  const seenCoaches = new Set();
+  const filtered = fetched.filter((coach: any) => {
+    const lowerName = coach.name?.toLowerCase();
+    if (!lowerName || seenCoaches.has(lowerName)) return false;
+    seenCoaches.add(lowerName);
+    return true;
+  });
+
+  // Apply Humza override & image defaults
+  const coaches = filtered.map((coach: any) => {
     const adjusted = coach.name?.toLowerCase().includes("shannon")
       ? {
           ...coach,
@@ -20,6 +31,7 @@ export default async function CoachesPage() {
           image: "/images/coach-humza.png",
         }
       : coach;
+
     return {
       ...adjusted,
       image:
@@ -28,6 +40,7 @@ export default async function CoachesPage() {
           : "/images/coach-humza.png",
     };
   });
+
   return (
     <div className="min-h-screen">
       <header className="cave-hero py-20">
