@@ -280,8 +280,12 @@ export function initializeDatabase() {
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log(`📊 Seeded ${db.prepare("SELECT COUNT(*) AS c FROM classes").get().c} unique classes`);
     console.log("Database initialized successfully");
-  } catch (err) {
-    console.error("❌ DB Init Error:", err);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("❌ DB Init Error:", error.message);
+    } else {
+      console.error("❌ DB Init Error:", String(error));
+    }
   }
 }
 
@@ -414,19 +418,30 @@ function generateClassInstances() {
             cls.instructor,
             cls.max_capacity,
           );
-        } catch (error) {
-          console.error(
-            `Error creating instance for ${cls.name} on ${dateString}:`,
-            error,
-          );
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            console.error(
+              `Error creating instance for ${cls.name} on ${dateString}:`,
+              error.message,
+            );
+          } else {
+            console.error(
+              `Error creating instance for ${cls.name} on ${dateString}:`,
+              String(error),
+            );
+          }
         }
       });
     }
 
     // Add some sample bookings and payments
     addSampleBookingsAndPayments();
-  } catch (error) {
-    console.error("Error generating class instances:", error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error generating class instances:", error.message);
+    } else {
+      console.error("Error generating class instances:", String(error));
+    }
   }
 }
 
@@ -487,13 +502,17 @@ function addSampleBookingsAndPayments() {
           db.prepare(
             "UPDATE class_instances SET current_bookings = current_bookings + 1 WHERE id = ?",
           ).run(instance.id);
-        } catch (error) {
+        } catch (error: unknown) {
           // Ignore duplicate booking errors
         }
       });
     });
-  } catch (error) {
-    console.error("Error adding sample bookings and payments:", error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error adding sample bookings and payments:", error.message);
+    } else {
+      console.error("Error adding sample bookings and payments:", String(error));
+    }
   }
 }
 
@@ -515,8 +534,12 @@ export const dbOperations = {
         GROUP BY LOWER(name)
         ORDER BY name
       `).all() as ClassRecord[];
-    } catch (e) {
-      console.error("Error getting classes:", e);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error getting classes:", error.message);
+      } else {
+        console.error("Error getting classes:", String(error));
+      }
       return [];
     }
   },
@@ -532,8 +555,12 @@ export const dbOperations = {
           ORDER BY name
         `)
         .all() as CoachRecord[];
-    } catch (error) {
-      console.error("Error getting coaches:", error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error getting coaches:", error.message);
+      } else {
+        console.error("Error getting coaches:", String(error));
+      }
       return [];
     }
   },

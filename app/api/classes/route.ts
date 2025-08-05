@@ -8,8 +8,12 @@ export async function GET() {
       "SELECT id, name, description, image, slug FROM classes ORDER BY name ASC",
     );
     return NextResponse.json(classes);
-  } catch (error) {
-    console.error("Error fetching classes:", error);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error fetching classes:", error.message);
+    } else {
+      console.error("Error fetching classes:", String(error));
+    }
     return NextResponse.json([], { status: 500 });
   }
 }
