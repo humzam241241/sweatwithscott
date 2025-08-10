@@ -27,7 +27,12 @@ export async function GET() {
 
     const stats = dbOperations.getGymStats()
     return NextResponse.json(stats)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching gym stats:", error)
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 })
   }

@@ -231,7 +231,12 @@ export default function AdminDashboard() {
         const membersData = await membersResponse.json();
         setMembers(membersData);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error fetching admin data:", error);
     } finally {
       setLoading(false);
@@ -311,7 +316,12 @@ export default function AdminDashboard() {
         const data = await response.json();
         setSelectedClassAttendees(data);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error fetching class attendees:", error);
     }
   };
@@ -344,7 +354,12 @@ export default function AdminDashboard() {
           }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error marking attendance:", error);
     }
   };
@@ -371,7 +386,12 @@ export default function AdminDashboard() {
         // Refresh data
         fetchAdminData();
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error marking payment as paid:", error);
     }
   };

@@ -27,7 +27,12 @@ export async function POST(request: NextRequest) {
       message: "Thank you for your message! We'll get back to you within 24 hours.",
       success: true,
     })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Contact form error:", error)
     return NextResponse.json({ error: "Failed to send message" }, { status: 500 })
   }

@@ -54,7 +54,12 @@ export default function AdminClassRoster() {
       const response = await fetch(`/api/admin/class-rosters?date=${selectedDate}`)
       const data = await response.json()
       setRosters(data)
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error fetching class rosters:", error)
     } finally {
       setLoading(false)
@@ -73,7 +78,12 @@ export default function AdminClassRoster() {
         }),
       })
       fetchClassRosters() // Refresh data
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error marking attendance:", error)
     }
   }

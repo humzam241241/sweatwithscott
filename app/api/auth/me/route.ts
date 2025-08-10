@@ -12,7 +12,12 @@ export async function GET() {
 
     const session = JSON.parse(sessionCookie.value)
     return NextResponse.json(session)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error getting user session:", error)
     return NextResponse.json({ error: "Invalid session" }, { status: 401 })
   }

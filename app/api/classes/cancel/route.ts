@@ -32,7 +32,12 @@ export async function POST(request: NextRequest) {
         "Booking cancelled successfully. If you cancelled within the policy timeframe, any applicable refund will be processed.",
       status: "cancelled",
     })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Cancellation error:", error)
     return NextResponse.json({ error: "Failed to cancel booking" }, { status: 500 })
   }

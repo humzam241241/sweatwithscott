@@ -5,7 +5,12 @@ export async function GET() {
   try {
     const bookings = dbOperations.getAllBookings()
     return NextResponse.json(bookings)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching bookings:", error)
     return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 })
   }
@@ -20,7 +25,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "Booking created successfully",
     })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error creating booking:", error)
     return NextResponse.json({ error: "Failed to create booking" }, { status: 500 })
   }

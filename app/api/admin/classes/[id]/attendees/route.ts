@@ -32,7 +32,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const attendees = dbOperations.getClassWithAttendees(classInstanceId)
     return NextResponse.json(attendees)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching class attendees:", error)
     return NextResponse.json({ error: "Failed to fetch class attendees" }, { status: 500 })
   }

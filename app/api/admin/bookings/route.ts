@@ -73,7 +73,12 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ bookings: allBookings })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching admin bookings:", error)
     return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 })
   }
@@ -111,7 +116,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error processing admin booking action:", error)
     return NextResponse.json({ error: "Failed to process action" }, { status: 500 })
   }

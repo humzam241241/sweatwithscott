@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -19,24 +19,24 @@ export default function ContactForm() {
     subject: "",
     message: "",
     interestedIn: "",
-  })
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
-  const [message, setMessage] = useState("")
+  });
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setStatus("loading")
+    e.preventDefault();
+    setStatus("loading");
 
     try {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
+      });
 
       if (response.ok) {
-        setStatus("success")
-        setMessage("Thank you! We'll get back to you within 24 hours.")
+        setStatus("success");
+        setMessage("Thank you! We'll get back to you within 24 hours.");
         setFormData({
           name: "",
           email: "",
@@ -44,16 +44,21 @@ export default function ContactForm() {
           subject: "",
           message: "",
           interestedIn: "",
-        })
+        });
       } else {
-        setStatus("error")
-        setMessage("Something went wrong. Please try again or call us directly.")
+        setStatus("error");
+        setMessage("Something went wrong. Please try again or call us directly.");
       }
-    } catch (error) {
-      setStatus("error")
-      setMessage("Something went wrong. Please try again or call us directly.")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error(String(error));
+      }
+      setStatus("error");
+      setMessage("Something went wrong. Please try again or call us directly.");
     }
-  }
+  };
 
   return (
     <Card className="w-full max-w-2xl">
@@ -168,5 +173,5 @@ export default function ContactForm() {
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -58,7 +58,12 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ success: true, redirectUrl: "/dashboard" })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Registration error:", error)
     return NextResponse.json({ error: "Registration failed" }, { status: 500 })
   }

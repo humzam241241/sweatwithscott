@@ -78,7 +78,12 @@ export default function Navigation() {
         const userData = await response.json();
         setUser(userData);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error checking auth status:", error);
     }
   };
@@ -89,7 +94,12 @@ export default function Navigation() {
       setUser(null);
       router.push("/");
       router.refresh();
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Error logging out:", error);
     }
   };

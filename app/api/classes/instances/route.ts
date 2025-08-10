@@ -58,7 +58,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(instances)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching class schedule:", error)
     return NextResponse.json([])
   }

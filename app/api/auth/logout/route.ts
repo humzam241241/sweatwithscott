@@ -9,7 +9,12 @@ export async function POST() {
     cookieStore.delete("session")
 
     return NextResponse.json({ success: true, message: "Logged out successfully" })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error during logout:", error)
     return NextResponse.json({ error: "Logout failed" }, { status: 500 })
   }

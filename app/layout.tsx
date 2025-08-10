@@ -1,14 +1,16 @@
-import "./globals.css";
-import Navbar from "@/components/Navbar";
 import { DataProvider } from "@/components/ui/data-provider";
+import type { ReactNode } from "react";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <html lang="en">
       <body className="bg-brand-light text-brand-dark">
         <DataProvider>
-          <Navbar />
-          <div className="pt-24">{children}</div>
+          {children}
         </DataProvider>
       </body>
     </html>

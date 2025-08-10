@@ -56,7 +56,12 @@ export async function POST(request: NextRequest) {
       },
       redirectUrl,
     })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Login error:", error)
     return NextResponse.json({ error: "An error occurred during login" }, { status: 500 })
   }

@@ -71,7 +71,12 @@ export async function GET(request: NextRequest) {
       { error: "Date or class_instance_id parameter required" },
       { status: 400 },
     );
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching class rosters:", error);
     return NextResponse.json(
       { error: "Failed to fetch class rosters" },

@@ -27,7 +27,12 @@ export async function GET() {
 
     const currentClasses = dbOperations.getCurrentClasses()
     return NextResponse.json(currentClasses)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching current classes:", error)
     return NextResponse.json({ error: "Failed to fetch current classes" }, { status: 500 })
   }

@@ -34,7 +34,12 @@ export async function POST(request: Request) {
     const result = dbOperations.markPaymentPaid(bookingId, paymentMethod || "cash")
 
     return NextResponse.json({ success: true, message: "Payment marked as paid successfully" })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error marking payment as paid:", error)
     return NextResponse.json({ error: "Failed to mark payment as paid" }, { status: 500 })
   }

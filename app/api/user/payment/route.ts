@@ -17,7 +17,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: "Payment processed successfully", payment: paymentResult })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     return NextResponse.json({ error: "Payment processing failed" }, { status: 500 })
   }
 }

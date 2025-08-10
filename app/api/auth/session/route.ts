@@ -50,12 +50,22 @@ export async function GET(): Promise<
           user,
         })
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Invalid session cookie:", error)
     }
 
     return NextResponse.json({ isLoggedIn: false })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Failed to read session cookie:", error)
     return NextResponse.json({ isLoggedIn: false })
   }

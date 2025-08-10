@@ -2,13 +2,13 @@ import Database from "better-sqlite3";
 import path from "path";
 import bcrypt from "bcryptjs";
 
-// ==== INTERFACES ====
 export interface ClassRecord {
   id: number;
   slug: string;
   name: string;
   description?: string | null;
   coach_name?: string | null;
+  instructor?: string | null;
   duration?: number | null;
   max_capacity?: number | null;
   price?: number | null;
@@ -32,34 +32,26 @@ export interface CoachRecord {
   updated_at?: string | null;
 }
 
-export interface MediaRecord {
+export interface UserRecord {
   id: number;
-  type?: string | null;
-  url: string;
-  title?: string | null;
-  created_at?: string | null;
+  username: string;
+  password: string;
+  email?: string | null;
+  full_name?: string | null;
+  phone?: string | null;
+  membership_type?: string | null;
+  membership_status?: string | null;
+  membership_expiry?: string | null;
+  is_admin?: number | null;
 }
 
-export interface MembershipPackageRecord {
-  id: number;
-  name: string;
-  description?: string | null;
-  price?: number | null;
-  features?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-}
-
-// ==== DATABASE CONNECTION ====
 const dbPath = path.join(process.cwd(), "gym.db");
 const db = new Database(dbPath);
 db.pragma("foreign_keys = ON");
 db.pragma("journal_mode = WAL");
 
-// ==== INITIALIZE DATABASE ====
 export function initializeDatabase() {
   try {
-    // Create tables
     db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,7 +67,6 @@ export function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
-
       CREATE TABLE IF NOT EXISTS classes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -90,12 +81,12 @@ export function initializeDatabase() {
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         slug TEXT,
+        coach_id INTEGER,
         coach_name TEXT,
         active INTEGER DEFAULT 1,
         image TEXT,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
-
       CREATE TABLE IF NOT EXISTS class_instances (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         class_id INTEGER NOT NULL,
@@ -109,7 +100,6 @@ export function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (class_id) REFERENCES classes(id)
       );
-
       CREATE TABLE IF NOT EXISTS coaches (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         slug TEXT UNIQUE,
@@ -120,7 +110,6 @@ export function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
-
       CREATE TABLE IF NOT EXISTS membership_packages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
@@ -130,7 +119,6 @@ export function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
-
       CREATE TABLE IF NOT EXISTS site_settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         key TEXT UNIQUE,
@@ -138,149 +126,37 @@ export function initializeDatabase() {
       );
     `);
 
-    // Ensure admin exists
     const adminExists = db.prepare("SELECT id FROM users WHERE username = ?").get("admin");
     if (!adminExists) {
       const hashedAdmin = bcrypt.hashSync("admin123", 10);
-      const expiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      const expiry = new Date(Date.now() + 365 * 864e5).toISOString().split("T")[0];
       db.prepare(`
         INSERT INTO users (username, password, email, full_name, is_admin, membership_status, membership_expiry)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin", expiry);
     }
 
-    // Reset & seed
     resetClassSchedule();
-    // Seed coaches if empty
-    const coachCount = db.prepare("SELECT COUNT(*) as count FROM coaches").get() as { count: number };
-    if (coachCount.count === 0) {
-      const insertCoach = db.prepare(
-        `INSERT INTO coaches (slug, name, bio, certifications, image) VALUES (?, ?, ?, ?, ?)`,
-      );
-      insertCoach.run(
-        "coach-kyle",
-        "Coach Kyle",
-        "Professional boxer and certified trainer with 10+ years of experience.",
-        "Certified Level 1 Boxing Coach",
-        "/images/logo.png",
-      );
-      insertCoach.run(
-        "coach-sarah",
-        "Coach Sarah",
-        "Strength and conditioning specialist focused on improving performance.",
-        "Certified Personal Trainer",
-        "/images/logo.png",
-      );
-    }
+    seedCoaches();
+    seedMembershipPackages();
+    seedSettings();
+    seedSampleUsers();
 
-    // Seed membership packages if empty
-    const pkgCount = db
-      .prepare("SELECT COUNT(*) as count FROM membership_packages")
-      .get() as { count: number };
-    if (pkgCount.count === 0) {
-      const insertPkg = db.prepare(
-        `INSERT INTO membership_packages (name, description, price, features) VALUES (?, ?, ?, ?)`,
-      );
-      insertPkg.run(
-        "Drop-In",
-        "Perfect for trying us out or occasional visits",
-        25,
-        JSON.stringify(["Access to any class", "No commitment required", "Pay as you go", "Valid for 30 days from purchase"]),
-      );
-      insertPkg.run(
-        "Monthly Unlimited",
-        "Best value for regular training",
-        150,
-        JSON.stringify([
-          "Unlimited classes",
-          "All class types included",
-          "Priority booking",
-          "Guest pass (1 per month)",
-          "Locker rental discount",
-          "Nutrition consultation",
-        ]),
-      );
-    }
-
-    // Seed site settings if empty
-    const settingsCount = db.prepare("SELECT COUNT(*) as count FROM site_settings").get() as { count: number };
-    if (settingsCount.count === 0) {
-      const insertSetting = db.prepare(
-        `INSERT INTO site_settings (key, value) VALUES (?, ?)`,
-      );
-      insertSetting.run("hero_title", "The Cave Boxing Gym");
-      insertSetting.run("hero_subtitle", "Train like a champion.");
-      insertSetting.run("hero_bg", "/images/frontpic.png");
-      insertSetting.run("contact_address", "123 Fight St, Hamilton, ON");
-      insertSetting.run("contact_phone", "(289) 892-5430");
-      insertSetting.run("contact_email", "info@caveboxing.com");
-    }
-
-    // Insert sample users if none exist (excluding admin)
-    const userCount = db
-      .prepare("SELECT COUNT(*) as count FROM users WHERE is_admin = 0")
-      .get() as { count: number };
-    if (userCount.count === 0) {
-      const sampleUsers = [
-        {
-          username: "john_doe",
-          password: "password123",
-          email: "john@example.com",
-          full_name: "John Doe",
-          phone: "555-0101",
-          membership_type: "monthly",
-        },
-        {
-          username: "jane_smith",
-          password: "password123",
-          email: "jane@example.com",
-          full_name: "Jane Smith",
-          phone: "555-0102",
-          membership_type: "annual",
-        },
-        {
-          username: "mike_wilson",
-          password: "password123",
-          email: "mike@example.com",
-          full_name: "Mike Wilson",
-          phone: "555-0103",
-          membership_type: "drop_in",
-        },
-      ];
-
-      const insertUser = db.prepare(`
-        INSERT INTO users (username, password, email, full_name, phone, membership_type, membership_expiry)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      sampleUsers.forEach((user) => {
-        const hashed = bcrypt.hashSync(user.password, 10);
-        const expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .split("T")[0];
-        insertUser.run(
-          user.username,
-          hashed,
-          user.email,
-          user.full_name,
-          user.phone,
-          user.membership_type,
-          expiry,
-        );
-      });
-    }
-
-    // Generate class instances for the next 30 days
-    const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get().count;
-    if (classCount === 0) {
-      console.log("Seeding initial data...");
+    if (db.prepare("SELECT COUNT(*) as c FROM classes").get().c === 0) {
       generateClassInstances();
     }
 
     console.log(`📂 Using DB file: ${dbPath}`);
-    console.log(`📊 Seeded ${db.prepare("SELECT COUNT(*) AS c FROM classes").get().c} unique classes`);
     console.log("Database initialized successfully");
   } catch (error: unknown) {
+<<<<<<< HEAD
+=======
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+>>>>>>> e8cc3e6 (cursor 1)
     if (error instanceof Error) {
       console.error("❌ DB Init Error:", error.message);
     } else {
@@ -289,115 +165,102 @@ export function initializeDatabase() {
   }
 }
 
-// ==== RESET CLASS SCHEDULE ====
 function resetClassSchedule() {
-  const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get().count;
-  if (classCount === 0) {
-    // Clear existing classes and instances
-    db.prepare("DELETE FROM class_instances").run();
-    db.prepare("DELETE FROM classes").run();
+  db.prepare("DELETE FROM class_instances").run();
+  db.prepare("DELETE FROM classes").run();
 
-    const capacities: Record<string, number> = {
-      Bootcamp: 30,
-      "Boxing Tech": 30,
-      "Junior Jabbers (6-12 yr)": 15,
-      "Strength & Conditioning": 30,
-      "Beginner Boxing": 30,
-      Sparring: 20,
-      "Open Gym": 9999,
-    };
+  const capacities: Record<string, number> = {
+    Bootcamp: 30,
+    "Boxing Tech": 30,
+    "Junior Jabbers (6-12 yr)": 15,
+    "Strength & Conditioning": 30,
+    "Beginner Boxing": 30,
+    Sparring: 20,
+    "Open Gym": 9999,
+  };
 
-    const schedule = [
-      { day: "Monday", time: "12:00", name: "Bootcamp" },
-      { day: "Monday", time: "17:00", name: "Boxing Tech" },
-      { day: "Monday", time: "18:00", name: "Bootcamp" },
-      { day: "Monday", time: "19:00", name: "Boxing Tech" },
-      { day: "Monday", time: "20:00", name: "Strength & Conditioning" },
-      { day: "Tuesday", time: "12:00", name: "Bootcamp" },
-      { day: "Tuesday", time: "17:00", name: "Bootcamp" },
-      { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
-      { day: "Tuesday", time: "19:00", name: "Boxing Tech" },
-      { day: "Tuesday", time: "20:00", name: "Open Gym" },
-      { day: "Wednesday", time: "12:00", name: "Bootcamp" },
-      { day: "Wednesday", time: "17:00", name: "Boxing Tech" },
-      { day: "Wednesday", time: "18:00", name: "Bootcamp" },
-      { day: "Wednesday", time: "19:00", name: "Boxing Tech" },
-      { day: "Wednesday", time: "20:00", name: "Open Gym" },
-      { day: "Thursday", time: "12:00", name: "Bootcamp" },
-      { day: "Thursday", time: "17:00", name: "Bootcamp" },
-      { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
-      { day: "Thursday", time: "19:00", name: "Boxing Tech" },
-      { day: "Thursday", time: "20:00", name: "Open Gym" },
-      { day: "Friday", time: "16:00", name: "Open Gym" },
-      { day: "Friday", time: "18:00", name: "Bootcamp" },
-      { day: "Friday", time: "19:00", name: "Boxing Tech" },
-      { day: "Friday", time: "20:00", name: "Open Gym" },
-      { day: "Saturday", time: "11:00", name: "Bootcamp" },
-      { day: "Saturday", time: "12:00", name: "Beginner Boxing" },
-      { day: "Saturday", time: "13:00", name: "Sparring" },
-    ];
+  const schedule = [
+    { day: "Monday", time: "12:00", name: "Bootcamp" },
+    { day: "Monday", time: "17:00", name: "Boxing Tech" },
+    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
+    { day: "Saturday", time: "12:00", name: "Beginner Boxing" },
+  ];
 
-    const addHour = (time: string) => {
-      const [h, m] = time.split(":").map(Number);
-      const endHour = (h + 1).toString().padStart(2, "0");
-      return `${endHour}:${m.toString().padStart(2, "0")}`;
-    };
+  const addHour = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
+    return `${String(h + 1).padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  };
 
-    const insertClass = db.prepare(`
-      INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
+  const insertClass = db.prepare(`
+    INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
 
-    schedule.forEach((cls) => {
-      insertClass.run(
-        cls.name,
-        "",
-        cls.day,
-        cls.time,
-        addHour(cls.time),
-        capacities[cls.name] || 30,
-        0,
-      );
-    });
+  schedule.forEach((cls) => {
+    insertClass.run(cls.name, "", cls.day, cls.time, addHour(cls.time), capacities[cls.name] || 30, 0);
+  });
 
-    db.prepare(`
-      UPDATE classes
-      SET slug = LOWER(
-        REPLACE(REPLACE(REPLACE(REPLACE(name, '&', 'and'), '(', ''), ')', ''), ' ', '-')
-      ) || '-' || id
-    `).run();
-
-    db.prepare(`
-      DELETE FROM classes
-      WHERE id NOT IN (
-        SELECT MIN(id)
-        FROM classes
-        GROUP BY LOWER(name)
-      )
-    `).run();
-  }
+  db.prepare(`
+    UPDATE classes
+    SET slug = LOWER(REPLACE(REPLACE(name, '&', 'and'), ' ', '-')) || '-' || id
+  `).run();
 }
 
-// Generate class instances based on class schedule
+function seedCoaches() {
+  if (db.prepare("SELECT COUNT(*) as c FROM coaches").get().c > 0) return;
+  const insertCoach = db.prepare(`
+    INSERT INTO coaches (slug, name, bio, certifications, image)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  insertCoach.run("coach-kyle", "Coach Kyle", "Professional boxer", "Certified Level 1 Boxing Coach", "/images/logo.png");
+  insertCoach.run("coach-sarah", "Coach Sarah", "Strength specialist", "Certified Personal Trainer", "/images/logo.png");
+}
+
+function seedMembershipPackages() {
+  if (db.prepare("SELECT COUNT(*) as c FROM membership_packages").get().c > 0) return;
+  const insertPkg = db.prepare(`
+    INSERT INTO membership_packages (name, description, price, features)
+    VALUES (?, ?, ?, ?)
+  `);
+  insertPkg.run("Drop-In", "Perfect for occasional visits", 25, JSON.stringify(["Access to any class", "No commitment"]));
+  insertPkg.run("Monthly Unlimited", "Best for regular training", 150, JSON.stringify(["Unlimited classes", "Priority booking"]));
+}
+
+function seedSettings() {
+  if (db.prepare("SELECT COUNT(*) as c FROM site_settings").get().c > 0) return;
+  const insertSetting = db.prepare(`INSERT INTO site_settings (key, value) VALUES (?, ?)`);
+  insertSetting.run("hero_title", "The Cave Boxing Gym");
+  insertSetting.run("hero_subtitle", "Train like a champion.");
+  insertSetting.run("hero_bg", "/images/frontpic.png");
+}
+
+function seedSampleUsers() {
+  if (db.prepare("SELECT COUNT(*) as c FROM users WHERE is_admin = 0").get().c > 0) return;
+  const insertUser = db.prepare(`
+    INSERT INTO users (username, password, email, full_name, phone, membership_type, membership_expiry)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  [["john_doe", "John Doe"], ["jane_smith", "Jane Smith"]].forEach(([username, fullname]) => {
+    const hashed = bcrypt.hashSync("password123", 10);
+    const expiry = new Date(Date.now() + 30 * 864e5).toISOString().split("T")[0];
+    insertUser.run(username, hashed, `${username}@example.com`, fullname, "555-0100", "monthly", expiry);
+  });
+}
+
 function generateClassInstances() {
   try {
-    const classes = db
-      .prepare("SELECT * FROM classes WHERE is_active = 1")
-      .all();
+    const classes = db.prepare("SELECT * FROM classes WHERE is_active = 1").all() as ClassRecord[];
     const today = new Date();
-
-    // Clear future instances to regenerate
     db.prepare("DELETE FROM class_instances WHERE date > date('now')").run();
 
     for (let i = 0; i < 30; i++) {
       const currentDate = new Date(today);
       currentDate.setDate(today.getDate() + i);
-
-      const dayName = currentDate.toLocaleDateString("en-US", {
-        weekday: "long",
-      });
+      const dayName = currentDate.toLocaleDateString("en-US", { weekday: "long" });
       const dateString = currentDate.toISOString().split("T")[0];
+      const dayClasses = classes.filter((cls) => cls.day_of_week === dayName);
 
+<<<<<<< HEAD
       const dayClasses = classes.filter(
         (cls: any) => cls.day_of_week === dayName,
       );
@@ -437,6 +300,22 @@ function generateClassInstances() {
     // Add some sample bookings and payments
     addSampleBookingsAndPayments();
   } catch (error: unknown) {
+=======
+      dayClasses.forEach((cls) => {
+        db.prepare(`
+          INSERT OR IGNORE INTO class_instances
+          (class_id, date, start_time, end_time, instructor, max_capacity, status)
+          VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
+        `).run(cls.id, dateString, cls.start_time, cls.end_time, cls.instructor, cls.max_capacity);
+      });
+    }
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+>>>>>>> e8cc3e6 (cursor 1)
     if (error instanceof Error) {
       console.error("Error generating class instances:", error.message);
     } else {
@@ -445,6 +324,7 @@ function generateClassInstances() {
   }
 }
 
+<<<<<<< HEAD
 // Add sample bookings and payments for demo
 function addSampleBookingsAndPayments() {
   try {
@@ -524,10 +404,54 @@ if (classCount === 0) {
 }
 
 // Database operations
+=======
+>>>>>>> e8cc3e6 (cursor 1)
 export const dbOperations = {
-  // Cleaned getAllClasses
+  // Users
+  getUserByUsername: (username: string): UserRecord | undefined => {
+    try {
+      return db.prepare("SELECT * FROM users WHERE username = ? LIMIT 1").get(username) as UserRecord | undefined;
+    } catch (error) {
+      console.error("getUserByUsername error:", error);
+      return undefined;
+    }
+  },
+  getUserById: (id: number): UserRecord | undefined => {
+    try {
+      return db.prepare("SELECT * FROM users WHERE id = ? LIMIT 1").get(id) as UserRecord | undefined;
+    } catch (error) {
+      console.error("getUserById error:", error);
+      return undefined;
+    }
+  },
+  createUser: (data: { username: string; password: string; email?: string; fullName?: string }): { lastInsertRowid: number } => {
+    const stmt = db.prepare(
+      "INSERT INTO users (username, password, email, full_name, is_admin, membership_status) VALUES (?, ?, ?, ?, 0, 'active')"
+    );
+    const info = stmt.run(data.username, data.password, data.email ?? null, data.fullName ?? null);
+    return { lastInsertRowid: Number(info.lastInsertRowid) };
+  },
+  updateUser: (userId: number, data: Record<string, unknown>): void => {
+    const allowed = new Set([
+      "username",
+      "password",
+      "email",
+      "full_name",
+      "phone",
+      "membership_type",
+      "membership_status",
+      "membership_expiry",
+    ]);
+    const entries = Object.entries(data).filter(([k]) => allowed.has(k));
+    if (entries.length === 0) return;
+    const sets = entries.map(([k]) => `${k} = ?`).join(", ");
+    const values = entries.map(([, v]) => v);
+    db.prepare(`UPDATE users SET ${sets} WHERE id = ?`).run(...values, userId);
+  },
+
   getAllClasses: (): ClassRecord[] => {
     try {
+<<<<<<< HEAD
       return db.prepare(`
         SELECT * FROM classes
         WHERE is_active = 1
@@ -535,6 +459,15 @@ export const dbOperations = {
         ORDER BY name
       `).all() as ClassRecord[];
     } catch (error: unknown) {
+=======
+      return db.prepare("SELECT * FROM classes WHERE is_active = 1 ORDER BY name").all() as ClassRecord[];
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+>>>>>>> e8cc3e6 (cursor 1)
       if (error instanceof Error) {
         console.error("Error getting classes:", error.message);
       } else {
@@ -543,10 +476,9 @@ export const dbOperations = {
       return [];
     }
   },
-
-  // Cleaned getAllCoaches
   getAllCoaches: (): CoachRecord[] => {
     try {
+<<<<<<< HEAD
       return db
         .prepare(`
           SELECT id, slug, name, bio, certifications, image, created_at, updated_at
@@ -556,16 +488,339 @@ export const dbOperations = {
         `)
         .all() as CoachRecord[];
     } catch (error: unknown) {
+=======
+      return db.prepare("SELECT * FROM coaches ORDER BY name").all() as CoachRecord[];
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+>>>>>>> e8cc3e6 (cursor 1)
       if (error instanceof Error) {
         console.error("Error getting coaches:", error.message);
       } else {
         console.error("Error getting coaches:", String(error));
       }
+<<<<<<< HEAD
+=======
+      return [];
+    }
+  },
+  getAllClassInstances: () => {
+    try {
+      return db.prepare("SELECT * FROM class_instances").all();
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+      if (error instanceof Error) {
+        console.error("Error getting class instances:", error.message);
+      } else {
+        console.error("Error getting class instances:", String(error));
+      }
+>>>>>>> e8cc3e6 (cursor 1)
       return [];
     }
   },
 
-  // You can keep other dbOperations like bookings, payments, etc.
+  // Bookings
+  getUserBookings: (userId: number) => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.id, cb.class_instance_id, cb.status as booking_status, cb.payment_status, cb.payment_method,
+                  cb.booking_date, ci.date, ci.start_time, ci.end_time, c.name as class_name
+           FROM class_bookings cb
+           JOIN class_instances ci ON ci.id = cb.class_instance_id
+           JOIN classes c ON c.id = ci.class_id
+           WHERE cb.user_id = ?
+           ORDER BY ci.date DESC, ci.start_time DESC`
+        )
+        .all(userId);
+    } catch (error) {
+      console.error("getUserBookings error:", error);
+      return [];
+    }
+  },
+  getUserBookingForClass: (userId: number, classInstanceId: number) => {
+    try {
+      return db
+        .prepare(
+          `SELECT * FROM class_bookings WHERE user_id = ? AND class_instance_id = ? LIMIT 1`
+        )
+        .get(userId, classInstanceId);
+    } catch (error) {
+      console.error("getUserBookingForClass error:", error);
+      return undefined;
+    }
+  },
+  getUserBookingOverlap: (
+    userId: number,
+    date: string,
+    startTime: string,
+    endTime: string
+  ) => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.* FROM class_bookings cb
+           JOIN class_instances ci ON ci.id = cb.class_instance_id
+           WHERE cb.user_id = ? AND ci.date = ? AND cb.status = 'confirmed'
+             AND NOT (ci.end_time <= ? OR ci.start_time >= ?)
+           LIMIT 1`
+        )
+        .get(userId, date, startTime, endTime);
+    } catch (error) {
+      console.error("getUserBookingOverlap error:", error);
+      return undefined;
+    }
+  },
+  getClassInstanceById: (id: number) => {
+    try {
+      return db.prepare("SELECT * FROM class_instances WHERE id = ?").get(id);
+    } catch (error) {
+      console.error("getClassInstanceById error:", error);
+      return undefined;
+    }
+  },
+  bookClass: (userId: number, classInstanceId: number): number => {
+    const insert = db.prepare(
+      `INSERT INTO class_bookings (user_id, class_instance_id, status, payment_status)
+       VALUES (?, ?, 'confirmed', 'pending')`
+    );
+    const info = insert.run(userId, classInstanceId);
+    db.prepare(
+      `UPDATE class_instances SET current_bookings = current_bookings + 1 WHERE id = ?`
+    ).run(classInstanceId);
+    return Number(info.lastInsertRowid);
+  },
+  waitlistClass: (userId: number, classInstanceId: number) => {
+    const insert = db.prepare(
+      `INSERT INTO class_bookings (user_id, class_instance_id, status, payment_status)
+       VALUES (?, ?, 'waitlist', 'pending')`
+    );
+    const info = insert.run(userId, classInstanceId);
+    return { lastInsertRowid: Number(info.lastInsertRowid) };
+  },
+  cancelBooking: (userId: number, classInstanceId: number, reason?: string) => {
+    const existing = db
+      .prepare(
+        `SELECT status FROM class_bookings WHERE user_id = ? AND class_instance_id = ? LIMIT 1`
+      )
+      .get(userId, classInstanceId) as { status?: string } | undefined;
+    if (!existing) return false;
+    db.prepare(
+      `UPDATE class_bookings SET status = 'cancelled', cancelled_date = CURRENT_TIMESTAMP, cancellation_reason = ?
+       WHERE user_id = ? AND class_instance_id = ?`
+    ).run(reason ?? null, userId, classInstanceId);
+    if (existing.status === 'confirmed') {
+      db.prepare(
+        `UPDATE class_instances SET current_bookings = MAX(current_bookings - 1, 0) WHERE id = ?`
+      ).run(classInstanceId);
+    }
+    return true;
+  },
+  promoteWaitlistedUser: (classInstanceId: number) => {
+    const waitlisted = db
+      .prepare(
+        `SELECT id, user_id FROM class_bookings WHERE class_instance_id = ? AND status = 'waitlist' ORDER BY booking_date ASC LIMIT 1`
+      )
+      .get(classInstanceId) as { id: number; user_id: number } | undefined;
+    if (!waitlisted) return undefined;
+    db.prepare(`UPDATE class_bookings SET status = 'confirmed' WHERE id = ?`).run(waitlisted.id);
+    db.prepare(
+      `UPDATE class_instances SET current_bookings = current_bookings + 1 WHERE id = ?`
+    ).run(classInstanceId);
+    return waitlisted.user_id;
+  },
+
+  // Admin and reporting helpers
+  getAllUsers: (): UserRecord[] => {
+    try {
+      return db.prepare("SELECT * FROM users ORDER BY id DESC").all() as UserRecord[];
+    } catch (error) {
+      console.error("getAllUsers error:", error);
+      return [];
+    }
+  },
+  getGymStats: () => {
+    try {
+      const users = db.prepare("SELECT COUNT(*) as c FROM users").get() as { c: number };
+      const classes = db.prepare("SELECT COUNT(*) as c FROM classes").get() as { c: number };
+      const upcoming = db
+        .prepare("SELECT COUNT(*) as c FROM class_instances WHERE date >= date('now')")
+        .get() as { c: number };
+      const bookings = db.prepare("SELECT COUNT(*) as c FROM class_bookings").get() as { c: number };
+      return {
+        totalMembers: users.c,
+        totalClasses: classes.c,
+        upcomingClasses: upcoming.c,
+        totalBookings: bookings.c,
+      };
+    } catch (error) {
+      console.error("getGymStats error:", error);
+      return { totalMembers: 0, totalClasses: 0, upcomingClasses: 0, totalBookings: 0 };
+    }
+  },
+  getAllBookings: () => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.*, u.username, u.email, ci.date, ci.start_time, ci.end_time
+           FROM class_bookings cb
+           JOIN users u ON u.id = cb.user_id
+           JOIN class_instances ci ON ci.id = cb.class_instance_id`
+        )
+        .all();
+    } catch (error) {
+      console.error("getAllBookings error:", error);
+      return [];
+    }
+  },
+  getLegacyBookings: () => {
+    try {
+      // Optional: fallback to legacy 'bookings' table if exists
+      return db.prepare("SELECT name, class_name, class_date as date FROM bookings").all();
+    } catch {
+      return [];
+    }
+  },
+  getClassRoster: (classInstanceId: number) => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.id, cb.user_id, cb.status as booking_status, cb.payment_status, cb.payment_method,
+                  cb.booking_date, cb.attended, cb.notes,
+                  u.username, u.email, u.phone
+           FROM class_bookings cb
+           JOIN users u ON u.id = cb.user_id
+           WHERE cb.class_instance_id = ?
+           ORDER BY cb.booking_date ASC`
+        )
+        .all(classInstanceId);
+    } catch (error) {
+      console.error("getClassRoster error:", error);
+      return [];
+    }
+  },
+  getClassRostersByDate: (date: string) => {
+    try {
+      return db
+        .prepare(
+          `SELECT ci.id as class_instance_id, c.name as class_name, ci.date, ci.start_time, ci.end_time,
+                  ci.max_capacity, ci.current_bookings,
+                  COALESCE(c.instructor, '') as coach
+           FROM class_instances ci
+           JOIN classes c ON c.id = ci.class_id
+           WHERE ci.date = ?
+           ORDER BY ci.start_time ASC`
+        )
+        .all(date);
+    } catch (error) {
+      console.error("getClassRostersByDate error:", error);
+      return [];
+    }
+  },
+  getOutstandingPayments: () => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.*, u.username, u.email FROM class_bookings cb
+           JOIN users u ON u.id = cb.user_id
+           WHERE cb.payment_status = 'pending' AND cb.status = 'confirmed'`
+        )
+        .all();
+    } catch (error) {
+      console.error("getOutstandingPayments error:", error);
+      return [];
+    }
+  },
+  getCurrentClasses: () => {
+    try {
+      return db
+        .prepare(
+          `SELECT ci.*, c.name as class_name FROM class_instances ci
+           JOIN classes c ON c.id = ci.class_id
+           WHERE ci.date = date('now') ORDER BY ci.start_time`
+        )
+        .all();
+    } catch (error) {
+      console.error("getCurrentClasses error:", error);
+      return [];
+    }
+  },
+  getFutureClasses: () => {
+    try {
+      return db
+        .prepare(
+          `SELECT ci.*, c.name as class_name FROM class_instances ci
+           JOIN classes c ON c.id = ci.class_id
+           WHERE ci.date > date('now') ORDER BY ci.date, ci.start_time LIMIT 100`
+        )
+        .all();
+    } catch (error) {
+      console.error("getFutureClasses error:", error);
+      return [];
+    }
+  },
+  getPastClasses: () => {
+    try {
+      return db
+        .prepare(
+          `SELECT ci.*, c.name as class_name FROM class_instances ci
+           JOIN classes c ON c.id = ci.class_id
+           WHERE ci.date < date('now') ORDER BY ci.date DESC, ci.start_time DESC LIMIT 100`
+        )
+        .all();
+    } catch (error) {
+      console.error("getPastClasses error:", error);
+      return [];
+    }
+  },
+  createClassInstance: (
+    classId: number,
+    date: string,
+    startTime: string,
+    endTime: string,
+    maxCapacity: number
+  ) => {
+    const info = db
+      .prepare(
+        `INSERT INTO class_instances (class_id, date, start_time, end_time, max_capacity)
+         VALUES (?, ?, ?, ?, ?)`
+      )
+      .run(classId, date, startTime, endTime, maxCapacity);
+    return { lastInsertRowid: Number(info.lastInsertRowid) };
+  },
+  markPaymentPaid: (bookingId: number, method: string) => {
+    db.prepare(
+      `UPDATE class_bookings SET payment_status = 'paid', payment_method = ? WHERE id = ?`
+    ).run(method, bookingId);
+    return { success: true };
+  },
+  markAttendance: (bookingId: number, attended: boolean, notes?: string) => {
+    db.prepare(
+      `UPDATE class_bookings SET attended = ?, attendance_marked_at = CURRENT_TIMESTAMP, notes = ? WHERE id = ?`
+    ).run(attended ? 1 : 0, notes ?? null, bookingId);
+    return { success: true };
+  },
+
+  // Content
+  getMembershipPackages: () => {
+    try {
+      return db.prepare("SELECT * FROM membership_packages ORDER BY price").all();
+    } catch (error) {
+      console.error("getMembershipPackages error:", error);
+      return [];
+    }
+  },
+  getMedia: () => {
+    // No media table; return empty to let UI handle gracefully
+    return [] as Array<{ id: number; url: string; title?: string; type?: string; category?: string }>;
+  },
 };
 
 export default db;

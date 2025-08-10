@@ -42,7 +42,12 @@ export default function LoginPage() {
       } else {
         setError(data.error || "Login failed")
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("Login error:", error)
       setError("An error occurred. Please try again.")
     } finally {

@@ -80,7 +80,12 @@ export async function GET(request: NextRequest) {
     }))
 
     return NextResponse.json(transformedBookings)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching user bookings:", error)
     return NextResponse.json({ error: "Failed to fetch bookings" }, { status: 500 })
   }

@@ -27,7 +27,12 @@ export async function GET() {
 
     const outstandingPayments = dbOperations.getOutstandingPayments()
     return NextResponse.json(outstandingPayments)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching outstanding payments:", error)
     return NextResponse.json({ error: "Failed to fetch outstanding payments" }, { status: 500 })
   }

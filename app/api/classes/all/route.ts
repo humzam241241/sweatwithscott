@@ -20,7 +20,12 @@ export async function GET(): Promise<NextResponse<GymClass[] | { error: string }
   try {
     const classes = dbOperations.getAllClasses() as GymClass[];
     return NextResponse.json(Array.isArray(classes) ? classes : []);
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error loading classes:", error);
     return NextResponse.json(
       { error: "Failed to load classes" },

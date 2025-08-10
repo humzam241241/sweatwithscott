@@ -45,7 +45,12 @@ export async function POST(
     );
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error creating class instance:", error);
     return NextResponse.json(
       { error: "Failed to create class instance" },

@@ -27,7 +27,12 @@ export async function GET() {
 
     const pastClasses = dbOperations.getPastClasses()
     return NextResponse.json(pastClasses)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching past classes:", error)
     return NextResponse.json({ error: "Failed to fetch past classes" }, { status: 500 })
   }

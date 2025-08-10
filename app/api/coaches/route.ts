@@ -18,7 +18,12 @@ export async function GET() {
     `).all();
 
     return NextResponse.json(coaches);
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("❌ Error fetching coaches:", error);
     return NextResponse.json(
       { error: "Failed to fetch coaches" },
@@ -26,3 +31,4 @@ export async function GET() {
     );
   }
 }
+ 

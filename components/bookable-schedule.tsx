@@ -90,7 +90,12 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
         console.error("❌ API did not return an array:", data);
         setClassInstances([]);
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       console.error("❌ Error fetching class instances:", error);
       setClassInstances([]);
     } finally {
@@ -123,7 +128,12 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       } else {
         setMessage({ type: "error", text: data.error });
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       setMessage({ type: "error", text: "Failed to book class. Please try again." });
     } finally {
       setBookingLoading(null);
@@ -152,7 +162,12 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
       } else {
         setMessage({ type: "error", text: data.error });
       }
-    } catch (error) {
+    } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
       setMessage({ type: "error", text: "Failed to cancel booking. Please try again." });
     } finally {
       setBookingLoading(null);

@@ -67,7 +67,12 @@ export async function POST(request: NextRequest) {
       booking_id: bookingId,
       status: "confirmed",
     })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Booking error:", error)
     return NextResponse.json({ error: "Failed to book class" }, { status: 500 })
   }

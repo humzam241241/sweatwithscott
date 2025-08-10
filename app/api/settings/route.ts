@@ -16,7 +16,12 @@ export async function GET() {
       settings[row.key] = row.value;
     }
     return NextResponse.json(settings);
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching settings:", error);
     return NextResponse.json({}, { status: 500 });
   }

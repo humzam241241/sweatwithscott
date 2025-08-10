@@ -31,7 +31,12 @@ export async function GET(): Promise<
         }))
       : [];
     return NextResponse.json(schedule);
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching schedule:", error);
     return NextResponse.json(
       { error: "Failed to load schedule" },

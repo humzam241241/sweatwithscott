@@ -38,7 +38,12 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 })
     }
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error marking attendance:", error)
     return NextResponse.json({ error: "Failed to mark attendance" }, { status: 500 })
   }

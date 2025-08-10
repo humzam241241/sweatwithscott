@@ -1,30 +1,37 @@
-import type { CoachRecord } from "./types";
+import type { CoachRecord } from "@/lib/types";
 
-export function filterUniqueCoaches<T extends Partial<CoachRecord>>(coaches: T[] | any[] = []): T[] {
-  if (!Array.isArray(coaches)) return [];
+/**
+ * Filters coaches so:
+ * - Each real coach appears once
+ * - Only ONE placeholder coach card is kept
+ * - Handles null/undefined/invalid data without crashing
+ */
+export function filterUniqueCoaches(coachList: CoachRecord[] = []) {
+  // If it's not an array, bail out with empty list
+  if (!Array.isArray(coachList)) return [];
 
-  const unique: T[] = [];
-  const seen = new Set<string>();
+  const seenNames = new Set<string>();
+  const result: CoachRecord[] = [];
   let placeholderAdded = false;
 
-  for (const coach of coaches) {
+  for (const coach of coachList) {
+    // Skip anything invalid
     if (!coach || typeof coach !== "object") continue;
 
-    const slug = typeof coach.slug === "string" ? coach.slug.toLowerCase() : "";
-    const name = typeof coach.name === "string" ? coach.name.toLowerCase() : "";
-    const key = slug || name;
-    if (!key || seen.has(key)) continue;
+    const nameKey = coach.name?.trim().toLowerCase() || "";
+    const isPlaceholder = !!coach.image?.includes("/images/logo.png");
 
-    const img = typeof coach.image === "string" ? coach.image : "";
-    const isPlaceholder = img.includes("/images/logo.png");
-    if (isPlaceholder) {
-      if (placeholderAdded) continue;
+    // Keep one placeholder
+    if (isPlaceholder && !placeholderAdded) {
       placeholderAdded = true;
+      result.push(coach);
     }
-
-    seen.add(key);
-    unique.push(coach);
+    // Keep real coaches if name is unique
+    else if (!isPlaceholder && !seenNames.has(nameKey)) {
+      seenNames.add(nameKey);
+      result.push(coach);
+    }
   }
 
-  return unique;
+  return result;
 }

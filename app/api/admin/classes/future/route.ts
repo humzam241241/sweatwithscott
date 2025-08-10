@@ -27,7 +27,12 @@ export async function GET() {
 
     const futureClasses = dbOperations.getFutureClasses()
     return NextResponse.json(futureClasses)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching future classes:", error)
     return NextResponse.json({ error: "Failed to fetch future classes" }, { status: 500 })
   }

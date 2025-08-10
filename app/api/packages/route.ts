@@ -8,7 +8,12 @@ export async function GET() {
       | MembershipPackageRecord[]
       | undefined;
     return NextResponse.json(packages ?? []);
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error fetching membership packages:", error);
     return NextResponse.json([], { status: 500 });
   }

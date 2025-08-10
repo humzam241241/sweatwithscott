@@ -8,7 +8,12 @@ export async function POST(request: NextRequest) {
     console.log(`Booking class: ${className} on ${date} at ${time} with ${coach}`)
 
     return NextResponse.json({ message: "Class booked successfully" })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     return NextResponse.json({ error: "Failed to book class" }, { status: 500 })
   }
 }

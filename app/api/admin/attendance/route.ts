@@ -43,7 +43,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: "Attendance updated successfully" })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     return NextResponse.json({ error: "Failed to update attendance" }, { status: 500 })
   }
 }

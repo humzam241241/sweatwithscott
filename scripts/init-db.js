@@ -18,7 +18,12 @@ const statements = schema.split(";").filter((stmt) => stmt.trim().length > 0)
 statements.forEach((statement) => {
   try {
     db.exec(statement)
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Error executing statement:", statement.substring(0, 50) + "...")
     console.error(error.message)
   }

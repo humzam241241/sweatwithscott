@@ -277,7 +277,12 @@ try {
   console.log("Sample payments inserted")
 
   console.log("Database setup completed successfully!")
-} catch (error) {
+} catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
   console.error("Database setup error:", error)
 } finally {
   db.close()

@@ -32,7 +32,12 @@ export async function POST(request: Request) {
     dbOperations.updateUser(user.id, { password: hashed })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     console.error("Reset password error:", error)
     return NextResponse.json({ error: "Password reset failed" }, { status: 500 })
   }
