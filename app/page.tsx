@@ -175,7 +175,9 @@ export default async function Home() {
       />
 
       {/* CONTACT FORM */}
-      <ContactForm />
+      <div className="max-w-4xl mx-auto">
+        <ContactForm />
+      </div>
 
       {/* FOOTER */}
       <Footer />
