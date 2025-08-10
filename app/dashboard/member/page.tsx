@@ -160,6 +160,32 @@ export default function MemberDashboard() {
                 </ul>
               </div>
             )}
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {}
+                }}
+                className="bg-brand text-white px-3 py-2 rounded"
+              >
+                Pay Drop-in
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'ADULT_UNLIMITED' }) });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {}
+                }}
+                className="bg-white text-black px-3 py-2 rounded"
+              >
+                Subscribe
+              </button>
+            </div>
           </div>
         )}
 

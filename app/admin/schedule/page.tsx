@@ -87,10 +87,14 @@ export default function AdminSchedulePage() {
     const startsAt = toLocalIsoMinute(selectInfo.start);
     const endsAt = toLocalIsoMinute(selectInfo.end);
     const title = prompt("Class Title?") || "New Class";
+    // Create or reuse a class for this title on-the-fly so color/coach can be edited from Classes page
+    const classResp = await fetch('/api/classes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: title, day_of_week: new Date(startsAt).toLocaleDateString('en-US',{ weekday:'long'}), start_time: startsAt.slice(11,16), end_time: endsAt.slice(11,16), max_capacity: 20, color: '#ef4444' }) });
+    if (!classResp.ok) return;
+    const created = await classResp.json();
     const res = await fetch(`/api/classes/instances`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, startsAt, endsAt }),
+      body: JSON.stringify({ classId: created.id, title, startsAt, endsAt }),
     });
     if (res.ok) {
       fetchEvents(selectInfo.view.activeStart.toISOString(), selectInfo.view.activeEnd.toISOString());

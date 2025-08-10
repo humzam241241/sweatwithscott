@@ -82,13 +82,14 @@ export async function PUT(request: NextRequest) {
     const id: number | undefined = body.id;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-    const day: string | undefined = body.day;
+    const day: string | undefined = body.day ?? body.day_of_week;
     const name: string | undefined = body.name;
-    const time: string | undefined = body.time;
-    const endTime: string | undefined = body.endTime;
-    const spots: number | undefined = body.spots !== undefined ? Number(body.spots) : undefined;
-    const coach: string | undefined = body.coach;
-    const color: string | null | undefined = body.color;
+    const time: string | undefined = body.time ?? body.start_time;
+    const endTime: string | undefined = body.endTime ?? body.end_time;
+    const spots: number | undefined =
+      body.spots !== undefined ? Number(body.spots) : (body.max_capacity !== undefined ? Number(body.max_capacity) : undefined);
+    const coach: string | undefined = body.coach ?? body.instructor;
+    const color: string | null | undefined = body.color ?? body.colour;
 
     let start: string | undefined;
     let end: string | undefined;

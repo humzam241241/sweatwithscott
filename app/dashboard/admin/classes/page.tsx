@@ -241,6 +241,7 @@ export default function AdminClassesPage() {
                 <div>
                   <p className="font-semibold">{cls.name}</p>
                   <p className="text-sm text-gray-600">{cls.description}</p>
+                  <p className="text-xs text-gray-500">{cls.day_of_week} · {cls.start_time} - {cls.end_time} · Coach: {cls.instructor || '—'}</p>
                 </div>
               </div>
               <div className="space-x-2">
