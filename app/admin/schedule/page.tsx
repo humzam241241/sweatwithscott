@@ -116,6 +116,9 @@ export default function AdminSchedulePage() {
           selectMirror
           expandRows
           eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: true }}
+          weekNumbers
+          stickyHeaderDates
+          dayMaxEventRows={3}
           selectable
           editable
           eventStartEditable
@@ -125,6 +128,43 @@ export default function AdminSchedulePage() {
           select={handleDateSelect}
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
+          eventContent={(arg) => {
+            const data = arg.event.extendedProps as any as AdminEvent;
+            const capacity = `${data.bookedCount}/${data.capacity}`;
+            const isCanceled = data.status === "canceled";
+            return {
+              html: `
+                <div class="flex items-center gap-2 ${isCanceled ? 'opacity-50 line-through' : ''}">
+                  <span class="inline-block w-2 h-2 rounded-full" style="background:${data.color || '#ef4444'}"></span>
+                  <div class="flex-1 truncate">
+                    <div class="text-[12px] font-medium leading-tight">${arg.event.title}</div>
+                    <div class="text-[10px] text-gray-500">${data.coach?.name || ''}</div>
+                  </div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-white">${capacity}</span>
+                </div>`
+            };
+          }}
+          eventClick={async (click) => {
+            const id = click.event.id;
+            const choice = window.prompt("Action: edit | cancel | duplicate", "edit");
+            if (!choice) return;
+            if (choice === "cancel") {
+              await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "canceled" }) });
+              click.event.setProp("classNames", ["opacity-50", "line-through"]);
+            } else if (choice === "duplicate") {
+              const start = click.event.start!; const end = click.event.end!;
+              const startsAt = new Date(start.getTime()); startsAt.setDate(startsAt.getDate() + 7);
+              const endsAt = new Date(end.getTime()); endsAt.setDate(endsAt.getDate() + 7);
+              await fetch(`/api/classes/instances`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: click.event.title, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }) });
+              fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
+            } else if (choice === "edit") {
+              const newTitle = window.prompt("Title", click.event.title) || click.event.title;
+              const newCapacityStr = window.prompt("Capacity", String(((click.event.extendedProps as any).capacity || 20)));
+              const newCapacity = newCapacityStr ? Number(newCapacityStr) : undefined;
+              await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newTitle, capacity: newCapacity }) });
+              fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
+            }
+          }}
           height="auto"
         />
       </div>

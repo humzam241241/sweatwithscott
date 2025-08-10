@@ -1,94 +1,102 @@
-export const dynamic = 'force-dynamic';
+"use client";
 
-import { headers } from "next/headers";
+import React, { useEffect, useMemo, useState } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
+import interactionPlugin from "@fullcalendar/interaction";
 
-interface ClassSchedule {
+type MemberEvent = {
   id: number;
-  name: string;
-  description?: string;
-  day_of_week?: string;
-  start_time?: string;
-  end_time?: string;
-  instructor?: string;
-  max_capacity?: number;
-  price?: number;
-}
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  bookedCount: number;
+  user_booking_status?: string;
+};
 
-async function getSchedule(): Promise<ClassSchedule[]> {
-  try {
-    const h = headers();
-    const proto = h.get("x-forwarded-proto") ?? "http";
-    const host = h.get("host") ?? "";
-    const base = host ? `${proto}://${host}` : "";
-    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
-    if (!res.ok) return [];
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching schedule:", error);
-    return [];
-  }
-}
+export default function SchedulePage() {
+  const [events, setEvents] = useState<MemberEvent[]>([]);
+  const [loading, setLoading] = useState(false);
 
-export default async function SchedulePage() {
-  const schedule = await getSchedule();
+  const fetchEvents = async (fromISO: string, toISO: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/classes/instances?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`);
+      const data = (await res.json()) as MemberEvent[];
+      setEvents(data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const groupedByDay = schedule.reduce((acc: Record<string, ClassSchedule[]>, cls) => {
-    const day = cls.day_of_week || "Unknown";
-    if (!acc[day]) acc[day] = [];
-    acc[day].push(cls);
-    return acc;
-  }, {});
-
-  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const fcEvents = useMemo(
+    () =>
+      events.map((e) => ({
+        id: String(e.id),
+        title: e.title,
+        start: e.startsAt,
+        end: e.endsAt,
+        extendedProps: e,
+      })),
+    [events]
+  );
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="cave-hero py-20 text-center">
-        <h1 className="text-5xl font-black mb-6">Class Schedule</h1>
-        <p className="text-xl">Find the perfect time to train with us.</p>
-      </header>
-
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        {schedule.length > 0 ? (
-          <div className="space-y-8">
-            {dayOrder.map((day) => {
-              const dayClasses = groupedByDay[day];
-              if (!dayClasses || dayClasses.length === 0) return null;
-
-              return (
-                <div key={day} className="bg-gray-50 rounded-lg p-6">
-                  <h2 className="text-2xl font-bold mb-4 text-brand">{day}</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {dayClasses
-                      .sort((a, b) => (a.start_time || "").localeCompare(b.start_time || ""))
-                      .map((cls) => (
-                        <div key={cls.id} className="bg-white rounded-lg shadow-md p-4">
-                          <h3 className="text-lg font-semibold mb-2">{cls.name}</h3>
-                          {cls.description && (
-                            <p className="text-gray-600 mb-3 text-sm">{cls.description}</p>
-                          )}
-                          <div className="space-y-1 text-sm">
-                            {cls.start_time && cls.end_time && (
-                              <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
-                            )}
-                            {cls.instructor && <p><strong>Coach:</strong> {cls.instructor}</p>}
-                            {cls.max_capacity && <p><strong>Capacity:</strong> {cls.max_capacity} spots</p>}
-                            {cls.price && <p><strong>Price:</strong> ${cls.price}</p>}
-                          </div>
-                        </div>
-                      ))}
+    <div className="p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-semibold">Class Schedule</h1>
+          {loading && <span className="text-sm text-gray-500">Loading…</span>}
+        </div>
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek" }}
+          timeZone="local"
+          slotMinTime="06:00:00"
+          slotMaxTime="23:00:00"
+          nowIndicator
+          expandRows
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: true }}
+          weekNumbers
+          stickyHeaderDates
+          dayMaxEventRows={3}
+          events={fcEvents}
+          datesSet={(arg) => fetchEvents(arg.startStr, arg.endStr)}
+          eventContent={(arg) => {
+            const data = arg.event.extendedProps as any as MemberEvent;
+            const capacity = `${data.bookedCount}/${data.capacity}`;
+            const isMine = data.user_booking_status === "confirmed";
+            return {
+              html: `
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 truncate">
+                    <div class="text-[12px] font-medium leading-tight">${arg.event.title}</div>
+                    <div class="text-[10px] ${isMine ? 'text-green-600' : 'text-gray-500'}">${isMine ? 'Booked' : ''}</div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No classes scheduled at this time.</p>
-            <p className="text-gray-400 mt-2">Check back soon for updates!</p>
-          </div>
-        )}
-      </section>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded ${data.bookedCount>=data.capacity ? 'bg-rose-600 text-white' : 'bg-gray-800 text-white'}">${capacity}</span>
+                </div>`
+            };
+          }}
+          eventClick={async (click) => {
+            try {
+              const id = Number(click.event.id);
+              const isMine = (click.event.extendedProps as any).user_booking_status === 'confirmed';
+              if (isMine) {
+                await fetch('/api/classes/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ class_instance_id: id, user_id: (window as any).CURRENT_USER_ID || 0 }) });
+              } else {
+                await fetch('/api/classes/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ class_instance_id: id, user_id: (window as any).CURRENT_USER_ID || 0 }) });
+              }
+              // refresh
+              fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
+            } catch {}
+          }}
+          height="auto"
+        />
+      </div>
     </div>
   );
 }

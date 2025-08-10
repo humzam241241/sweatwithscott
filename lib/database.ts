@@ -166,6 +166,28 @@ export function initializeDatabase() {
         id TEXT PRIMARY KEY,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+
+      -- Inventory tables
+      CREATE TABLE IF NOT EXISTS inventory_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sku TEXT UNIQUE,
+        name TEXT NOT NULL,
+        category TEXT,
+        price REAL DEFAULT 0,
+        quantity INTEGER DEFAULT 0,
+        min_threshold INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS inventory_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id INTEGER NOT NULL,
+        delta INTEGER NOT NULL,
+        reason TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+      );
     `);
 
     // Ensure columns exist for older DBs created by legacy code
@@ -815,6 +837,51 @@ export const dbOperations = {
       console.error("getOutstandingPayments error:", error);
       return [];
     }
+  },
+
+  // Inventory operations
+  getInventory: () => {
+    try {
+      return db.prepare(`SELECT * FROM inventory_items ORDER BY category, name`).all();
+    } catch (error) {
+      console.error("getInventory error:", error);
+      return [];
+    }
+  },
+  getInventoryLowStock: () => {
+    try {
+      return db.prepare(`SELECT * FROM inventory_items WHERE quantity <= min_threshold ORDER BY name`).all();
+    } catch (error) {
+      return [];
+    }
+  },
+  upsertInventoryItem: (data: { id?: number; sku?: string; name: string; category?: string; price?: number; quantity?: number; min_threshold?: number }) => {
+    if (data.id) {
+      db.prepare(`UPDATE inventory_items SET sku = COALESCE(?, sku), name = COALESCE(?, name), category = COALESCE(?, category), price = COALESCE(?, price), quantity = COALESCE(?, quantity), min_threshold = COALESCE(?, min_threshold), updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(
+        data.sku ?? null,
+        data.name ?? null,
+        data.category ?? null,
+        data.price ?? null,
+        data.quantity ?? null,
+        data.min_threshold ?? null,
+        data.id,
+      );
+      return { id: data.id };
+    }
+    const info = db.prepare(`INSERT INTO inventory_items (sku, name, category, price, quantity, min_threshold) VALUES (?, ?, ?, ?, ?, ?)`).run(
+      data.sku ?? null,
+      data.name,
+      data.category ?? null,
+      data.price ?? 0,
+      data.quantity ?? 0,
+      data.min_threshold ?? 0,
+    );
+    return { id: Number(info.lastInsertRowid) };
+  },
+  addInventoryMovement: (itemId: number, delta: number, reason?: string) => {
+    db.prepare(`INSERT INTO inventory_movements (item_id, delta, reason) VALUES (?, ?, ?)`)
+      .run(itemId, delta, reason ?? null);
+    db.prepare(`UPDATE inventory_items SET quantity = quantity + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(delta, itemId);
   },
 
   // Stripe: customers

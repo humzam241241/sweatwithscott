@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { dbOperations } from "@/lib/database"
+import { isMembershipActiveForUserId } from "@/lib/memberships"
 
 // Mock booking storage - in production, this would be in the database
 const bookings = new Map<string, any>()
@@ -22,6 +23,16 @@ export async function POST(request: NextRequest) {
     const classInstance = dbOperations.getClassInstanceById(class_instance_id)
     if (!classInstance) {
       return NextResponse.json({ error: "Class not found" }, { status: 404 })
+    }
+
+    // Require active membership or drop-in payment intent
+    const hasActive = isMembershipActiveForUserId(user_id, { graceDays: 7 })
+    const isDropIn = String(payment_method).toLowerCase() === "drop_in"
+    if (!hasActive && !isDropIn) {
+      return NextResponse.json(
+        { error: "Requires active membership or purchase a drop-in" },
+        { status: 402 },
+      )
     }
 
     // Check if user already has a booking for this class

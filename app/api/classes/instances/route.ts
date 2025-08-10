@@ -67,6 +67,18 @@ export async function GET(request: NextRequest) {
 
     // If new params were used, return admin event shape
     if (fromISO && toISO) {
+      // Optional: include user booking status if user_id provided
+      let bookingForUser: ((instanceId: number) => string | undefined) | null = null
+      if (userId !== undefined) {
+        const bookingStmt = db.prepare(
+          `SELECT status FROM class_bookings WHERE user_id = ? AND class_instance_id = ? LIMIT 1`
+        )
+        bookingForUser = (instanceId: number) => {
+          const b = bookingStmt.get(userId, instanceId) as { status: string } | undefined
+          return b?.status
+        }
+      }
+
       const result = instances.map((row) => {
         const startsAt = `${row.date}T${row.start_time}:00`
         const endsAt = `${row.date}T${row.end_time}:00`
@@ -80,6 +92,7 @@ export async function GET(request: NextRequest) {
           bookedCount: row.current_bookings,
           color: row.color ?? undefined,
           status: row.status,
+          user_booking_status: bookingForUser ? bookingForUser(row.id) : undefined,
         }
       })
       return NextResponse.json(result)

@@ -34,19 +34,116 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <h1 className="mb-8 text-3xl font-bold">Admin Dashboard</h1>
-      <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {links.map((link) => (
-          <li key={link.href}>
-            <Link
-              href={link.href}
-              className="block rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
-            >
-              {link.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <ScheduleBoard className="mt-12" />
+      <StatsCards />
+      <div className="mt-8">
+        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {links.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                className="block rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="mt-12">
+        <ScheduleBoard />
+      </div>
+      <div className="mt-12">
+        <InventoryPanel />
+      </div>
+    </div>
+  );
+}
+
+function StatsCards() {
+  const [stats, setStats] = useState<any>(null);
+  useEffect(() => { fetch('/api/admin/stats').then(r=>r.json()).then(setStats).catch(()=>setStats(null)); }, []);
+  const items = [
+    { label: 'Members', value: stats?.totalMembers },
+    { label: 'Classes', value: stats?.totalClasses },
+    { label: 'Upcoming', value: stats?.upcomingClasses },
+    { label: 'Bookings', value: stats?.totalBookings },
+  ];
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {items.map((s, i) => (
+        <div key={i} className="rounded-lg bg-white p-4 border border-gray-200">
+          <div className="text-sm text-gray-500">{s.label}</div>
+          <div className="text-2xl font-semibold">{s.value ?? '—'}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InventoryPanel() {
+  const [data, setData] = useState<{ items: any[]; lowStock: any[] }>({ items: [], lowStock: [] });
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState<any>({ name: '', sku: '', category: '', price: 0, quantity: 0, min_threshold: 0 });
+
+  const refresh = () => { fetch('/api/admin/inventory').then(r=>r.json()).then(setData).catch(()=>setData({ items: [], lowStock: [] })); };
+  useEffect(() => { refresh(); }, []);
+
+  const saveItem = async () => {
+    await fetch('/api/admin/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editing ? { ...form, id: editing.id } : form) });
+    setEditing(null); setForm({ name: '', sku: '', category: '', price: 0, quantity: 0, min_threshold: 0 }); refresh();
+  };
+  const adjustQty = async (item: any, delta: number) => {
+    await fetch('/api/admin/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item_id: item.id, delta, reason: delta > 0 ? 'restock' : 'sale' }) });
+    refresh();
+  };
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+        <h2 className="font-semibold">Inventory</h2>
+        {data.lowStock.length > 0 && <span className="text-xs text-amber-600">Low stock: {data.lowStock.length}</span>}
+      </div>
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div className="text-sm text-gray-500 mb-2">Items</div>
+          <div className="space-y-2 max-h-[420px] overflow-auto pr-2">
+            {data.items.map((it) => (
+              <div key={it.id} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded p-2">
+                <div className="min-w-0">
+                  <div className="font-medium truncate">{it.name}</div>
+                  <div className="text-xs text-gray-500 truncate">{it.sku || '—'} · {it.category || 'Uncategorized'}</div>
+                </div>
+                <div className="text-sm text-gray-700 whitespace-nowrap">${'{'}it.price?.toFixed?.(2) ?? it.price ?? 0{'}'}</div>
+                <div className="text-xs">
+                  <span className={`${'{'}it.quantity <= it.min_threshold ? 'bg-rose-600 text-white' : 'bg-gray-800 text-white'{'}'} px-2 py-0.5 rounded`}>{'{'}it.quantity{'}'}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => adjustQty(it, -1)} className="px-2 text-sm bg-gray-200 rounded">-</button>
+                  <button onClick={() => adjustQty(it, +1)} className="px-2 text-sm bg-gray-200 rounded">+</button>
+                  <button onClick={() => { setEditing(it); setForm(it); }} className="px-2 text-sm underline">Edit</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="text-sm text-gray-500 mb-2">{editing ? 'Edit Item' : 'Add Item'}</div>
+          <div className="space-y-2">
+            {['name','sku','category'].map((k) => (
+              <input key={k} className="w-full rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder={k.toUpperCase()} value={form[k] ?? ''} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
+            ))}
+            <div className="grid grid-cols-3 gap-2">
+              <input className="rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder="PRICE" type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+              <input className="rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder="QTY" type="number" value={form.quantity ?? 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+              <input className="rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder="MIN" type="number" value={form.min_threshold ?? 0} onChange={(e) => setForm({ ...form, min_threshold: Number(e.target.value) })} />
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={saveItem} className="px-3 py-2 bg-black text-white rounded">{editing ? 'Update' : 'Add'}</button>
+              {editing && <button onClick={() => { setEditing(null); setForm({ name: '', sku: '', category: '', price: 0, quantity: 0, min_threshold: 0 }); }} className="px-3 py-2 bg-gray-200 rounded">Cancel</button>}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

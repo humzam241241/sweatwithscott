@@ -120,6 +120,20 @@ export default function MemberDashboard() {
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
         )}
         <BookableSchedule userMode userId={user?.userId} />
+        <div className="mt-6">
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch("/api/stripe/portal", { method: "POST" });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              } catch {}
+            }}
+            className="text-sm text-brand hover:underline"
+          >
+            Manage Billing
+          </button>
+        </div>
 
         {membership && (
           <div className="mt-8 border border-gray-700 p-4 rounded bg-gray-900">

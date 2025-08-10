@@ -238,14 +238,38 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
     }
 
     return (
-      <Button
-        size="sm"
-        onClick={() => handleBookClass(instance.id)}
-        disabled={isLoading}
-        className="bg-red-600 hover:bg-red-700"
-      >
-        {isLoading ? "Booking..." : "Book Class"}
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          onClick={() => handleBookClass(instance.id)}
+          disabled={isLoading}
+          className="bg-red-600 hover:bg-red-700"
+        >
+          {isLoading ? "Booking..." : "RSVP"}
+        </Button>
+        {instance.price > 0 && (
+          <a
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
+              try {
+                const res = await fetch("/api/stripe/checkout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ planCode: "DROP_IN" }),
+                });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              } catch (err) {
+                // swallow
+              }
+            }}
+            className="text-sm text-red-600 underline"
+          >
+            Pay Drop-in
+          </a>
+        )}
+      </div>
     );
   };
 

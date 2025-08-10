@@ -6,7 +6,7 @@ import type { ClassRecord, CoachRecord } from "@/lib/types";
 async function getClasses(): Promise<ClassRecord[]> {
   try {
     const { headers } = await import("next/headers");
-    const h = headers();
+    const h = await headers();
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("host") ?? "";
     const base = host ? `${proto}://${host}` : "";
@@ -22,7 +22,7 @@ async function getClasses(): Promise<ClassRecord[]> {
 async function getCoaches(): Promise<CoachRecord[]> {
   try {
     const { headers } = await import("next/headers");
-    const h = headers();
+    const h = await headers();
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("host") ?? "";
     const base = host ? `${proto}://${host}` : "";
