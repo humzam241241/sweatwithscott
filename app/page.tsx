@@ -58,7 +58,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-white text-black">
       {/* HERO SECTION */}
-      <section className="relative text-center text-white">
+      <section className="relative text-center text-white mt-20 md:mt-24">
         <div className="absolute inset-0">
           <img
             src={hero.bg}

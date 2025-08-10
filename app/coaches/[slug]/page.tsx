@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import Link from "next/link";
+import { headers } from "next/headers";
 import type { CoachRecord, ClassRecord } from "@/lib/types";
 
 const placeholderCoaches: CoachRecord[] = [
@@ -32,9 +33,14 @@ export default async function CoachPage({
 }: {
   params: { slug: string };
 }) {
+  const h = headers();
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const host = h.get("host") ?? "";
+  const base = host ? `${proto}://${host}` : "";
+
   let coaches: CoachRecord[] = [];
   try {
-    const res = await fetch(`/api/coaches`, { cache: "no-store" });
+    const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
     coaches = (await res.json()) as CoachRecord[];
   } catch {
     coaches = [];
@@ -47,8 +53,8 @@ export default async function CoachPage({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8">
         <p className="mb-4 text-2xl font-bold text-brand">Coach Not Found</p>
-        <Link href="/coaches" className="text-brand underline">
-          ← Back to All Coaches
+        <Link href="/" className="text-brand underline">
+          ← Back to Home
         </Link>
       </div>
     );
@@ -56,7 +62,7 @@ export default async function CoachPage({
 
   let classes: ClassRecord[] = [];
   try {
-    const res = await fetch(`/api/classes`, { cache: "no-store" });
+    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
     classes = (await res.json()) as ClassRecord[];
   } catch {
     classes = [];
