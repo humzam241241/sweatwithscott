@@ -40,13 +40,29 @@ async function getData(endpoint: string) {
   }
 }
 
+async function getSchedule() {
+  try {
+    const h = headers();
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    const host = h.get("host");
+    const base = host ? `${proto}://${host}` : "";
+    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`Failed to fetch schedule`);
+    return res.json();
+  } catch (err) {
+    console.error(`Error loading schedule:`, err);
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [classes, coaches, packagesData, mediaData, settings] = await Promise.all([
+  const [classes, coaches, packagesData, mediaData, settings, scheduleData] = await Promise.all([
     getData("/api/classes"),
     getData("/api/coaches"),
     getData("/api/packages"),
     getData("/api/media"),
     getData("/api/settings"),
+    getSchedule(),
   ]);
 
   const hero = {
@@ -58,7 +74,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-white text-black">
       {/* HERO SECTION */}
-      <section className="relative text-center text-white mt-16 md:mt-20">
+      <section className="relative text-center text-white">
         <div className="absolute inset-0">
           <img
             src={hero.bg}
@@ -116,6 +132,36 @@ export default async function Home() {
         title: m.title ?? "",
         category: m.type ?? "all",
       }))} />
+
+      {/* SCHEDULE */}
+      <section id="schedule" className="py-16 px-6 bg-gray-50">
+        <h2 className="text-3xl font-bold mb-8 text-center">Class Schedule</h2>
+        {Array.isArray(scheduleData) && scheduleData.length > 0 ? (
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {scheduleData.map((cls: any) => (
+                <div key={cls.id ?? cls.slug} className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-xl font-semibold mb-2">{cls.name}</h3>
+                  {cls.description && (
+                    <p className="text-gray-600 mb-3 text-sm">{cls.description}</p>
+                  )}
+                  <div className="space-y-1 text-sm">
+                    {cls.day_of_week && <p><strong>Day:</strong> {cls.day_of_week}</p>}
+                    {cls.start_time && cls.end_time && (
+                      <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
+                    )}
+                    {cls.instructor && <p><strong>Coach:</strong> {cls.instructor}</p>}
+                    {cls.max_capacity && <p><strong>Capacity:</strong> {cls.max_capacity} spots</p>}
+                    {cls.price && <p><strong>Price:</strong> ${cls.price}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">No classes scheduled.</p>
+        )}
+      </section>
 
       {/* MEMBERSHIP PACKAGES */}
       <MembershipPackages

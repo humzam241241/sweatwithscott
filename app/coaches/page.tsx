@@ -45,7 +45,7 @@ export default async function CoachesPage() {
   });
 
   return (
-    <div className="min-h-screen pt-24 md:pt-28">
+    <div className="min-h-screen">
       <header className="cave-hero py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-black mb-6">Meet Our Coaches</h1>

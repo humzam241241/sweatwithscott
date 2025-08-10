@@ -39,7 +39,7 @@ export default async function HomePage() {
   const [classes, coaches] = await Promise.all([getClasses(), getCoaches()]);
 
   return (
-    <div className="min-h-screen pt-24 md:pt-28">
+    <div className="min-h-screen">
       {/* HERO / HEADER */}
       <header className="cave-hero py-20 text-center">
         <h1 className="text-5xl font-black mb-6">Our Classes</h1>

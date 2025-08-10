@@ -76,8 +76,10 @@ export default async function CoachPage({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={image} alt={coach.name} className="h-96 w-full object-cover" />
+      <div className="mx-auto max-w-4xl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={image} alt={coach.name} className="h-96 w-full object-cover object-center" />
+      </div>
       <div className="mx-auto max-w-4xl p-8">
         <h1 className="mb-4 text-4xl font-bold text-brand">{coach.name}</h1>
         {coach.bio && (

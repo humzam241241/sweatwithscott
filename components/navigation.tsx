@@ -140,19 +140,21 @@ export default function Navigation() {
         
         {/* Logo + Title */}
         <div className="flex items-center space-x-3">
-          {logoExists && (
-            <Link href="/">
+          <Link href="/" className="flex items-center space-x-3">
+            {logoExists ? (
               <Image
                 src="/images/logo.png"
                 alt="The Cave Boxing logo"
-                width={60}
-                height={60}
+                width={50}
+                height={50}
                 className="cave-logo"
               />
-            </Link>
-          )}
-          <Link href="/" className="text-white text-xl font-bold">
-            The Cave Boxing
+            ) : (
+              <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">CB</span>
+              </div>
+            )}
+            <span className="text-white text-xl font-bold">The Cave Boxing</span>
           </Link>
         </div>
 

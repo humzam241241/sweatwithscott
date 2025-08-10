@@ -10,7 +10,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-brand-light text-brand-dark">
+      <body className="bg-brand-light text-brand-dark pt-20">
         <Navigation />
         <DataProvider>
           {children}
