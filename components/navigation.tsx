@@ -33,7 +33,7 @@ export default function Navigation() {
     checkAuthStatus();
 
     // Check for logo image
-    fetch("/images/logo.png").then((res) => {
+    fetch("/images/cave-logo.png").then((res) => {
       if (res.ok) setLogoExists(true);
     });
 
@@ -133,7 +133,7 @@ export default function Navigation() {
   return (
     <nav
       className={`cave-navbar fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${
-        isScrolled ? "bg-[var(--cave-dark)] shadow-lg" : "bg-transparent"
+        isScrolled ? "bg-black/90 backdrop-blur-sm shadow-lg" : "bg-black/50 backdrop-blur-sm"
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
@@ -143,14 +143,14 @@ export default function Navigation() {
           <Link href="/" className="flex items-center space-x-3">
             {logoExists ? (
               <Image
-                src="/images/logo.png"
+                src="/images/cave-logo.png"
                 alt="The Cave Boxing logo"
-                width={50}
-                height={50}
-                className="cave-logo"
+                width={60}
+                height={60}
+                className="cave-logo rounded-full"
               />
             ) : (
-              <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+              <div className="w-15 h-15 bg-red-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-lg">CB</span>
               </div>
             )}
@@ -202,7 +202,7 @@ export default function Navigation() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-[var(--cave-dark)] border-t border-gray-800">
+        <div className="md:hidden bg-black/95 backdrop-blur-sm border-t border-gray-800">
           <ul className="flex flex-col space-y-2 p-4">
             {navLinks.map((link) => {
               const isActive = active === link.sectionId || active === link.href;
