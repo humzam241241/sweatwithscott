@@ -50,6 +50,22 @@ const db = new Database(dbPath);
 db.pragma("foreign_keys = ON");
 db.pragma("journal_mode = WAL");
 
+function ensureColumns(tableName: string, columns: Array<{ name: string; type: string; defaultSql?: string }>) {
+  try {
+    const existing = (db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>).map(
+      (c) => c.name,
+    );
+    for (const col of columns) {
+      if (!existing.includes(col.name)) {
+        const alter = `ALTER TABLE ${tableName} ADD COLUMN ${col.name} ${col.type}${col.defaultSql ? ` ${col.defaultSql}` : ""}`;
+        db.exec(alter);
+      }
+    }
+  } catch (error) {
+    // If table doesn't exist yet, caller will create it below
+  }
+}
+
 export function initializeDatabase() {
   try {
     db.exec(`
@@ -123,6 +139,53 @@ export function initializeDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         key TEXT UNIQUE,
         value TEXT
+      );
+    `);
+
+    // Ensure columns exist for older DBs created by legacy code
+    ensureColumns("classes", [
+      { name: "day_of_week", type: "TEXT" },
+      { name: "start_time", type: "TEXT" },
+      { name: "end_time", type: "TEXT" },
+      { name: "is_active", type: "INTEGER", defaultSql: "DEFAULT 1" },
+      { name: "slug", type: "TEXT" },
+      { name: "coach_id", type: "INTEGER" },
+      { name: "coach_name", type: "TEXT" },
+      { name: "active", type: "INTEGER", defaultSql: "DEFAULT 1" },
+      { name: "image", type: "TEXT" },
+      { name: "updated_at", type: "DATETIME", defaultSql: "DEFAULT CURRENT_TIMESTAMP" },
+    ]);
+
+    // Ensure auxiliary tables used by admin features exist
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS class_bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        class_instance_id INTEGER NOT NULL,
+        booking_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        status TEXT DEFAULT 'confirmed',
+        payment_status TEXT DEFAULT 'pending',
+        payment_method TEXT,
+        payment_amount REAL,
+        attended INTEGER DEFAULT 0,
+        notes TEXT,
+        cancelled_date DATETIME,
+        cancellation_reason TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (class_instance_id) REFERENCES class_instances(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        booking_id INTEGER,
+        amount REAL,
+        payment_type TEXT,
+        payment_method TEXT,
+        description TEXT,
+        status TEXT DEFAULT 'completed',
+        payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
       );
     `);
 
@@ -374,11 +437,7 @@ function addSampleBookingsAndPayments() {
 }
 
 // Initialize on import
-const classCount = (db.prepare("SELECT COUNT(*) as count FROM classes").get() as { count: number }).count;
-if (classCount === 0) {
-  console.log("Seeding initial data...");
-  generateClassInstances();
-}
+initializeDatabase();
 
 // Database operations
 export const dbOperations = {
