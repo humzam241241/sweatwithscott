@@ -10,9 +10,7 @@ export async function GET() {
         name,
         bio,
         certifications,
-        image,
-        created_at,
-        updated_at
+        image
       FROM coaches
       ORDER BY name ASC
     `).all();

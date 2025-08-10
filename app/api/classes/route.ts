@@ -5,7 +5,8 @@ export async function GET() {
   try {
     const classes = db
       .prepare(
-        `SELECT id, slug, name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image
+        `SELECT id, slug, name, description, day_of_week, start_time, end_time, max_capacity, price, image,
+                COALESCE(instructor, coach_name, '') as instructor
          FROM classes WHERE is_active = 1 ORDER BY name`
       )
       .all();

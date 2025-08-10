@@ -6,6 +6,7 @@ import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import { headers } from "next/headers";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
 
@@ -26,7 +27,11 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 
 async function getData(endpoint: string) {
   try {
-    const res = await fetch(`${endpoint}`, { cache: "no-store" });
+    const h = headers();
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    const host = h.get("host");
+    const base = host ? `${proto}://${host}` : "";
+    const res = await fetch(`${base}${endpoint}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`Failed to fetch ${endpoint}`);
     return res.json();
   } catch (err) {
