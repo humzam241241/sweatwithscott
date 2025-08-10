@@ -10,7 +10,7 @@ export default function CoachCard({ coach }: { coach: CoachRecord }) {
       ? coach.image
       : "/images/coach-humza.png";
 
-  const slug = coach.slug || "unknown-coach";
+  const slug = coach.slug || coach.name?.toLowerCase().replace(/\s+/g, "-") || "unknown-coach";
 
   return (
     <Link href={`/coaches/${slug}`}>

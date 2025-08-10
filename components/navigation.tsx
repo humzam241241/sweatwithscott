@@ -106,8 +106,8 @@ export default function Navigation() {
 
   const baseLinks: NavLink[] = [
     { href: "/", label: "Home" },
-    { href: "/classes", label: "Classes", sectionId: "classes" },
-    { href: "/coaches", label: "Coaches", sectionId: "coaches" },
+    { href: "/classes", label: "Classes" },
+    { href: "/coaches", label: "Coaches" },
     { href: "/schedule", label: "Schedule", sectionId: "schedule" },
     { href: "/membership", label: "Membership", sectionId: "membership" },
     { href: "/about", label: "About", sectionId: "about" },

@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic';
 import Link from "next/link";
+import { headers } from "next/headers";
 import type { ClassRecord } from "@/lib/types";
 
 const placeholderClasses: ClassRecord[] = [
@@ -21,9 +22,14 @@ export default async function ClassPage({
 }: {
   params: { slug: string };
 }) {
+  const h = headers();
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const host = h.get("host") ?? "";
+  const base = host ? `${proto}://${host}` : "";
+
   let classes: ClassRecord[] = [];
   try {
-    const res = await fetch(`/api/classes`, { cache: "no-store" });
+    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
     classes = (await res.json()) as ClassRecord[];
   } catch {
     classes = [];
@@ -36,8 +42,8 @@ export default async function ClassPage({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8">
         <p className="text-2xl font-bold text-brand mb-4">Class Not Found</p>
-        <Link href="/classes" className="text-brand underline">
-          ← Back to All Classes
+        <Link href="/" className="text-brand underline">
+          ← Back to Home
         </Link>
       </div>
     );
