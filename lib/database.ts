@@ -149,11 +149,11 @@ export function initializeDatabase() {
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log("Database initialized successfully");
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(error.message);
-    } else {
-      console.error(String(error));
-    }
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
     if (error instanceof Error) {
       console.error("❌ DB Init Error:", error.message);
     } else {
@@ -261,9 +261,9 @@ function generateClassInstances() {
         try {
           db.prepare(
             `
-            INSERT OR IGNORE INTO class_instances 
-            (class_id, date, start_time, end_time, instructor, max_capacity, status)
-            VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
+          INSERT OR IGNORE INTO class_instances
+          (class_id, date, start_time, end_time, instructor, max_capacity, status)
+          VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
           `,
           ).run(
             cls.id,

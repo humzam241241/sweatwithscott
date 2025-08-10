@@ -41,23 +41,36 @@ async function getData(endpoint: string) {
 }
 
 export default async function Home() {
-  const [classes, coaches] = await Promise.all([
+  const [classes, coaches, packagesData, mediaData, settings] = await Promise.all([
     getData("/api/classes"),
     getData("/api/coaches"),
+    getData("/api/packages"),
+    getData("/api/media"),
+    getData("/api/settings"),
   ]);
 
-  const hero = fallbackHero;
+  const hero = {
+    title: (settings as any)?.hero_title ?? fallbackHero.title,
+    subtitle: (settings as any)?.hero_subtitle ?? fallbackHero.subtitle,
+    bg: (settings as any)?.hero_bg ?? fallbackHero.bg,
+  };
 
   return (
     <main className="min-h-screen bg-white text-black">
       {/* HERO SECTION */}
-      <section
-        className="relative flex flex-col items-center justify-center h-[70vh] bg-cover bg-center text-center text-white"
-        style={{ backgroundImage: `url(${hero.bg})` }}
-      >
-        <div className="bg-black/50 absolute inset-0" />
-        <h1 className="text-5xl md:text-6xl font-bold z-10">{hero.title}</h1>
-        <p className="text-lg md:text-2xl mt-4 z-10">{hero.subtitle}</p>
+      <section className="relative text-center text-white">
+        <div className="absolute inset-0">
+          <img
+            src={hero.bg}
+            alt="Hero"
+            className="w-full h-[70vh] md:h-[80vh] object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-black/50" />
+        </div>
+        <div className="relative z-10 flex flex-col items-center justify-center h-[70vh] md:h-[80vh]">
+          <h1 className="text-5xl md:text-6xl font-bold">{hero.title}</h1>
+          <p className="text-lg md:text-2xl mt-4">{hero.subtitle}</p>
+        </div>
       </section>
 
       {/* CLASSES */}
@@ -97,10 +110,26 @@ export default async function Home() {
       </section>
 
       {/* MEDIA GALLERY */}
-      <MediaGallery />
+      <MediaGallery items={(Array.isArray(mediaData) ? mediaData : []).map((m: any) => ({
+        id: m.id,
+        fileUrl: m.url ?? m.fileUrl,
+        title: m.title ?? "",
+        category: m.type ?? "all",
+      }))} />
 
       {/* MEMBERSHIP PACKAGES */}
-      <MembershipPackages />
+      <MembershipPackages
+        packages={(Array.isArray(packagesData) ? packagesData : []).map((p: any) => ({
+          name: p.name,
+          price: `$${p.price ?? 0}`,
+          period: "",
+          description: p.description ?? "",
+          features: p.features ? (() => { try { return JSON.parse(p.features); } catch { return []; } })() : [],
+          popular: false,
+          buttonText: "Join Now",
+          buttonLink: "/membership",
+        }))}
+      />
 
       {/* CONTACT FORM */}
       <ContactForm />

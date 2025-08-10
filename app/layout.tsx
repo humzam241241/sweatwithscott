@@ -1,4 +1,5 @@
 import "./globals.css";
+import Navigation from "@/components/navigation";
 import { DataProvider } from "@/components/ui/data-provider";
 import type { ReactNode } from "react";
 
@@ -10,6 +11,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-brand-light text-brand-dark">
+        <Navigation />
         <DataProvider>
           {children}
         </DataProvider>
