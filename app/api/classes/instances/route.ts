@@ -142,8 +142,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const start = new Date(startsAt)
-    const end = new Date(endsAt)
+    // Interpret incoming ISO-like strings as local times if missing timezone
+    const parseLocal = (iso: string) => {
+      // If it already has a timezone/Z, let Date parse it as-is
+      if (/Z|[+-]\d{2}:?\d{2}$/.test(iso)) return new Date(iso)
+      // Treat as local wall time
+      const [datePart, timePart] = iso.split("T")
+      const [y, m, d] = datePart.split("-").map((n) => Number(n))
+      const [hh, mm = "0"] = (timePart || "00:00").split(":")
+      const dt = new Date(y, (m ?? 1) - 1, d ?? 1, Number(hh), Number(mm))
+      return dt
+    }
+
+    const start = parseLocal(startsAt)
+    const end = parseLocal(endsAt)
     if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) {
       return NextResponse.json({ error: "Invalid startsAt/endsAt" }, { status: 400 })
     }

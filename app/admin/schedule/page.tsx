@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -22,6 +22,7 @@ type AdminEvent = {
 export default function AdminSchedulePage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const calendarRef = useRef<FullCalendar | null>(null);
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -77,9 +78,14 @@ export default function AdminSchedulePage() {
     });
   };
 
+  const toLocalIsoMinute = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const handleDateSelect = async (selectInfo: DateSelectArg) => {
-    const startsAt = selectInfo.startStr;
-    const endsAt = selectInfo.endStr;
+    const startsAt = toLocalIsoMinute(selectInfo.start);
+    const endsAt = toLocalIsoMinute(selectInfo.end);
     const title = prompt("Class Title?") || "New Class";
     const res = await fetch(`/api/classes/instances`, {
       method: "POST",
@@ -103,6 +109,13 @@ export default function AdminSchedulePage() {
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek" }}
+          timeZone="local"
+          slotMinTime="06:00:00"
+          slotMaxTime="23:00:00"
+          nowIndicator
+          selectMirror
+          expandRows
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: true }}
           selectable
           editable
           eventStartEditable
