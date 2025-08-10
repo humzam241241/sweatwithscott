@@ -1,30 +1,50 @@
+param(
+  [switch]$CleanAll
+)
+
 Write-Host "=== CaveBoxing Site Launcher & Deployer ===" -ForegroundColor Cyan
 
 # 1️⃣ Pull latest from origin/main
 Write-Host "`n1/7 Pulling latest from GitHub..." -ForegroundColor Yellow
 try {
-    git pull origin main
+  git pull origin main
 } catch {
-    Write-Host "⚠ Git pull failed" -ForegroundColor Red
+  Write-Host "⚠ Git pull failed" -ForegroundColor Red
 }
 
 # 2️⃣ Commit and push any local changes
 Write-Host "`n2/7 Checking for local changes..." -ForegroundColor Yellow
 if (git status --porcelain) {
-    git add .
-    $commitMsg = "Auto-deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-    git commit -m $commitMsg
-    git push origin main
-    Write-Host "Local changes committed and pushed." -ForegroundColor Green
+  git add .
+  $commitMsg = "Auto-deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+  git commit -m $commitMsg
+  git push origin main
+  Write-Host "Local changes committed and pushed." -ForegroundColor Green
 } else {
-    Write-Host "No local changes to commit." -ForegroundColor DarkGray
+  Write-Host "No local changes to commit." -ForegroundColor DarkGray
 }
 
-# 3️⃣ Clear cache and dependencies
+# Helper to remove paths quietly and robustly
+function Remove-PathSafe {
+  param([string]$Path)
+  if (Test-Path -LiteralPath $Path) {
+    Write-Host "Removing $Path ..." -ForegroundColor DarkGray
+    try { Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop } catch {}
+    # Fallback to cmd rd to handle deep trees on Windows
+    if (Test-Path -LiteralPath $Path) {
+      try { cmd /c rd /s /q "$Path" | Out-Null } catch {}
+    }
+  }
+}
+
+# 3️⃣ Clear build cache (safe by default). Use -CleanAll to also nuke node_modules
 Write-Host "`n3/7 Clearing cache..." -ForegroundColor Yellow
-$paths = @('.next','node_modules','pnpm-lock.yaml')
-foreach ($p in $paths) {
-    if (Test-Path $p) { Remove-Item $p -Recurse -Force }
+Remove-PathSafe ".next"
+Remove-PathSafe ".turbo"
+if ($CleanAll) {
+  Write-Host "-CleanAll specified: removing node_modules and lockfile" -ForegroundColor DarkYellow
+  Remove-PathSafe "node_modules"
+  Remove-PathSafe "pnpm-lock.yaml"
 }
 
 # 4️⃣ Install dependencies

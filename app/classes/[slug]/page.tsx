@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import type { ClassRecord } from "@/lib/types";
 
@@ -20,11 +21,9 @@ export default async function ClassPage({
 }: {
   params: { slug: string };
 }) {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
   let classes: ClassRecord[] = [];
   try {
-    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+    const res = await fetch(`/api/classes`, { cache: "no-store" });
     classes = (await res.json()) as ClassRecord[];
   } catch {
     classes = [];

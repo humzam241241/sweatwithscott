@@ -1,17 +1,16 @@
+export const dynamic = 'force-dynamic';
 import CoachCard from "@/components/CoachCard";
 import ClassCard from "@/components/ClassCard";
 import type { ClassRecord, CoachRecord } from "@/lib/types";
 
 async function getClasses(): Promise<ClassRecord[]> {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "";
-  const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+  const res = await fetch(`/api/classes`, { cache: "no-store" });
   if (!res.ok) return [];
   return res.json();
 }
 
 async function getCoaches(): Promise<CoachRecord[]> {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "";
-  const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
+  const res = await fetch(`/api/coaches`, { cache: "no-store" });
   if (!res.ok) return [];
   return res.json();
 }

@@ -149,14 +149,11 @@ export function initializeDatabase() {
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log("Database initialized successfully");
   } catch (error: unknown) {
-<<<<<<< HEAD
-=======
-  if (error instanceof Error) {
-    console.error(error.message);
-  } else {
-    console.error(String(error));
-  }
->>>>>>> e8cc3e6 (cursor 1)
+    if (error instanceof Error) {
+      console.error(error.message);
+    } else {
+      console.error(String(error));
+    }
     if (error instanceof Error) {
       console.error("❌ DB Init Error:", error.message);
     } else {
@@ -260,11 +257,6 @@ function generateClassInstances() {
       const dateString = currentDate.toISOString().split("T")[0];
       const dayClasses = classes.filter((cls) => cls.day_of_week === dayName);
 
-<<<<<<< HEAD
-      const dayClasses = classes.filter(
-        (cls: any) => cls.day_of_week === dayName,
-      );
-
       dayClasses.forEach((cls: any) => {
         try {
           db.prepare(
@@ -296,26 +288,12 @@ function generateClassInstances() {
         }
       });
     }
-
-    // Add some sample bookings and payments
-    addSampleBookingsAndPayments();
-  } catch (error: unknown) {
-=======
-      dayClasses.forEach((cls) => {
-        db.prepare(`
-          INSERT OR IGNORE INTO class_instances
-          (class_id, date, start_time, end_time, instructor, max_capacity, status)
-          VALUES (?, ?, ?, ?, ?, ?, 'scheduled')
-        `).run(cls.id, dateString, cls.start_time, cls.end_time, cls.instructor, cls.max_capacity);
-      });
-    }
   } catch (error: unknown) {
   if (error instanceof Error) {
     console.error(error.message);
   } else {
     console.error(String(error));
   }
->>>>>>> e8cc3e6 (cursor 1)
     if (error instanceof Error) {
       console.error("Error generating class instances:", error.message);
     } else {
@@ -324,7 +302,6 @@ function generateClassInstances() {
   }
 }
 
-<<<<<<< HEAD
 // Add sample bookings and payments for demo
 function addSampleBookingsAndPayments() {
   try {
@@ -397,15 +374,13 @@ function addSampleBookingsAndPayments() {
 }
 
 // Initialize on import
-const classCount = db.prepare("SELECT COUNT(*) as count FROM classes").get().count;
+const classCount = (db.prepare("SELECT COUNT(*) as count FROM classes").get() as { count: number }).count;
 if (classCount === 0) {
   console.log("Seeding initial data...");
   generateClassInstances();
 }
 
 // Database operations
-=======
->>>>>>> e8cc3e6 (cursor 1)
 export const dbOperations = {
   // Users
   getUserByUsername: (username: string): UserRecord | undefined => {
@@ -451,15 +426,6 @@ export const dbOperations = {
 
   getAllClasses: (): ClassRecord[] => {
     try {
-<<<<<<< HEAD
-      return db.prepare(`
-        SELECT * FROM classes
-        WHERE is_active = 1
-        GROUP BY LOWER(name)
-        ORDER BY name
-      `).all() as ClassRecord[];
-    } catch (error: unknown) {
-=======
       return db.prepare("SELECT * FROM classes WHERE is_active = 1 ORDER BY name").all() as ClassRecord[];
     } catch (error: unknown) {
   if (error instanceof Error) {
@@ -467,7 +433,6 @@ export const dbOperations = {
   } else {
     console.error(String(error));
   }
->>>>>>> e8cc3e6 (cursor 1)
       if (error instanceof Error) {
         console.error("Error getting classes:", error.message);
       } else {
@@ -478,17 +443,6 @@ export const dbOperations = {
   },
   getAllCoaches: (): CoachRecord[] => {
     try {
-<<<<<<< HEAD
-      return db
-        .prepare(`
-          SELECT id, slug, name, bio, certifications, image, created_at, updated_at
-          FROM coaches
-          GROUP BY LOWER(name)
-          ORDER BY name
-        `)
-        .all() as CoachRecord[];
-    } catch (error: unknown) {
-=======
       return db.prepare("SELECT * FROM coaches ORDER BY name").all() as CoachRecord[];
     } catch (error: unknown) {
   if (error instanceof Error) {
@@ -496,7 +450,6 @@ export const dbOperations = {
   } else {
     console.error(String(error));
   }
->>>>>>> e8cc3e6 (cursor 1)
       if (error instanceof Error) {
         console.error("Error getting coaches:", error.message);
       } else {
@@ -521,7 +474,6 @@ export const dbOperations = {
       } else {
         console.error("Error getting class instances:", String(error));
       }
->>>>>>> e8cc3e6 (cursor 1)
       return [];
     }
   },

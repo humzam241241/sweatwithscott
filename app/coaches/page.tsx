@@ -1,24 +1,15 @@
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
-<<<<<<< HEAD
 import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches";
-=======
-import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches"; // <-- shared import
->>>>>>> e8cc3e6 (cursor 1)
 
 async function getCoaches() {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
+  const res = await fetch(`/api/coaches`, { cache: "no-store" });
   if (!res.ok) return [];
   return res.json();
 }
 
 export default async function CoachesPage() {
   const fetched = await getCoaches();
-
-<<<<<<< HEAD
-=======
-  // Apply shared filtering
->>>>>>> e8cc3e6 (cursor 1)
   const filtered = filterUniqueCoaches(fetched);
 
   // Apply Humza override & image defaults
