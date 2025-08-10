@@ -5,24 +5,23 @@ import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches";
 async function getCoaches() {
   try {
     const { headers } = await import("next/headers");
-    const h = headers();
+    const h = await headers();
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("host") ?? "";
     const base = host ? `${proto}://${host}` : "";
     const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
-    if (!res.ok) return [];
+    if (!res.ok) return [] as any[];
     return res.json();
   } catch (error) {
     console.error("Error fetching coaches:", error);
-    return [];
+    return [] as any[];
   }
 }
 
 export default async function CoachesPage() {
   const fetched = await getCoaches();
-  const filtered = filterUniqueCoaches(fetched);
+  const filtered = filterUniqueCoaches(fetched as any[]);
 
-  // Apply Humza override & image defaults
   const coaches = filtered.map((coach: any) => {
     const adjusted = coach.name?.toLowerCase().includes("shannon")
       ? {
@@ -41,7 +40,7 @@ export default async function CoachesPage() {
         adjusted.image && adjusted.image !== "/images/logo.png"
           ? adjusted.image
           : "/images/coach-humza.png",
-    };
+    } as any;
   });
 
   return (
@@ -55,14 +54,14 @@ export default async function CoachesPage() {
         </div>
       </header>
 
-      <section className="card-grid">
+      <section className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {coaches.map((coach: any) => (
-          <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="card">
-            <img src={coach.image || "/images/coach-humza.png"} alt={coach.name} />
-            <div className="card-overlay">
-              <h3>{coach.name}</h3>
-              <p>{coach.role}</p>
-              <span className="card-link">View Bio</span>
+          <Link key={coach.slug} href={`/coaches/${coach.slug}`} className="group rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow bg-white">
+            <img src={coach.image || "/images/coach-humza.png"} alt={coach.name} className="h-56 w-full object-cover" />
+            <div className="p-4">
+              <h3 className="font-semibold text-lg group-hover:text-red-600">{coach.name}</h3>
+              <p className="text-sm text-gray-600">{coach.role}</p>
+              <span className="text-sm text-red-600 underline">View Bio</span>
             </div>
           </Link>
         ))}

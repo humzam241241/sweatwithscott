@@ -96,7 +96,28 @@ export default function SchedulePage() {
           }}
           height="auto"
         />
+        {/* Listen for admin changes and refresh */}
+        <RefreshOnBroadcast onRefresh={(from,to)=>fetchEvents(from,to)} />
       </div>
     </div>
   );
+}
+
+function RefreshOnBroadcast({ onRefresh }: { onRefresh: (fromISO:string, toISO:string)=>void }){
+  const [range, setRange] = React.useState<{from:string;to:string}|null>(null);
+  React.useEffect(()=>{
+    const handler = () => {
+      const cal = document.querySelector('.fc') as any;
+      if (cal && (cal._calendar || (cal as any).calendar)){
+        const api = (cal._calendar || (cal as any).calendar);
+        const start = api.view.activeStart.toISOString();
+        const end = api.view.activeEnd.toISOString();
+        setRange({from:start, to:end});
+        onRefresh(start,end);
+      }
+    };
+    window.addEventListener('classes:changed', handler);
+    return () => window.removeEventListener('classes:changed', handler);
+  }, [onRefresh]);
+  return null;
 }

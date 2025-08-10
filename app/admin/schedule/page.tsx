@@ -93,8 +93,8 @@ export default function AdminSchedulePage() {
       body: JSON.stringify({ title, startsAt, endsAt }),
     });
     if (res.ok) {
-      // refetch by calling onDatesSet implicitly
       fetchEvents(selectInfo.view.activeStart.toISOString(), selectInfo.view.activeEnd.toISOString());
+      window.dispatchEvent(new CustomEvent('classes:changed'));
     }
   };
 
@@ -157,12 +157,14 @@ export default function AdminSchedulePage() {
               const endsAt = new Date(end.getTime()); endsAt.setDate(endsAt.getDate() + 7);
               await fetch(`/api/classes/instances`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: click.event.title, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }) });
               fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
+              window.dispatchEvent(new CustomEvent('classes:changed'));
             } else if (choice === "edit") {
               const newTitle = window.prompt("Title", click.event.title) || click.event.title;
               const newCapacityStr = window.prompt("Capacity", String(((click.event.extendedProps as any).capacity || 20)));
               const newCapacity = newCapacityStr ? Number(newCapacityStr) : undefined;
               await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newTitle, capacity: newCapacity }) });
               fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
+              window.dispatchEvent(new CustomEvent('classes:changed'));
             }
           }}
           height="auto"
