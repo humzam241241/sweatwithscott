@@ -39,9 +39,10 @@ function addOneHour(time: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const day: string = body.day;
+    const day: string = body.day ?? body.day_of_week;
     const name: string = body.name;
-    const time: string = body.time;
+    const time: string = body.time ?? body.start_time;
+    const endTime: string | undefined = body.endTime ?? body.end_time;
     const spots: number = Number(body.spots ?? 0);
     const coach: string = String(body.coach ?? "");
     const color: string | null = body.color ?? null;
@@ -54,13 +55,13 @@ export async function POST(request: NextRequest) {
     const start = Number.isNaN(startTime.getTime())
       ? time
       : `${String(startTime.getHours()).padStart(2, "0")}:${String(startTime.getMinutes()).padStart(2, "0")}`;
-    const end = addOneHour(start);
+    const end = endTime ? addOneHour(endTime) : addOneHour(start);
 
     const stmt = db.prepare(
-      `INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price, image)
-       VALUES (?, ?, ?, ?, ?, ?, 0, NULL)`
+      `INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color)
+       VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?)`
     );
-    const info = stmt.run(name, coach, day, start, end, spots);
+    const info = stmt.run(name, coach, day, start, end, spots, color);
 
     // Return the newly created class
     const created = db.prepare(`SELECT * FROM classes WHERE id = ?`).get(info.lastInsertRowid);
@@ -84,6 +85,7 @@ export async function PUT(request: NextRequest) {
     const day: string | undefined = body.day;
     const name: string | undefined = body.name;
     const time: string | undefined = body.time;
+    const endTime: string | undefined = body.endTime;
     const spots: number | undefined = body.spots !== undefined ? Number(body.spots) : undefined;
     const coach: string | undefined = body.coach;
     const color: string | null | undefined = body.color;
@@ -95,7 +97,7 @@ export async function PUT(request: NextRequest) {
       start = Number.isNaN(d.getTime())
         ? time
         : `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-      end = addOneHour(start);
+      end = endTime ? endTime : addOneHour(start);
     }
 
     const updates: string[] = [];
@@ -106,7 +108,7 @@ export async function PUT(request: NextRequest) {
     if (start !== undefined) { updates.push("start_time = ?"); values.push(start); }
     if (end !== undefined) { updates.push("end_time = ?"); values.push(end); }
     if (spots !== undefined) { updates.push("max_capacity = ?"); values.push(spots); }
-    // color not stored in schema; ignore safely
+    if (color !== undefined) { updates.push("color = ?"); values.push(color); }
 
     if (updates.length === 0) {
       return NextResponse.json({ error: "No fields to update" }, { status: 400 });

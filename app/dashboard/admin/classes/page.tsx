@@ -10,13 +10,19 @@ interface ClassItem {
   description: string;
   image?: string;
   price?: number | null;
+  day_of_week?: string;
+  start_time?: string;
+  end_time?: string;
+  max_capacity?: number;
+  instructor?: string;
+  color?: string | null;
 }
 
 export default function AdminClassesPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [form, setForm] = useState<Partial<ClassItem>>({});
+  const [form, setForm] = useState<Partial<ClassItem>>({ day_of_week: "Monday", color: "#c90015" });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -88,6 +94,12 @@ export default function AdminClassesPage() {
       description: cls.description,
       image: cls.image,
       price: cls.price ?? undefined,
+      day_of_week: cls.day_of_week,
+      start_time: cls.start_time,
+      end_time: cls.end_time,
+      max_capacity: cls.max_capacity,
+      instructor: cls.instructor,
+      color: cls.color ?? undefined,
     });
     setPreview(cls.image ?? null);
   };
@@ -107,7 +119,7 @@ export default function AdminClassesPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <h1 className="mb-6 text-3xl font-bold text-brand">Manage Classes</h1>
-      <form onSubmit={submit} className="mb-8 space-y-4 max-w-xl">
+      <form onSubmit={submit} className="mb-8 space-y-4 max-w-2xl">
         <div>
           <label className="mb-1 block font-medium">Name *</label>
           <input
@@ -116,6 +128,41 @@ export default function AdminClassesPage() {
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
           />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block font-medium">Day *</label>
+            <select className="w-full rounded border p-2" value={form.day_of_week ?? "Monday"} onChange={(e)=>setForm({...form, day_of_week: e.target.value})}>
+              {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d=> (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block font-medium">Start Time *</label>
+            <input type="time" className="w-full rounded border p-2" value={form.start_time ?? ""} onChange={(e)=>setForm({...form, start_time: e.target.value})} required />
+          </div>
+          <div>
+            <label className="mb-1 block font-medium">End Time *</label>
+            <input type="time" className="w-full rounded border p-2" value={form.end_time ?? ""} onChange={(e)=>setForm({...form, end_time: e.target.value})} required />
+          </div>
+          <div>
+            <label className="mb-1 block font-medium">Spots</label>
+            <input type="number" className="w-full rounded border p-2" value={form.max_capacity ?? 0} onChange={(e)=>setForm({...form, max_capacity: parseInt(e.target.value || '0',10)})} />
+          </div>
+          <div>
+            <label className="mb-1 block font-medium">Coach</label>
+            <input className="w-full rounded border p-2" value={form.instructor ?? ""} onChange={(e)=>setForm({...form, instructor: e.target.value})} />
+          </div>
+          <div>
+            <label className="mb-1 block font-medium">Color</label>
+            <input type="color" list="class-colors" className="w-full h-10 rounded border p-1" value={form.color ?? "#c90015"} onChange={(e)=>setForm({...form, color: e.target.value})} />
+            <datalist id="class-colors">
+              {['#c90015','#1d4ed8','#059669','#0ea5e9','#f59e0b','#7c3aed','#ef4444','#14b8a6','#f97316','#84cc16'].map(c=> (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </datalist>
+          </div>
         </div>
         <div>
           <label className="mb-1 block font-medium">Description</label>
@@ -150,7 +197,7 @@ export default function AdminClassesPage() {
             />
           )}
         </div>
-        <div className="space-x-2">
+      <div className="space-x-2">
           <button
             type="submit"
             className="rounded bg-brand px-4 py-2 font-medium text-white"
@@ -193,16 +240,10 @@ export default function AdminClassesPage() {
                 </div>
               </div>
               <div className="space-x-2">
-                <button
-                  onClick={() => startEdit(cls)}
-                  className="rounded bg-brand px-3 py-1 text-white"
-                >
+                <button onClick={() => startEdit(cls)} className="rounded bg-blue-600 px-3 py-1 text-white">
                   Edit
                 </button>
-                <button
-                  onClick={() => remove(cls.id)}
-                  className="rounded bg-red-600 px-3 py-1 text-white"
-                >
+                <button onClick={() => remove(cls.id)} className="rounded bg-blue-600/20 border border-blue-600 px-3 py-1 text-blue-700">
                   Delete
                 </button>
               </div>

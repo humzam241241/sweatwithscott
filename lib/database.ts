@@ -153,6 +153,7 @@ export function initializeDatabase() {
       { name: "coach_name", type: "TEXT" },
       { name: "active", type: "INTEGER", defaultSql: "DEFAULT 1" },
       { name: "image", type: "TEXT" },
+      { name: "color", type: "TEXT" },
       { name: "updated_at", type: "DATETIME", defaultSql: "DEFAULT CURRENT_TIMESTAMP" },
     ]);
 
