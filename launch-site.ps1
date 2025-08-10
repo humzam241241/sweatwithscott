@@ -55,24 +55,28 @@ pnpm install
 Write-Host "`n5/7 Building site..." -ForegroundColor Yellow
 pnpm build
 
-# 6️⃣ Start the site locally and open browser
+# 6️⃣ Start the site locally and open browser (auto-pick free port)
 Write-Host "`n6/7 Starting local server..." -ForegroundColor Yellow
 
-# Ensure port 3000 is free (kill any process listening on it)
-try {
-  $conn = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction Stop
-  if ($conn) {
-    $pid = $conn.OwningProcess
-    Write-Host "Port 3000 busy - killing process $pid ..." -ForegroundColor DarkYellow
-    Stop-Process -Id $conn.OwningProcess -Force
-    Start-Sleep -Seconds 2
+function Get-FreePort {
+  param([int]$Start = 3000, [int]$End = 3020)
+  for ($p = $Start; $p -le $End; $p++) {
+    try {
+      $conn = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction Stop
+    } catch {
+      return $p
+    }
   }
-} catch { }
+  return $null
+}
+
+$port = Get-FreePort -Start 3000 -End 3020
+if (-not $port) { $port = 3000 }
+Write-Host "Using port $port" -ForegroundColor Green
 
 # Launch browser after server starts
-Start-Job { Start-Sleep 5; Start-Process 'http://localhost:3000' } | Out-Null
-# Using pnpm exec; avoids extra -- token
-pnpm exec next start . -p 3000
+Start-Job { param($p) Start-Sleep 3; Start-Process ("http://localhost:" + $p) } -ArgumentList $port | Out-Null
+pnpm exec next start . -p $port
 
 # 7. Keep window open after exit
 Write-Host "";
