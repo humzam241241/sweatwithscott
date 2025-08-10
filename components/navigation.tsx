@@ -132,8 +132,8 @@ export default function Navigation() {
 
   return (
     <nav
-      className={`cave-navbar fixed top-0 left-0 w-full z-50 transition-colors duration-300 ${
-        isScrolled ? "bg-black/90 backdrop-blur-sm shadow-lg" : "bg-black/50 backdrop-blur-sm"
+      className={`cave-navbar sticky top-0 left-0 w-full z-50 transition-colors duration-300 ${
+        isScrolled ? "bg-black/90 backdrop-blur-sm shadow-lg" : "bg-black/90"
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between p-4">

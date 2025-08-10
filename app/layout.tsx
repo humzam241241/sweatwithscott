@@ -13,7 +13,7 @@ export default function RootLayout({
       <body className="bg-brand-light text-brand-dark">
         <Navigation />
         <DataProvider>
-          <main className="pt-[var(--header-h)]">
+          <main>
             {children}
           </main>
         </DataProvider>

@@ -79,11 +79,11 @@ export default async function Home() {
           <img
             src={hero.bg}
             alt="Hero"
-            className="w-full h-[70vh] md:h-[80vh] object-cover object-center"
+            className="w-full h-[calc(70vh+var(--header-h))] md:h-[calc(80vh+var(--header-h))] object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/50" />
         </div>
-        <div className="relative z-10 flex flex-col items-center justify-center h-[70vh] md:h-[80vh]">
+        <div className="relative z-10 flex flex-col items-center justify-center h-[calc(70vh+var(--header-h))] md:h-[calc(80vh+var(--header-h))]">
           <h1 className="text-5xl md:text-6xl font-bold">{hero.title}</h1>
           <p className="text-lg md:text-2xl mt-4">{hero.subtitle}</p>
         </div>
