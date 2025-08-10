@@ -140,6 +140,32 @@ export function initializeDatabase() {
         key TEXT UNIQUE,
         value TEXT
       );
+
+      -- Stripe integration tables
+      CREATE TABLE IF NOT EXISTS stripe_customers (
+        user_id INTEGER UNIQUE NOT NULL,
+        stripe_customer_id TEXT UNIQUE NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER UNIQUE NOT NULL,
+        stripe_subscription_id TEXT UNIQUE,
+        plan_code TEXT,
+        status TEXT,
+        current_period_end DATETIME,
+        delinquent_since DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS stripe_events (
+        id TEXT PRIMARY KEY,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Ensure columns exist for older DBs created by legacy code
@@ -788,6 +814,111 @@ export const dbOperations = {
     } catch (error) {
       console.error("getOutstandingPayments error:", error);
       return [];
+    }
+  },
+
+  // Stripe: customers
+  getStripeCustomerByUserId: (userId: number): { stripe_customer_id: string } | undefined => {
+    try {
+      return db
+        .prepare(`SELECT stripe_customer_id FROM stripe_customers WHERE user_id = ? LIMIT 1`)
+        .get(userId) as { stripe_customer_id: string } | undefined;
+    } catch (error) {
+      console.error("getStripeCustomerByUserId error:", error);
+      return undefined;
+    }
+  },
+  insertStripeCustomer: (userId: number, stripeCustomerId: string) => {
+    db.prepare(`INSERT OR REPLACE INTO stripe_customers (user_id, stripe_customer_id) VALUES (?, ?)`)
+      .run(userId, stripeCustomerId);
+  },
+
+  // Stripe: subscriptions
+  getSubscriptionByUserId: (userId: number) => {
+    try {
+      return db
+        .prepare(`SELECT * FROM subscriptions WHERE user_id = ? LIMIT 1`)
+        .get(userId);
+    } catch (error) {
+      console.error("getSubscriptionByUserId error:", error);
+      return undefined;
+    }
+  },
+  getSubscriptionByStripeId: (stripeSubscriptionId: string) => {
+    try {
+      return db
+        .prepare(`SELECT * FROM subscriptions WHERE stripe_subscription_id = ? LIMIT 1`)
+        .get(stripeSubscriptionId);
+    } catch (error) {
+      console.error("getSubscriptionByStripeId error:", error);
+      return undefined;
+    }
+  },
+  upsertSubscription: (data: {
+    userId: number;
+    stripeSubscriptionId: string;
+    planCode?: string | null;
+    status?: string | null;
+    currentPeriodEnd?: string | null;
+  }) => {
+    const existing = dbOperations.getSubscriptionByUserId(data.userId);
+    if (!existing) {
+      db.prepare(
+        `INSERT INTO subscriptions (user_id, stripe_subscription_id, plan_code, status, current_period_end)
+         VALUES (?, ?, ?, ?, ?)`
+      ).run(
+        data.userId,
+        data.stripeSubscriptionId,
+        data.planCode ?? null,
+        data.status ?? null,
+        data.currentPeriodEnd ?? null,
+      );
+    } else {
+      db.prepare(
+        `UPDATE subscriptions SET stripe_subscription_id = ?, plan_code = COALESCE(?, plan_code),
+         status = COALESCE(?, status), current_period_end = COALESCE(?, current_period_end), updated_at = CURRENT_TIMESTAMP
+         WHERE user_id = ?`
+      ).run(
+        data.stripeSubscriptionId,
+        data.planCode ?? null,
+        data.status ?? null,
+        data.currentPeriodEnd ?? null,
+        data.userId,
+      );
+    }
+  },
+  setSubscriptionStatus: (stripeSubscriptionId: string, status: string, currentPeriodEnd?: string | null) => {
+    db.prepare(
+      `UPDATE subscriptions SET status = ?, current_period_end = COALESCE(?, current_period_end), updated_at = CURRENT_TIMESTAMP
+       WHERE stripe_subscription_id = ?`
+    ).run(status, currentPeriodEnd ?? null, stripeSubscriptionId);
+  },
+  setDelinquent: (stripeSubscriptionId: string, delinquentSinceISO?: string) => {
+    db.prepare(
+      `UPDATE subscriptions SET status = 'past_due', delinquent_since = COALESCE(?, delinquent_since), updated_at = CURRENT_TIMESTAMP
+       WHERE stripe_subscription_id = ?`
+    ).run(delinquentSinceISO ?? new Date().toISOString(), stripeSubscriptionId);
+  },
+  clearDelinquent: (stripeSubscriptionId: string) => {
+    db.prepare(
+      `UPDATE subscriptions SET delinquent_since = NULL, updated_at = CURRENT_TIMESTAMP WHERE stripe_subscription_id = ?`
+    ).run(stripeSubscriptionId);
+  },
+
+  // Stripe: idempotency
+  hasProcessedStripeEvent: (eventId: string): boolean => {
+    try {
+      const row = db.prepare(`SELECT 1 FROM stripe_events WHERE id = ? LIMIT 1`).get(eventId) as { 1?: number } | undefined;
+      return !!row;
+    } catch {
+      return false;
+    }
+  },
+  markProcessedStripeEvent: (eventId: string) => {
+    try {
+      db.prepare(`INSERT OR IGNORE INTO stripe_events (id) VALUES (?)`).run(eventId);
+    } catch (error) {
+      // ignore
     }
   },
   getCurrentClasses: () => {
