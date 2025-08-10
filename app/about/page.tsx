@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-[120vh] bg-white">
 
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">

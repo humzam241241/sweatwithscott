@@ -136,11 +136,11 @@ export default function Navigation() {
         isScrolled ? "bg-black/90 backdrop-blur-sm shadow-lg" : "bg-black/90"
       }`}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between p-3">
         
         {/* Logo + Title */}
-        <div className="flex items-center space-x-3">
-          <Link href="/" className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4 pl-1">
+          <Link href="/" className="flex items-center space-x-4">
             {logoExists ? (
               <Image
                 src="/images/cave-logo.png"
@@ -154,7 +154,7 @@ export default function Navigation() {
                 <span className="text-white font-bold text-lg">CB</span>
               </div>
             )}
-            <span className="text-white text-xl font-bold">The Cave Boxing</span>
+            <span className="text-white text-2xl font-bold tracking-wide">The Cave Boxing</span>
           </Link>
         </div>
 
