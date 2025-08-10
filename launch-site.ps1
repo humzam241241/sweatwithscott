@@ -55,6 +55,17 @@ pnpm install
 Write-Host "`n5/7 Building site..." -ForegroundColor Yellow
 pnpm build
 
+# Ensure production artifacts exist; if missing, force a rebuild
+function Test-BuildReady {
+  return (Test-Path ".next/server/middleware-manifest.json") -and (Test-Path ".next/required-server-files.json")
+}
+
+if (-not (Test-BuildReady)) {
+  Write-Host "Build artifacts missing; performing a clean rebuild..." -ForegroundColor DarkYellow
+  try { Remove-Item ".next" -Recurse -Force -ErrorAction SilentlyContinue } catch {}
+  pnpm build
+}
+
 # 6️⃣ Start the site locally and open browser (auto-pick free port)
 Write-Host "`n6/7 Starting local server..." -ForegroundColor Yellow
 
