@@ -79,7 +79,7 @@ export default async function Home() {
           <img
             src={hero.bg}
             alt="Hero"
-            className="w-full h-[85vh] md:h-[92vh] object-cover object-top"
+            className="w-full h-[85vh] md:h-[92vh] object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/50" />
         </div>
@@ -133,35 +133,32 @@ export default async function Home() {
         category: m.type ?? "all",
       }))} />
 
-      {/* SCHEDULE */}
-      <section id="schedule" className="py-16 px-6 bg-gray-50">
-        <h2 className="text-3xl font-bold mb-8 text-center">Class Schedule</h2>
-        {Array.isArray(scheduleData) && scheduleData.length > 0 ? (
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {scheduleData.map((cls: any) => (
-                <div key={cls.id ?? cls.slug} className="bg-white rounded-lg shadow-md p-6">
-                  <h3 className="text-xl font-semibold mb-2">{cls.name}</h3>
-                  {cls.description && (
-                    <p className="text-gray-600 mb-3 text-sm">{cls.description}</p>
-                  )}
-                  <div className="space-y-1 text-sm">
-                    {cls.day_of_week && <p><strong>Day:</strong> {cls.day_of_week}</p>}
-                    {cls.start_time && cls.end_time && (
-                      <p><strong>Time:</strong> {cls.start_time} - {cls.end_time}</p>
-                    )}
-                    {cls.instructor && <p><strong>Coach:</strong> {cls.instructor}</p>}
-                    {cls.max_capacity && <p><strong>Capacity:</strong> {cls.max_capacity} spots</p>}
-                    {cls.price && <p><strong>Price:</strong> ${cls.price}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p className="text-center text-gray-500">No classes scheduled.</p>
-        )}
-      </section>
+       {/* SCHEDULE (Google Calendar-like) */}
+       <section id="schedule" className="py-16 px-6 bg-gray-50">
+         <h2 className="text-3xl font-bold mb-8 text-center">Class Schedule</h2>
+         <div className="max-w-7xl mx-auto">
+           {/* Weekly grid */}
+           <div className="grid grid-cols-7 gap-4 min-w-[900px] overflow-x-auto">
+             {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((day) => (
+               <div key={day} className="bg-white rounded-lg shadow-sm p-3">
+                 <h3 className="text-center font-semibold mb-3">{day}</h3>
+                 <div className="flex flex-col gap-2">
+                   {Array.isArray(scheduleData) && scheduleData
+                     .filter((c: any) => c.day_of_week === day)
+                     .sort((a: any,b: any) => String(a.start_time).localeCompare(String(b.start_time)))
+                     .map((c: any) => (
+                       <div key={`${c.id}-${c.start_time}`} className="event rounded-lg p-3" style={{backgroundColor:'#c90015'}}>
+                         <div className="text-sm font-semibold">{c.start_time} - {c.end_time}</div>
+                         <div className="text-sm">{c.name}</div>
+                         {c.instructor && <div className="text-xs opacity-80">Coach: {c.instructor}</div>}
+                       </div>
+                   ))}
+                 </div>
+               </div>
+             ))}
+           </div>
+         </div>
+       </section>
 
       {/* MEMBERSHIP PACKAGES */}
       <MembershipPackages
