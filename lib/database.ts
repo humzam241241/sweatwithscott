@@ -240,10 +240,13 @@ function resetClassSchedule() {
   };
 
   const schedule = [
-    { day: "Monday", time: "12:00", name: "Bootcamp" },
-    { day: "Monday", time: "17:00", name: "Boxing Tech" },
-    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
-    { day: "Saturday", time: "12:00", name: "Beginner Boxing" },
+    { day: "Monday", time: "12:00", name: "Bootcamp", description: "High-intensity full-body workout combining boxing drills with strength training." },
+    { day: "Monday", time: "17:00", name: "Boxing Tech", description: "Technical boxing skills focusing on footwork, combinations, and defensive techniques." },
+    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)", description: "Fun boxing fundamentals for kids in a safe, supportive environment." },
+    { day: "Wednesday", time: "19:00", name: "Strength & Conditioning", description: "Build power and endurance with sport-specific conditioning workouts." },
+    { day: "Thursday", time: "17:30", name: "Beginner Boxing", description: "Perfect introduction to boxing for newcomers. Learn the basics in a welcoming atmosphere." },
+    { day: "Friday", time: "18:00", name: "Advanced Boxing", description: "Intensive training for experienced boxers looking to sharpen their skills." },
+    { day: "Saturday", time: "12:00", name: "Open Gym", description: "Self-directed training time with access to all equipment and coaching support." },
   ];
 
   const addHour = (time: string) => {
@@ -252,12 +255,32 @@ function resetClassSchedule() {
   };
 
   const insertClass = db.prepare(`
-    INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
+  const classImages = {
+    "Bootcamp": "/images/gym-training.png",
+    "Boxing Tech": "/images/boxing-training.png", 
+    "Junior Jabbers (6-12 yr)": "/images/junior-jabbers.png",
+    "Strength & Conditioning": "/images/strength-conditioning.png",
+    "Beginner Boxing": "/images/boxing-training.png",
+    "Advanced Boxing": "/images/boxing-training.png",
+    "Open Gym": "/images/gym-training.png",
+  };
+
   schedule.forEach((cls) => {
-    insertClass.run(cls.name, "", cls.day, cls.time, addHour(cls.time), capacities[cls.name] || 30, 0);
+    insertClass.run(
+      cls.name, 
+      cls.description || "", 
+      "", 
+      cls.day, 
+      cls.time, 
+      addHour(cls.time), 
+      capacities[cls.name] || 30, 
+      25, 
+      classImages[cls.name as keyof typeof classImages] || "/images/boxing-training.png"
+    );
   });
 
   db.prepare(`
@@ -272,8 +295,27 @@ function seedCoaches() {
     INSERT INTO coaches (slug, name, bio, certifications, image)
     VALUES (?, ?, ?, ?, ?)
   `);
-  insertCoach.run("coach-kyle", "Coach Kyle", "Professional boxer", "Certified Level 1 Boxing Coach", "/images/logo.png");
-  insertCoach.run("coach-sarah", "Coach Sarah", "Strength specialist", "Certified Personal Trainer", "/images/logo.png");
+  insertCoach.run(
+    "humza-muhammad", 
+    "Humza Muhammad", 
+    "Head coach with over 8 years of boxing experience. Specializes in technical training and competitive preparation.", 
+    "Certified Boxing Coach, Level 2 Personal Trainer", 
+    "/images/coach-humza.png"
+  );
+  insertCoach.run(
+    "kyle-mclaughlin", 
+    "Kyle McLaughlin", 
+    "Former amateur boxer turned coach. Focuses on fundamentals and building confidence in new fighters.", 
+    "USA Boxing Certified Coach", 
+    "/images/kyle-mclaughlin.png"
+  );
+  insertCoach.run(
+    "scott-trainer", 
+    "Scott Wilson", 
+    "Strength and conditioning specialist with a background in professional athletics.", 
+    "NSCA Certified Strength Coach, Boxing Conditioning Specialist", 
+    "/images/coach-scott.png"
+  );
 }
 
 function seedMembershipPackages() {

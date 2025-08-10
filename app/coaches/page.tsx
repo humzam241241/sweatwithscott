@@ -3,9 +3,19 @@ import Link from "next/link";
 import { filterUniqueCoaches } from "@/lib/filterUniqueCoaches";
 
 async function getCoaches() {
-  const res = await fetch(`/api/coaches`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const { headers } = await import("next/headers");
+    const h = headers();
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    const host = h.get("host") ?? "";
+    const base = host ? `${proto}://${host}` : "";
+    const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching coaches:", error);
+    return [];
+  }
 }
 
 export default async function CoachesPage() {
@@ -35,7 +45,7 @@ export default async function CoachesPage() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-24 md:pt-28">
       <header className="cave-hero py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-black mb-6">Meet Our Coaches</h1>

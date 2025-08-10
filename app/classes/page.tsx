@@ -4,26 +4,46 @@ import ClassCard from "@/components/ClassCard";
 import type { ClassRecord, CoachRecord } from "@/lib/types";
 
 async function getClasses(): Promise<ClassRecord[]> {
-  const res = await fetch(`/api/classes`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const { headers } = await import("next/headers");
+    const h = headers();
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    const host = h.get("host") ?? "";
+    const base = host ? `${proto}://${host}` : "";
+    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching classes:", error);
+    return [];
+  }
 }
 
 async function getCoaches(): Promise<CoachRecord[]> {
-  const res = await fetch(`/api/coaches`, { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const { headers } = await import("next/headers");
+    const h = headers();
+    const proto = h.get("x-forwarded-proto") ?? "http";
+    const host = h.get("host") ?? "";
+    const base = host ? `${proto}://${host}` : "";
+    const res = await fetch(`${base}/api/coaches`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching coaches:", error);
+    return [];
+  }
 }
 
 export default async function HomePage() {
   const [classes, coaches] = await Promise.all([getClasses(), getCoaches()]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-24 md:pt-28">
       {/* HERO / HEADER */}
       <header className="cave-hero py-20 text-center">
-        <h1 className="text-5xl font-black mb-6">The Cave Boxing Gym</h1>
-        <p className="text-xl">Train like a champion.</p>
+        <h1 className="text-5xl font-black mb-6">Our Classes</h1>
+        <p className="text-xl">Find the perfect training program for your fitness journey.</p>
       </header>
 
       {/* CLASSES */}
