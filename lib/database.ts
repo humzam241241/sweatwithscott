@@ -455,8 +455,6 @@ export const dbOperations = {
       } else {
         console.error("Error getting coaches:", String(error));
       }
-<<<<<<< HEAD
-=======
       return [];
     }
   },

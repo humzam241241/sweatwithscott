@@ -38,6 +38,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import MediaManager from "@/components/media-manager";
+import SiteSettingsForm from "@/components/SiteSettingsForm";
 import { toast } from "sonner";
 
 interface GymStats {
@@ -542,7 +543,7 @@ export default function AdminDashboard() {
 
         {/* Admin Tabs */}
         <Tabs defaultValue="current" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 bg-gray-900">
+          <TabsList className="grid w-full grid-cols-8 bg-gray-900">
             <TabsTrigger
               value="current"
               className="data-[state=active]:bg-red-600"
@@ -591,6 +592,12 @@ export default function AdminDashboard() {
             >
               <ImageIcon className="h-4 w-4 mr-2" />
               Media Manager
+            </TabsTrigger>
+            <TabsTrigger
+              value="settings"
+              className="data-[state=active]:bg-red-600"
+            >
+              Site Settings
             </TabsTrigger>
           </TabsList>
 
@@ -1335,6 +1342,21 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+        {/* Site Settings */}
+        <TabsContent value="settings" className="space-y-6">
+          <Card className="bg-gray-900 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-red-500">Site Settings</CardTitle>
+              <CardDescription className="text-gray-400">
+                Update homepage content and contact info
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SiteSettingsForm />
+            </CardContent>
+          </Card>
+        </TabsContent>
         </Tabs>
       </div>
     </div>
