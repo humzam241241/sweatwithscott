@@ -120,6 +120,9 @@ export default function MemberDashboard() {
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
         )}
         <BookableSchedule userMode userId={user?.userId} />
+        <div className="mt-8">
+          <iframe title="schedule" src="/schedule" className="w-full h-[700px] rounded border" />
+        </div>
         <div className="mt-6">
           <button
             onClick={async () => {

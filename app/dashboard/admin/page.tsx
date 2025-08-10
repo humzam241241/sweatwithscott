@@ -49,8 +49,9 @@ export default function AdminDashboard() {
           ))}
         </ul>
       </div>
-      <div className="mt-12">
-        <ScheduleBoard />
+      <div className="mt-12 space-y-6">
+        <h2 className="text-xl font-semibold">Live Calendar</h2>
+        <iframe title="admin-schedule" src="/admin/schedule" className="w-full h-[800px] rounded border" />
       </div>
       <div className="mt-12">
         <InventoryPanel />

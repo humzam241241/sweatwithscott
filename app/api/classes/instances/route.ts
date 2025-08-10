@@ -43,14 +43,15 @@ export async function GET(request: NextRequest) {
         ci.id,
         ci.class_id,
         c.name AS name,
-        c.instructor AS coach,
+        COALESCE(c.instructor, c.coach_name, '') AS coach,
         ci.date,
         ci.start_time,
         ci.end_time,
-        IFNULL(c.level, 'All Levels') AS level,
+        'All Levels' AS level,
         ci.max_capacity,
         ci.current_bookings,
         c.price,
+        c.color,
         ci.status
       FROM class_instances ci
       JOIN classes c ON ci.class_id = c.id

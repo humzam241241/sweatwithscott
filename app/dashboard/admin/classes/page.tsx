@@ -84,6 +84,10 @@ export default function AdminClassesPage() {
     if (res.ok) {
       resetForm();
       loadClasses();
+      // Notify other views (member/admin calendars) to refresh
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('classes:changed'));
+      }
     }
   };
 

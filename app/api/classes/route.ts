@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
     const name: string = body.name;
     const time: string = body.time ?? body.start_time;
     const endTime: string | undefined = body.endTime ?? body.end_time;
-    const spots: number = Number(body.spots ?? 0);
-    const coach: string = String(body.coach ?? "");
-    const color: string | null = body.color ?? null;
+    const spots: number = Number(body.spots ?? body.max_capacity ?? 0);
+    const coach: string = String(body.coach ?? body.instructor ?? "");
+    const color: string | null = (body.color ?? body.colour ?? null) as string | null;
 
     if (!day || !name || !time) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
