@@ -1,3 +1,4 @@
+import "./globals.css";
 import { DataProvider } from "@/components/ui/data-provider";
 import type { ReactNode } from "react";
 
