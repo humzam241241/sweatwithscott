@@ -151,6 +151,7 @@ export default function AdminSchedulePage() {
   };
 
   return (
+    <>
     <div className="p-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -364,6 +365,7 @@ export default function AdminSchedulePage() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
 
