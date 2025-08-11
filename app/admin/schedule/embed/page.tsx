@@ -2,6 +2,9 @@
 import { useEffect } from "react";
 import AdminSchedulePage from "../page";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function AdminScheduleEmbed() {
   useEffect(() => {
     // Hide global navigation when embedded
