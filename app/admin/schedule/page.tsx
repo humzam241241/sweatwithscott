@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import FullCalendar from "@fullcalendar/react";
+import dynamic from "next/dynamic";
+const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
@@ -22,6 +23,9 @@ type AdminEvent = {
   color?: string;
   status: string;
 };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default function AdminSchedulePage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
