@@ -25,7 +25,7 @@ type AdminEvent = {
 };
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = false;
 
 export default function AdminSchedulePage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
