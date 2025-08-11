@@ -79,7 +79,7 @@ export default async function Home() {
           <img
             src={hero.bg}
             alt="Hero"
-            className="w-full h-screen object-cover object-[50%_20%] md:object-center"
+            className="w-full h-screen object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/50" />
         </div>

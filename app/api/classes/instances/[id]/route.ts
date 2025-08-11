@@ -10,6 +10,7 @@ const patchSchema = z.object({
   capacity: z.number().int().positive().optional(),
   color: z.string().optional(),
   status: z.string().optional(),
+  coachName: z.string().optional(),
 });
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
@@ -22,7 +23,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
     }
-    const { startsAt, endsAt, title, capacity, color, status } = parsed.data;
+    const { startsAt, endsAt, title, capacity, color, status, coachName } = parsed.data;
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -70,6 +71,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       if (color) {
         classUpdates.push("color = ?");
         classValues.push(color);
+      }
+      if (coachName) {
+        classUpdates.push("instructor = ?");
+        classValues.push(coachName);
       }
       if (classUpdates.length > 0) {
         db.prepare(`UPDATE classes SET ${classUpdates.join(", ")} WHERE id = ?`).run(...classValues, inst.class_id);

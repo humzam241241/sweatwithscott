@@ -179,12 +179,13 @@ export default function AdminSchedulePage() {
             style={{ left: menu.x, top: menu.y }}
             onMouseLeave={() => setMenu((m) => ({ ...m, open: false }))}
           >
-            <MenuItem label="Edit title/capacity" onClick={async () => {
+            <MenuItem label="Edit title/capacity/coach" onClick={async () => {
               const id = menu.eventId!;
               const newTitle = window.prompt("Title", menu.data?.title || "") || menu.data?.title;
               const newCapacityStr = window.prompt("Capacity", String(menu.data?.capacity || 20));
               const newCapacity = newCapacityStr ? Number(newCapacityStr) : undefined;
-              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, capacity: newCapacity }) });
+              const coachName = window.prompt("Coach", menu.data?.coach?.name || "") || menu.data?.coach?.name;
+              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, capacity: newCapacity, coachName }) });
               setMenu((m)=>({ ...m, open:false }));
               const view = (calendarRef.current as any)?.getApi?.().view;
               fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());

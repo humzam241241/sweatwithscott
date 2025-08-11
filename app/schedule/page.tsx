@@ -86,6 +86,10 @@ export default function SchedulePage() {
             };
           }}
           eventClick={(click) => {
+            if (!(window as any).CURRENT_USER_ID) {
+              // not logged in → no edit menu
+              return;
+            }
             const rect = (click.jsEvent.target as HTMLElement).getBoundingClientRect();
             setMenu({
               open: true,
