@@ -135,7 +135,6 @@ const createSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const db = getDb()
     const json = await request.json()
     const parsed = createSchema.safeParse(json)
     if (!parsed.success) {
