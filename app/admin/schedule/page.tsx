@@ -30,7 +30,8 @@ export default function AdminSchedulePage() {
     eventId?: string;
     data?: AdminEvent;
   }>({ open: false, x: 0, y: 0 });
-  const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [], open: false });
+  const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [] });
+  const [filters, setFilters] = useState<{ coach: string | 'All'; title: string | 'All' }>({ coach: 'All', title: 'All' });
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -45,7 +46,10 @@ export default function AdminSchedulePage() {
 
   const fcEvents = useMemo(
     () =>
-      events.map((e) => ({
+      events
+        .filter((e) => (filters.coach === 'All' || (e.coach?.name || '') === filters.coach))
+        .filter((e) => (filters.title === 'All' || e.title === filters.title))
+        .map((e) => ({
         id: String(e.id),
         title: e.title,
         start: e.startsAt,
@@ -55,7 +59,7 @@ export default function AdminSchedulePage() {
         extendedProps: e,
         classNames: e.status === "canceled" ? ["opacity-50", "line-through"] : [],
       })),
-    [events]
+    [events, filters]
   );
 
   const onDatesSet = (arg: any) => {
@@ -113,9 +117,23 @@ export default function AdminSchedulePage() {
   return (
     <div className="p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <h1 className="text-xl font-semibold">Schedule Manager</h1>
-          {loading && <span className="text-sm text-gray-500">Loading…</span>}
+          <div className="flex items-center gap-2">
+            <select className="border rounded px-2 py-1 text-sm" value={filters.coach} onChange={(e)=>setFilters(f=>({ ...f, coach: e.target.value as any }))}>
+              <option>All</option>
+              {Array.from(new Set(events.map(e=>e.coach?.name).filter(Boolean) as string[])).map((c)=> (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <select className="border rounded px-2 py-1 text-sm" value={filters.title} onChange={(e)=>setFilters(f=>({ ...f, title: e.target.value as any }))}>
+              <option>All</option>
+              {Array.from(new Set(events.map(e=>e.title))).map((t)=> (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            {loading && <span className="text-sm text-gray-500">Loading…</span>}
+          </div>
         </div>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
@@ -136,6 +154,7 @@ export default function AdminSchedulePage() {
           longPressDelay={0}
           snapDuration={{ minutes: 15 } as any}
           slotDuration="00:30:00"
+          height="auto"
           selectable
           editable
           eventStartEditable

@@ -549,6 +549,14 @@ export const dbOperations = {
       return undefined;
     }
   },
+  getUserByEmail: (email: string): UserRecord | undefined => {
+    try {
+      return db.prepare("SELECT * FROM users WHERE email = ? LIMIT 1").get(email) as UserRecord | undefined;
+    } catch (error) {
+      console.error("getUserByEmail error:", error);
+      return undefined;
+    }
+  },
   createUser: (data: { username: string; password: string; email?: string; fullName?: string }): { lastInsertRowid: number } => {
     const stmt = db.prepare(
       "INSERT INTO users (username, password, email, full_name, is_admin, membership_status) VALUES (?, ?, ?, ?, 0, 'active')"
