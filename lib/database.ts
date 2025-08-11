@@ -346,19 +346,22 @@ function resetClassSchedule() {
     "Open Gym": "/images/gym-training.png",
   };
 
+  const addedNames = new Set<string>();
   schedule.forEach((cls) => {
+    if (addedNames.has(cls.name)) return;
     insertClass.run(
-      cls.name, 
-      cls.description || "", 
-      "", 
-      cls.day, 
-      cls.time, 
-      addHour(cls.time), 
-      capacities[cls.name] || 30, 
-      25, 
+      cls.name,
+      cls.description || "",
+      "",
+      cls.day,
+      cls.time,
+      addHour(cls.time),
+      capacities[cls.name] || 30,
+      25,
       classImages[cls.name as keyof typeof classImages] || "/images/boxing-training.png",
       cls.color || null
     );
+    addedNames.add(cls.name);
   });
 
   db.prepare(`
