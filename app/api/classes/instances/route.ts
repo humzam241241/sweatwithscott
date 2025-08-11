@@ -202,7 +202,20 @@ export async function POST(request: NextRequest) {
       db.prepare(`UPDATE classes SET color = ? WHERE id = ?`).run(color, effectiveClassId)
     }
 
-    return NextResponse.json({ id: Number(info.lastInsertRowid) }, { status: 201 })
+    // Respond with the created instance in admin event shape for immediate UI updates
+    const cls = db.prepare(`SELECT name, color, instructor, max_capacity FROM classes WHERE id = ?`).get(effectiveClassId) as { name: string; color?: string | null; instructor?: string | null; max_capacity?: number | null } | undefined
+    const createdEvent = {
+      id: Number(info.lastInsertRowid),
+      title: title ?? cls?.name ?? 'Class',
+      startsAt: `${date}T${startTime}:00`,
+      endsAt: `${date}T${endTime}:00`,
+      coach: { id: null, name: cls?.instructor ?? coachName ?? '' },
+      capacity: capacity ?? cls?.max_capacity ?? 20,
+      bookedCount: 0,
+      color: color ?? (cls?.color ?? undefined),
+      status: 'scheduled',
+    }
+    return NextResponse.json(createdEvent, { status: 201 })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ error: message }, { status: 500 })

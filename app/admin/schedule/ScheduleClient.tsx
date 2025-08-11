@@ -162,6 +162,11 @@ export default function ScheduleClient() {
       body: JSON.stringify({ classId: Number(created.id ?? created?.ID ?? created?.class_id), title, startsAt, endsAt, capacity, color, coachName }),
     });
     if (res.ok) {
+      // Optimistically add created event if returned
+      try {
+        const ev = (await res.json()) as AdminEvent
+        setEvents((prev) => [...prev, ev])
+      } catch {}
       const api = (calendarRef.current as any)?.getApi?.();
       fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
       window.dispatchEvent(new CustomEvent("classes:changed"));
@@ -250,8 +255,9 @@ export default function ScheduleClient() {
                 <div class="flex items-center gap-2 ${isCanceled ? "opacity-50 line-through" : ""}">
                   <span class="inline-block w-2 h-2 rounded-full" style="background:${data.color || "#ef4444"}"></span>
                   <div class="flex-1 truncate">
-                    <div class="text-[12px] font-medium leading-tight">${arg.event.title}</div>
-                    <div class="text-[10px] text-gray-500">${data.coach?.name || ""}</div>
+                    <div class="text-[12px] font-semibold leading-tight">${arg.event.title}</div>
+                    <div class="text-[10px] text-gray-500">${new Date(data.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(data.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                    ${data.coach?.name ? `<div class="text-[10px] text-gray-500">Coach: ${data.coach.name}</div>` : ''}
                   </div>
                   <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-white">${capacity}</span>
                 </div>`
