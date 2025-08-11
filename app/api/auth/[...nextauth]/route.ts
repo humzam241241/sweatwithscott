@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -23,6 +24,11 @@ const handler = NextAuth({
         const ok = await bcrypt.compare(creds.password, user.passwordHash);
         return ok ? { id: user.id, email: user.email ?? undefined, name: user.name ?? undefined } : null;
       },
+    }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   pages: { signIn: "/signin" },
