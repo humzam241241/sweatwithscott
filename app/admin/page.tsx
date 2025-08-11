@@ -1166,15 +1166,22 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
         {/* Schedule Manager */}
-        <TabsContent value="schedule" className="space-y-6">
+          <TabsContent value="schedule" className="space-y-6">
           <Card className="bg-gray-900 border-gray-700">
             <CardHeader>
               <CardTitle className="text-red-500">Schedule Manager</CardTitle>
               <CardDescription className="text-gray-400">
-                Manage weekly class schedule
+                Manage weekly class schedule. For a full Google Calendar-like editor, use the Calendar view below.
               </CardDescription>
             </CardHeader>
             <CardContent>
+                <div className="mb-6 flex items-center justify-between">
+                  <div className="text-sm text-gray-400">Live Calendar Editor</div>
+                  <Link href="/admin/schedule" className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white">Open Full Calendar</Link>
+                </div>
+                <div className="rounded border border-gray-800 overflow-hidden mb-8">
+                  <iframe title="admin-schedule" src="/admin/schedule" className="w-full h-[720px] bg-white" />
+                </div>
               <form onSubmit={handleClassSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div>
