@@ -7,6 +7,7 @@ import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+const DynamicHomeSchedule = dynamic(() => import("@/components/HomeSchedule"), { ssr: false });
 import { headers } from "next/headers";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
@@ -138,7 +139,7 @@ export default async function Home() {
        <section id="schedule" className="py-16 px-6 bg-gray-50">
          <h2 className="text-3xl font-bold mb-8 text-center">Class Schedule</h2>
          <div className="max-w-7xl mx-auto">
-           {dynamic(() => import("@/components/HomeSchedule"), { ssr: false })()}
+           <DynamicHomeSchedule />
          </div>
        </section>
 
