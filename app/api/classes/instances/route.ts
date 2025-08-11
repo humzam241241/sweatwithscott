@@ -152,8 +152,8 @@ export async function POST(request: NextRequest) {
       } else {
         const info = db.prepare(
           `INSERT INTO classes (name, description, instructor, duration, max_capacity, price, day_of_week, start_time, end_time, is_active, slug, coach_id, coach_name, active, image, color)
-           VALUES (?, '', '', 60, ?, 0, NULL, NULL, NULL, 1, LOWER(REPLACE(?, ' ', '-')), NULL, '', 1, NULL, ?)`
-        ).run(title, capacity ?? 20, title, color ?? null)
+           VALUES (?, '', ?, 60, ?, 0, ?, ?, ?, 1, LOWER(REPLACE(?, ' ', '-')), NULL, ?, 1, NULL, ?)`
+        ).run(title, coachName ?? '', capacity ?? 20, null, null, null, title, coachName ?? '', color ?? null)
         effectiveClassId = Number(info.lastInsertRowid)
       }
     }

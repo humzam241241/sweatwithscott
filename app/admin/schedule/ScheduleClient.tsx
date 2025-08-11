@@ -145,21 +145,10 @@ export default function ScheduleClient() {
 
   const createClassFromForm = async () => {
     const { title, startsAt, endsAt, capacity, coachName, color } = createForm;
-    const dayOfWeek = new Date(startsAt).toLocaleDateString("en-US", { weekday: "long" });
-    const classResp = await fetch("/api/classes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: title, day_of_week: dayOfWeek, start_time: startsAt.slice(11, 16), end_time: endsAt.slice(11, 16), max_capacity: capacity, color }),
-    });
-    if (!classResp.ok) {
-      console.error("Failed to create class", await classResp.text());
-      return false;
-    }
-    const created = await classResp.json();
     const res = await fetch(`/api/classes/instances`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ classId: Number(created.id ?? created?.ID ?? created?.class_id), title, startsAt, endsAt, capacity, color, coachName }),
+      body: JSON.stringify({ title, startsAt, endsAt, capacity, color, coachName }),
     });
     if (res.ok) {
       // Optimistically add created event if returned
@@ -383,14 +372,24 @@ export default function ScheduleClient() {
         </div>
       </div>
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>New class</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-1">
-            <div className="space-y-1">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={createForm.title} onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} />
+          <div className="space-y-4 py-1">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+              <div className="md:col-span-3 space-y-1">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" placeholder="e.g. Beginner Boxing" value={createForm.title} onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cap">Capacity</Label>
+                <Input id="cap" type="number" value={createForm.capacity} onChange={(e) => setCreateForm({ ...createForm, capacity: Number(e.target.value || 0) })} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="coach">Coach</Label>
+                <Input id="coach" placeholder="optional" value={createForm.coachName} onChange={(e) => setCreateForm({ ...createForm, coachName: e.target.value })} />
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -402,19 +401,21 @@ export default function ScheduleClient() {
                 <Input id="end" type="datetime-local" value={createForm.endsAt} onChange={(e) => setCreateForm({ ...createForm, endsAt: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="cap">Capacity</Label>
-                <Input id="cap" type="number" value={createForm.capacity} onChange={(e) => setCreateForm({ ...createForm, capacity: Number(e.target.value || 0) })} />
-              </div>
-              <div className="space-y-1 md:col-span-2">
-                <Label htmlFor="coach">Coach</Label>
-                <Input id="coach" value={createForm.coachName} onChange={(e) => setCreateForm({ ...createForm, coachName: e.target.value })} />
-              </div>
-            </div>
             <div className="space-y-1">
               <Label htmlFor="color">Color</Label>
               <input id="color" type="color" value={createForm.color} onChange={(e) => setCreateForm({ ...createForm, color: e.target.value })} className="h-10 w-20 rounded" />
+            </div>
+            <div className="rounded-md bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600">
+              <div className="font-medium text-gray-700 mb-1">Preview</div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ background: createForm.color }} />
+                <div className="flex-1">
+                  <div className="text-[12px] font-semibold">{createForm.title || 'New Class'}</div>
+                  <div className="text-[11px]">{new Date(createForm.startsAt).toLocaleString()} - {new Date(createForm.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                  {createForm.coachName && <div className="text-[11px]">Coach: {createForm.coachName}</div>}
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-white">0/{createForm.capacity}</span>
+              </div>
             </div>
           </div>
           <DialogFooter>
