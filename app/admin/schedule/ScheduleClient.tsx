@@ -148,6 +148,7 @@ export default function ScheduleClient() {
     const res = await fetch(`/api/classes/instances`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      cache: "no-store",
       body: JSON.stringify({ title, startsAt, endsAt, capacity, color, coachName }),
     });
     if (res.ok) {
@@ -155,6 +156,16 @@ export default function ScheduleClient() {
       try {
         const ev = (await res.json()) as AdminEvent
         setEvents((prev) => [...prev, ev])
+        const api = (calendarRef.current as any)?.getApi?.();
+        api?.addEvent?.({
+          id: String(ev.id),
+          title: ev.title,
+          start: ev.startsAt,
+          end: ev.endsAt,
+          backgroundColor: ev.color,
+          borderColor: ev.color,
+          extendedProps: ev,
+        });
       } catch {}
       const api = (calendarRef.current as any)?.getApi?.();
       fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
@@ -162,7 +173,11 @@ export default function ScheduleClient() {
       api.unselect?.();
       return true;
     }
-    console.error("Failed to create class instance", await res.text());
+    const errText = await res.text();
+    console.error("Failed to create class instance", errText);
+    if (typeof window !== 'undefined') {
+      alert(`Could not create class.\n${errText || 'Unknown error'}`);
+    }
     return false;
   };
 
@@ -425,7 +440,9 @@ export default function ScheduleClient() {
             <Button
               onClick={async () => {
                 const ok = await createClassFromForm();
-                if (ok) setCreateOpen(false);
+                if (ok) {
+                  setCreateOpen(false);
+                }
               }}
             >
               Create

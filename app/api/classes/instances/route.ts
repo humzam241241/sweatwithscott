@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     const start = parseLocal(startsAt)
     const end = parseLocal(endsAt)
     if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) {
-      return NextResponse.json({ error: "Invalid startsAt/endsAt" }, { status: 400 })
+      return NextResponse.json({ error: `Invalid startsAt/endsAt. startsAt='${startsAt}', endsAt='${endsAt}'` }, { status: 400 })
     }
     const pad = (n: number) => String(n).padStart(2, "0")
     const date = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
