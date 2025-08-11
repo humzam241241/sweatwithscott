@@ -6,6 +6,10 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin, { DateSelectArg, EventDropArg, EventResizeDoneArg } from "@fullcalendar/interaction";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type AdminEvent = {
   id: number | string;
@@ -33,6 +37,15 @@ export default function AdminSchedulePage() {
   const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [] });
   const [filters, setFilters] = useState<{ coach: string | 'All'; title: string | 'All' }>({ coach: 'All', title: 'All' });
   const [showTip, setShowTip] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<{ title: string; startsAt: string; endsAt: string; capacity: number; coachName: string; color: string }>({
+    title: "New Class",
+    startsAt: toLocalIsoMinute(new Date()),
+    endsAt: toLocalIsoMinute(new Date(Date.now() + 60 * 60 * 1000)),
+    capacity: 20,
+    coachName: "",
+    color: "#ef4444",
+  });
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -100,23 +113,41 @@ export default function AdminSchedulePage() {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  const handleDateSelect = async (selectInfo: DateSelectArg) => {
-    const startsAt = toLocalIsoMinute(selectInfo.start);
-    const endsAt = toLocalIsoMinute(selectInfo.end);
-    const title = prompt("Class Title?") || "New Class";
-    // Create or reuse a class for this title on-the-fly so color/coach can be edited from Classes page
-    const classResp = await fetch('/api/classes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: title, day_of_week: new Date(startsAt).toLocaleDateString('en-US',{ weekday:'long'}), start_time: startsAt.slice(11,16), end_time: endsAt.slice(11,16), max_capacity: 20, color: '#ef4444' }) });
-    if (!classResp.ok) return;
+  const handleDateSelect = (selectInfo: DateSelectArg) => {
+    setCreateForm({
+      title: "New Class",
+      startsAt: toLocalIsoMinute(selectInfo.start),
+      endsAt: toLocalIsoMinute(selectInfo.end),
+      capacity: 20,
+      coachName: "",
+      color: "#ef4444",
+    });
+    setCreateOpen(true);
+  };
+
+  const createClassFromForm = async () => {
+    const { title, startsAt, endsAt, capacity, coachName, color } = createForm;
+    const dayOfWeek = new Date(startsAt).toLocaleDateString('en-US', { weekday: 'long' });
+    const classResp = await fetch('/api/classes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: title, day_of_week: dayOfWeek, start_time: startsAt.slice(11,16), end_time: endsAt.slice(11,16), max_capacity: capacity, color })
+    });
+    if (!classResp.ok) return false;
     const created = await classResp.json();
     const res = await fetch(`/api/classes/instances`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ classId: created.id, title, startsAt, endsAt }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ classId: created.id, title, startsAt, endsAt, capacity, color, coachName })
     });
     if (res.ok) {
-      fetchEvents(selectInfo.view.activeStart.toISOString(), selectInfo.view.activeEnd.toISOString());
+      const api = (calendarRef.current as any)?.getApi?.();
+      fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
       window.dispatchEvent(new CustomEvent('classes:changed'));
+      api.unselect?.();
+      return true;
     }
+    return false;
   };
 
   return (
@@ -127,7 +158,7 @@ export default function AdminSchedulePage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowTip((v) => !v)}
+              onClick={() => { setCreateForm({ title: 'New Class', startsAt: toLocalIsoMinute(new Date()), endsAt: toLocalIsoMinute(new Date(Date.now()+60*60*1000)), capacity: 20, coachName: '', color: '#ef4444' }); setCreateOpen(true); }}
               className="px-3 py-1.5 rounded bg-black text-white border border-gray-300 hover:bg-gray-900"
             >
               + New class
@@ -292,6 +323,47 @@ export default function AdminSchedulePage() {
         )}
       </div>
     </div>
+    <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New class</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-1">
+          <div className="space-y-1">
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" value={createForm.title} onChange={(e)=>setCreateForm({ ...createForm, title: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="start">Starts</Label>
+              <Input id="start" type="datetime-local" value={createForm.startsAt} onChange={(e)=>setCreateForm({ ...createForm, startsAt: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="end">Ends</Label>
+              <Input id="end" type="datetime-local" value={createForm.endsAt} onChange={(e)=>setCreateForm({ ...createForm, endsAt: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="cap">Capacity</Label>
+              <Input id="cap" type="number" value={createForm.capacity} onChange={(e)=>setCreateForm({ ...createForm, capacity: Number(e.target.value || 0) })} />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label htmlFor="coach">Coach</Label>
+              <Input id="coach" value={createForm.coachName} onChange={(e)=>setCreateForm({ ...createForm, coachName: e.target.value })} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="color">Color</Label>
+            <input id="color" type="color" value={createForm.color} onChange={(e)=>setCreateForm({ ...createForm, color: e.target.value })} className="h-10 w-20 rounded" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={()=>setCreateOpen(false)}>Cancel</Button>
+          <Button onClick={async ()=>{ const ok = await createClassFromForm(); if (ok) setCreateOpen(false); }}>Create</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
