@@ -32,6 +32,7 @@ export default function AdminSchedulePage() {
   }>({ open: false, x: 0, y: 0 });
   const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [] });
   const [filters, setFilters] = useState<{ coach: string | 'All'; title: string | 'All' }>({ coach: 'All', title: 'All' });
+  const [showTip, setShowTip] = useState(false);
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -77,6 +78,8 @@ export default function AdminSchedulePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ startsAt, endsAt }),
     });
+    // Broadcast so all calendars update live
+    window.dispatchEvent(new CustomEvent('classes:changed'));
   };
 
   const handleEventResize = async (info: EventResizeDoneArg) => {
@@ -88,6 +91,8 @@ export default function AdminSchedulePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ startsAt, endsAt }),
     });
+    // Broadcast so all calendars update live
+    window.dispatchEvent(new CustomEvent('classes:changed'));
   };
 
   const toLocalIsoMinute = (d: Date) => {
@@ -120,6 +125,13 @@ export default function AdminSchedulePage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
           <h1 className="text-xl font-semibold">Schedule Manager</h1>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowTip((v) => !v)}
+              className="px-3 py-1.5 rounded bg-black text-white border border-gray-300 hover:bg-gray-900"
+            >
+              + New class
+            </button>
             <select className="border rounded px-2 py-1 text-sm" value={filters.coach} onChange={(e)=>setFilters(f=>({ ...f, coach: e.target.value as any }))}>
               <option>All</option>
               {Array.from(new Set(events.map(e=>e.coach?.name).filter(Boolean) as string[])).map((c)=> (
@@ -135,6 +147,11 @@ export default function AdminSchedulePage() {
             {loading && <span className="text-sm text-gray-500">Loading…</span>}
           </div>
         </div>
+        {showTip && (
+          <div className="mb-3 rounded border border-blue-300 bg-blue-50 text-blue-800 text-sm px-3 py-2">
+            Click and drag on the calendar to create a class. Use the event menu to edit, change color/coach, duplicate or cancel.
+          </div>
+        )}
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
           initialView="timeGridWeek"
