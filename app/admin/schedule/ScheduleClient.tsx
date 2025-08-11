@@ -41,6 +41,12 @@ export default function ScheduleClient() {
     data?: AdminEvent;
   }>({ open: false, x: 0, y: 0 });
   const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [] });
+  const [editor, setEditor] = useState<{
+    open: boolean;
+    id?: string;
+    form?: { title: string; startsAt: string; endsAt: string; capacity: number; coachName: string; color?: string; status?: string };
+    attendees?: any[];
+  }>({ open: false });
   const [filters, setFilters] = useState<{ coach: string | "All"; title: string | "All" }>({ coach: "All", title: "All" });
   const [showTip, setShowTip] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -267,15 +273,27 @@ export default function ScheduleClient() {
                 </div>`
               };
             }}
-            eventClick={(click) => {
-              const rect = (click.jsEvent.target as HTMLElement).getBoundingClientRect();
-              setMenu({
+            eventClick={async (click) => {
+              const data = click.event.extendedProps as any as AdminEvent;
+              setEditor({
                 open: true,
-                x: rect.left,
-                y: rect.bottom + window.scrollY,
-                eventId: click.event.id,
-                data: click.event.extendedProps as any as AdminEvent,
+                id: click.event.id,
+                form: {
+                  title: data.title || click.event.title,
+                  startsAt: toLocalIsoMinute(new Date(data.startsAt || click.event.start!)),
+                  endsAt: toLocalIsoMinute(new Date(data.endsAt || click.event.end!)),
+                  capacity: data.capacity ?? 20,
+                  coachName: data.coach?.name || "",
+                  color: data.color,
+                  status: data.status,
+                },
+                attendees: [],
               });
+              try {
+                const res = await fetch(`/api/admin/classes/${click.event.id}/attendees`);
+                const attendees = res.ok ? await res.json() : [];
+                setEditor((e) => ({ ...e, attendees }));
+              } catch {}
             }}
             height="auto"
           />
@@ -448,6 +466,114 @@ export default function ScheduleClient() {
             >
               Create
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event editor dialog */}
+      <Dialog open={editor.open} onOpenChange={(open)=> setEditor((e)=>({ ...e, open }))}>
+        <DialogContent className="sm:max-w-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle>Edit class</DialogTitle>
+          </DialogHeader>
+          {editor.form && (
+            <div className="space-y-4 py-1">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                <div className="md:col-span-3 space-y-1">
+                  <Label htmlFor="e-title">Title</Label>
+                  <Input id="e-title" value={editor.form.title} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, title: e.target.value } } : prev)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="e-cap">Capacity</Label>
+                  <Input id="e-cap" type="number" value={editor.form.capacity} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, capacity: Number(e.target.value || 0) } } : prev)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="e-coach">Coach</Label>
+                  <Input id="e-coach" value={editor.form.coachName} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, coachName: e.target.value } } : prev)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="e-start">Starts</Label>
+                  <Input id="e-start" type="datetime-local" value={editor.form.startsAt} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, startsAt: e.target.value } } : prev)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="e-end">Ends</Label>
+                  <Input id="e-end" type="datetime-local" value={editor.form.endsAt} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, endsAt: e.target.value } } : prev)} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="e-color">Color</Label>
+                <input id="e-color" type="color" value={editor.form.color || '#ef4444'} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, color: e.target.value } } : prev)} className="h-10 w-20 rounded" />
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="font-medium mb-2">Attendees</div>
+                <div className="max-h-[220px] overflow-auto divide-y">
+                  {editor.attendees && editor.attendees.length > 0 ? (
+                    editor.attendees.map((a:any)=> (
+                      <div key={a.id} className="flex items-center justify-between py-2 text-sm">
+                        <div>
+                          <div className="font-medium">{a.username || a.email || `User ${a.user_id}`}</div>
+                          <div className="text-gray-500">{a.status} · {a.payment_status}</div>
+                        </div>
+                        <button className="px-2 py-1 text-red-600 border border-red-600 rounded" onClick={async ()=>{
+                          await fetch('/api/classes/cancel', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ user_id: a.user_id, class_instance_id: Number(editor.id) }) });
+                          try { const res = await fetch(`/api/admin/classes/${editor.id}/attendees`); const attendees = res.ok ? await res.json() : []; setEditor((e)=> ({ ...e, attendees })); } catch {}
+                        }}>Kick</button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500">No attendees</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <div className="flex items-center gap-2 w-full justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={async ()=>{
+                  if (!editor.id || !editor.form) return;
+                  await fetch(`/api/classes/instances/${editor.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                    title: editor.form.title,
+                    capacity: editor.form.capacity,
+                    coachName: editor.form.coachName,
+                    color: editor.form.color,
+                    startsAt: new Date(editor.form.startsAt).toISOString(),
+                    endsAt: new Date(editor.form.endsAt).toISOString(),
+                  }) });
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  if (api) {
+                    const ev = api.getEventById(editor.id);
+                    if (ev) {
+                      ev.setProp('title', editor.form.title);
+                      ev.setStart(new Date(editor.form.startsAt));
+                      ev.setEnd(new Date(editor.form.endsAt));
+                    }
+                  }
+                  setEditor({ open: false });
+                  if (api?.view) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                }}>Save changes</Button>
+                <Button variant="outline" onClick={async ()=>{
+                  if (!editor.id) return;
+                  await fetch(`/api/classes/instances/${editor.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'canceled' }) });
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  setEditor({ open: false });
+                  if (api?.view) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                }}>Cancel class</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={()=> setEditor({ open:false })}>Close</Button>
+                <Button variant="destructive" onClick={async ()=>{
+                  if (!editor.id) return;
+                  await fetch(`/api/classes/instances/${editor.id}`, { method: 'DELETE' });
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  const e = api?.getEventById(editor.id);
+                  e?.remove();
+                  setEditor({ open: false });
+                }}>Delete</Button>
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
