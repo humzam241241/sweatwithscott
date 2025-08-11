@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import AdminSchedulePage from "../../page";
+import AdminSchedulePage from "../page";
 
 export default function AdminScheduleEmbed() {
   useEffect(() => {
