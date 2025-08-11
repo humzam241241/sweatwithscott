@@ -806,6 +806,22 @@ export const dbOperations = {
       return [];
     }
   },
+  getClassWithAttendees: (classInstanceId: number) => {
+    try {
+      return db
+        .prepare(
+          `SELECT cb.id, cb.user_id, u.username, u.email, cb.status, cb.payment_status
+           FROM class_bookings cb
+           JOIN users u ON u.id = cb.user_id
+           WHERE cb.class_instance_id = ?
+           ORDER BY cb.booking_date ASC`
+        )
+        .all(classInstanceId);
+    } catch (error) {
+      console.error("getClassWithAttendees error:", error);
+      return [];
+    }
+  },
   getClassRostersByDate: (date: string) => {
     try {
       return db

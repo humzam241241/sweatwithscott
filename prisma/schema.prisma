@@ -22,6 +22,71 @@ model User {
   updatedAt     DateTime @updatedAt
 }
 
+// Domain models to migrate from SQLite progressively
+model Member {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  stripeCustomerId String?  @unique
+  status           String   @default("active")
+  delinquentSince  DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Membership {
+  id                     String   @id @default(cuid())
+  memberId               String
+  stripeSubscriptionId   String   @unique
+  planCode               String
+  currentPeriodEnd       DateTime
+  status                 String
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model ClassTemplate {
+  id             String   @id @default(cuid())
+  name           String
+  coachName      String?
+  capacityDefault Int
+  rrule          String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ClassInstanceP {
+  id          String   @id @default(cuid())
+  templateId  String?
+  title       String
+  coachName   String?
+  startsAt    DateTime
+  endsAt      DateTime
+  capacity    Int
+  status      String   @default("scheduled")
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BookingP {
+  id              String   @id @default(cuid())
+  classInstanceId String
+  memberId        String
+  status          String   @default("booked")
+  bookedAt        DateTime @default(now())
+  canceledAt      DateTime?
+}
+
+model PaymentP {
+  id        String   @id @default(cuid())
+  memberId  String
+  amount    Int
+  currency  String   @default("cad")
+  status    String   @default("completed")
+  createdAt DateTime @default(now())
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String

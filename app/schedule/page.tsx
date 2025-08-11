@@ -20,6 +20,9 @@ type MemberEvent = {
 export default function SchedulePage() {
   const [events, setEvents] = useState<MemberEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [menu, setMenu] = useState<{ open: boolean; x: number; y: number; eventId?: string; data?: MemberEvent }>(
+    { open: false, x: 0, y: 0 }
+  );
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -64,6 +67,7 @@ export default function SchedulePage() {
           weekNumbers
           stickyHeaderDates
           dayMaxEventRows={3}
+          slotDuration="00:30:00"
           events={fcEvents}
           datesSet={(arg) => fetchEvents(arg.startStr, arg.endStr)}
           eventContent={(arg) => {
@@ -81,25 +85,70 @@ export default function SchedulePage() {
                 </div>`
             };
           }}
-          eventClick={async (click) => {
-            try {
-              const id = Number(click.event.id);
-              const isMine = (click.event.extendedProps as any).user_booking_status === 'confirmed';
-              if (isMine) {
-                await fetch('/api/classes/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ class_instance_id: id, user_id: (window as any).CURRENT_USER_ID || 0 }) });
-              } else {
-                await fetch('/api/classes/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ class_instance_id: id, user_id: (window as any).CURRENT_USER_ID || 0 }) });
-              }
-              // refresh
-              fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
-            } catch {}
+          eventClick={(click) => {
+            const rect = (click.jsEvent.target as HTMLElement).getBoundingClientRect();
+            setMenu({
+              open: true,
+              x: rect.left,
+              y: rect.bottom + window.scrollY,
+              eventId: String(click.event.id),
+              data: click.event.extendedProps as any as MemberEvent,
+            });
           }}
           height="auto"
         />
+        {menu.open && menu.data && (
+          <div
+            className="fixed z-50 rounded-md border bg-white shadow-lg text-sm"
+            style={{ left: menu.x, top: menu.y }}
+            onMouseLeave={() => setMenu((m) => ({ ...m, open: false }))}
+          >
+            {menu.data.user_booking_status === 'confirmed' ? (
+              <MenuItem label="Cancel RSVP" onClick={async () => {
+                try {
+                  await fetch('/api/classes/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ class_instance_id: Number(menu.eventId), user_id: (window as any).CURRENT_USER_ID || 0 }) });
+                } finally {
+                  setMenu((m)=>({ ...m, open:false }));
+                  const cal = document.querySelector('.fc') as any;
+                  const api = cal?._calendar || (cal as any)?.calendar;
+                  if (api) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                }
+              }} />
+            ) : (
+              <MenuItem label="RSVP" onClick={async () => {
+                try {
+                  await fetch('/api/classes/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ class_instance_id: Number(menu.eventId), user_id: (window as any).CURRENT_USER_ID || 0 }) });
+                } finally {
+                  setMenu((m)=>({ ...m, open:false }));
+                  const cal = document.querySelector('.fc') as any;
+                  const api = cal?._calendar || (cal as any)?.calendar;
+                  if (api) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                }
+              }} />
+            )}
+            <MenuItem label="Pay Drop-in" onClick={async ()=>{
+              try {
+                const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              } finally {
+                setMenu((m)=>({ ...m, open:false }));
+              }
+            }} />
+          </div>
+        )}
         {/* Listen for admin changes and refresh */}
         <RefreshOnBroadcast onRefresh={(from,to)=>fetchEvents(from,to)} />
       </div>
     </div>
+  );
+}
+
+function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="block w-full text-left px-3 py-2 hover:bg-gray-100" type="button">
+      {label}
+    </button>
   );
 }
 

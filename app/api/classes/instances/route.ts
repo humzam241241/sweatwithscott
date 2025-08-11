@@ -129,6 +129,7 @@ const createSchema = z.object({
   endsAt: z.string().datetime(),
   capacity: z.number().int().positive().optional(),
   color: z.string().optional(),
+  coachName: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 })
     }
-    const { classId, title, startsAt, endsAt, capacity, color } = parsed.data
+    const { classId, title, startsAt, endsAt, capacity, color, coachName } = parsed.data
 
     let effectiveClassId = classId
     if (!effectiveClassId) {
@@ -153,6 +154,17 @@ export async function POST(request: NextRequest) {
            VALUES (?, '', '', 60, ?, 0, NULL, NULL, NULL, 1, LOWER(REPLACE(?, ' ', '-')), NULL, '', 1, NULL, ?)`
         ).run(title, capacity ?? 20, title, color ?? null)
         effectiveClassId = Number(info.lastInsertRowid)
+      }
+    }
+
+    // Update class attributes if provided
+    if (color || coachName) {
+      const updates: string[] = []
+      const values: any[] = []
+      if (color) { updates.push('color = ?'); values.push(color) }
+      if (coachName) { updates.push('instructor = ?'); values.push(coachName) }
+      if (updates.length) {
+        db.prepare(`UPDATE classes SET ${updates.join(', ')} WHERE id = ?`).run(...values, effectiveClassId)
       }
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -23,6 +23,14 @@ export default function AdminSchedulePage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const calendarRef = useRef<FullCalendar | null>(null);
+  const [menu, setMenu] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+    eventId?: string;
+    data?: AdminEvent;
+  }>({ open: false, x: 0, y: 0 });
+  const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [], open: false });
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -124,6 +132,11 @@ export default function AdminSchedulePage() {
           stickyHeaderDates
           dayMaxEventRows={3}
           selectable
+          selectOverlap={true}
+          longPressDelay={0}
+          snapDuration={{ minutes: 15 } as any}
+          slotDuration="00:30:00"
+          selectable
           editable
           eventStartEditable
           eventDurationEditable
@@ -148,31 +161,142 @@ export default function AdminSchedulePage() {
                 </div>`
             };
           }}
-          eventClick={async (click) => {
-            const id = click.event.id;
-            const choice = window.prompt("Action: edit | cancel | duplicate", "edit");
-            if (!choice) return;
-            if (choice === "cancel") {
-              await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "canceled" }) });
-              click.event.setProp("classNames", ["opacity-50", "line-through"]);
-            } else if (choice === "duplicate") {
-              const start = click.event.start!; const end = click.event.end!;
-              const startsAt = new Date(start.getTime()); startsAt.setDate(startsAt.getDate() + 7);
-              const endsAt = new Date(end.getTime()); endsAt.setDate(endsAt.getDate() + 7);
-              await fetch(`/api/classes/instances`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: click.event.title, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }) });
-              fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
-              window.dispatchEvent(new CustomEvent('classes:changed'));
-            } else if (choice === "edit") {
-              const newTitle = window.prompt("Title", click.event.title) || click.event.title;
-              const newCapacityStr = window.prompt("Capacity", String(((click.event.extendedProps as any).capacity || 20)));
-              const newCapacity = newCapacityStr ? Number(newCapacityStr) : undefined;
-              await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newTitle, capacity: newCapacity }) });
-              fetchEvents(click.view.activeStart.toISOString(), click.view.activeEnd.toISOString());
-              window.dispatchEvent(new CustomEvent('classes:changed'));
-            }
+          eventClick={(click) => {
+            const rect = (click.jsEvent.target as HTMLElement).getBoundingClientRect();
+            setMenu({
+              open: true,
+              x: rect.left,
+              y: rect.bottom + window.scrollY,
+              eventId: click.event.id,
+              data: click.event.extendedProps as any as AdminEvent,
+            });
           }}
           height="auto"
         />
+        {menu.open && (
+          <div
+            className="fixed z-50 rounded-md border bg-white shadow-lg text-sm"
+            style={{ left: menu.x, top: menu.y }}
+            onMouseLeave={() => setMenu((m) => ({ ...m, open: false }))}
+          >
+            <MenuItem label="Edit title/capacity" onClick={async () => {
+              const id = menu.eventId!;
+              const newTitle = window.prompt("Title", menu.data?.title || "") || menu.data?.title;
+              const newCapacityStr = window.prompt("Capacity", String(menu.data?.capacity || 20));
+              const newCapacity = newCapacityStr ? Number(newCapacityStr) : undefined;
+              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, capacity: newCapacity }) });
+              setMenu((m)=>({ ...m, open:false }));
+              const view = (calendarRef.current as any)?.getApi?.().view;
+              fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+              window.dispatchEvent(new CustomEvent('classes:changed'));
+            }} />
+            <MenuItem label="Change color" onClick={async () => {
+              const id = menu.eventId!;
+              const color = window.prompt('Hex color', menu.data?.color || '#ef4444');
+              if (!color) return;
+              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ color }) });
+              setMenu((m)=>({ ...m, open:false }));
+              const view = (calendarRef.current as any)?.getApi?.().view;
+              fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+              window.dispatchEvent(new CustomEvent('classes:changed'));
+            }} />
+            <MenuItem label="Capacity +1" onClick={async ()=>{
+              const id = menu.eventId!;
+              const newCapacity = (menu.data?.capacity || 20) + 1;
+              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ capacity: newCapacity }) });
+              setMenu((m)=>({ ...m, open:false }));
+              const view = (calendarRef.current as any)?.getApi?.().view;
+              fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+            }} />
+            <MenuItem label="Capacity −1" onClick={async ()=>{
+              const id = menu.eventId!;
+              const newCapacity = Math.max(1, (menu.data?.capacity || 20) - 1);
+              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ capacity: newCapacity }) });
+              setMenu((m)=>({ ...m, open:false }));
+              const view = (calendarRef.current as any)?.getApi?.().view;
+              fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+            }} />
+            <MenuItem label="View roster" onClick={async ()=>{
+              const id = menu.eventId!;
+              const res = await fetch(`/api/admin/classes/${id}/attendees`);
+              const attendees = res.ok ? await res.json() : [];
+              setMenu((m)=>({ ...m, open:false }));
+              setRoster({ open: true, attendees, eventId: id });
+            }} />
+            <MenuItem label="Duplicate +1 week" onClick={async ()=>{
+              const api = (calendarRef.current as any)?.getApi?.();
+              const ev = api?.getEventById(menu.eventId!);
+              if (!ev) return;
+              const start = ev.start!; const end = ev.end!;
+              const startsAt = new Date(start.getTime()); startsAt.setDate(startsAt.getDate() + 7);
+              const endsAt = new Date(end.getTime()); endsAt.setDate(endsAt.getDate() + 7);
+              await fetch(`/api/classes/instances`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: ev.title, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), capacity: menu.data?.capacity, color: menu.data?.color, coachName: menu.data?.coach?.name }) });
+              setMenu((m)=>({ ...m, open:false }));
+              fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+              window.dispatchEvent(new CustomEvent('classes:changed'));
+            }} />
+            <MenuItem label="Cancel" onClick={async ()=>{
+              const id = menu.eventId!;
+              await fetch(`/api/classes/instances/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'canceled' }) });
+              setMenu((m)=>({ ...m, open:false }));
+              const view = (calendarRef.current as any)?.getApi?.().view;
+              fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+            }} />
+          </div>
+        )}
+        {roster.open && (
+          <RosterModal attendees={roster.attendees} onClose={()=>setRoster({ open:false, attendees: [] })} onKick={async (userId:number)=>{
+            await fetch('/api/classes/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: userId, class_instance_id: Number(roster.eventId) }) });
+            const res = await fetch(`/api/admin/classes/${roster.eventId}/attendees`);
+            const attendees = res.ok ? await res.json() : [];
+            setRoster((r)=>({ ...r, attendees }));
+            window.dispatchEvent(new CustomEvent('classes:changed'));
+          }} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="block w-full text-left px-3 py-2 hover:bg-gray-100"
+      type="button"
+    >
+      {label}
+    </button>
+  );
+}
+
+function RosterModal({ attendees, onClose, onKick }: { attendees: any[]; onClose: () => void; onKick: (userId: number) => void }) {
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg rounded-md bg-white p-4 shadow-xl">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Attendees</h3>
+          <button onClick={onClose} className="text-sm text-gray-500">Close</button>
+        </div>
+        <div className="max-h-[50vh] overflow-auto divide-y">
+          {attendees.length === 0 ? (
+            <div className="text-sm text-gray-500">No attendees</div>
+          ) : attendees.map((a) => (
+            <div key={a.id} className="flex items-center justify-between py-2 text-sm">
+              <div>
+                <div className="font-medium">{a.username || a.email || `User ${a.user_id}`}</div>
+                <div className="text-gray-500">{a.status} · {a.payment_status}</div>
+              </div>
+              <button className="px-2 py-1 text-red-600 border border-red-600 rounded" onClick={()=>onKick(a.user_id)}>Kick</button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
