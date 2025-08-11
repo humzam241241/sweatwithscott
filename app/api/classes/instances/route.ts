@@ -125,8 +125,9 @@ export async function GET(request: NextRequest) {
 const createSchema = z.object({
   classId: z.number().int().optional(),
   title: z.string().min(1).optional(),
-  startsAt: z.string().datetime(),
-  endsAt: z.string().datetime(),
+  // Accept flexible datetime strings (e.g., from <input type="datetime-local">)
+  startsAt: z.string().min(1),
+  endsAt: z.string().min(1),
   capacity: z.number().int().positive().optional(),
   color: z.string().optional(),
   coachName: z.string().optional(),
@@ -193,9 +194,9 @@ export async function POST(request: NextRequest) {
     const info = db
       .prepare(
         `INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity, current_bookings, status)
-         VALUES (?, ?, ?, ?, '', ?, 0, 'scheduled')`
+         VALUES (?, ?, ?, ?, COALESCE((SELECT instructor FROM classes WHERE id = ?), ''), ?, 0, 'scheduled')`
       )
-      .run(effectiveClassId, date, startTime, endTime, capacity ?? 20)
+      .run(effectiveClassId, date, startTime, endTime, effectiveClassId, capacity ?? 20)
 
     if (color) {
       db.prepare(`UPDATE classes SET color = ? WHERE id = ?`).run(color, effectiveClassId)

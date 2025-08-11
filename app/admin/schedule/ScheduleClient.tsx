@@ -151,12 +151,15 @@ export default function ScheduleClient() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: title, day_of_week: dayOfWeek, start_time: startsAt.slice(11, 16), end_time: endsAt.slice(11, 16), max_capacity: capacity, color }),
     });
-    if (!classResp.ok) return false;
+    if (!classResp.ok) {
+      console.error("Failed to create class", await classResp.text());
+      return false;
+    }
     const created = await classResp.json();
     const res = await fetch(`/api/classes/instances`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ classId: created.id, title, startsAt, endsAt, capacity, color, coachName }),
+      body: JSON.stringify({ classId: Number(created.id ?? created?.ID ?? created?.class_id), title, startsAt, endsAt, capacity, color, coachName }),
     });
     if (res.ok) {
       const api = (calendarRef.current as any)?.getApi?.();
@@ -165,6 +168,7 @@ export default function ScheduleClient() {
       api.unselect?.();
       return true;
     }
+    console.error("Failed to create class instance", await res.text());
     return false;
   };
 
