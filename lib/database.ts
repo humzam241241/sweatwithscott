@@ -288,14 +288,42 @@ function resetClassSchedule() {
     "Open Gym": 9999,
   };
 
-  const schedule = [
-    { day: "Monday", time: "12:00", name: "Bootcamp", description: "High-intensity full-body workout combining boxing drills with strength training." },
-    { day: "Monday", time: "17:00", name: "Boxing Tech", description: "Technical boxing skills focusing on footwork, combinations, and defensive techniques." },
-    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)", description: "Fun boxing fundamentals for kids in a safe, supportive environment." },
-    { day: "Wednesday", time: "19:00", name: "Strength & Conditioning", description: "Build power and endurance with sport-specific conditioning workouts." },
-    { day: "Thursday", time: "17:30", name: "Beginner Boxing", description: "Perfect introduction to boxing for newcomers. Learn the basics in a welcoming atmosphere." },
-    { day: "Friday", time: "18:00", name: "Advanced Boxing", description: "Intensive training for experienced boxers looking to sharpen their skills." },
-    { day: "Saturday", time: "12:00", name: "Open Gym", description: "Self-directed training time with access to all equipment and coaching support." },
+  // Rich weekly template to populate the public/admin schedules by default
+  const schedule: Array<{ day: string; time: string; name: string; description?: string; color?: string }> = [
+    // Sunday
+    { day: "Sunday", time: "20:00", name: "Strength & Conditioning", description: "Evening conditioning session.", color: "#f59e0b" },
+    // Monday
+    { day: "Monday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
+    { day: "Monday", time: "12:00", name: "Bootcamp", description: "Midday Bootcamp.", color: "#ef4444" },
+    { day: "Monday", time: "17:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
+    { day: "Monday", time: "18:00", name: "Bootcamp", description: "Evening Bootcamp.", color: "#ef4444" },
+    { day: "Monday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
+    { day: "Monday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
+    // Tuesday
+    { day: "Tuesday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
+    { day: "Tuesday", time: "17:00", name: "Bootcamp", description: "After-work Bootcamp.", color: "#ef4444" },
+    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)", description: "Kids fundamentals.", color: "#22c55e" },
+    { day: "Tuesday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
+    { day: "Tuesday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
+    // Wednesday
+    { day: "Wednesday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
+    { day: "Wednesday", time: "12:00", name: "Bootcamp", description: "Midday Bootcamp.", color: "#ef4444" },
+    { day: "Wednesday", time: "19:00", name: "Strength & Conditioning", description: "Power and endurance.", color: "#f59e0b" },
+    { day: "Wednesday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
+    // Thursday
+    { day: "Thursday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
+    { day: "Thursday", time: "17:30", name: "Beginner Boxing", description: "Intro to boxing.", color: "#ef4444" },
+    { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)", description: "Kids fundamentals.", color: "#22c55e" },
+    { day: "Thursday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
+    { day: "Thursday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
+    // Friday
+    { day: "Friday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
+    { day: "Friday", time: "18:00", name: "Bootcamp", description: "Evening Bootcamp.", color: "#ef4444" },
+    { day: "Friday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
+    { day: "Friday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
+    // Saturday
+    { day: "Saturday", time: "12:00", name: "Open Gym", description: "Open gym.", color: "#22d3ee" },
+    { day: "Saturday", time: "15:00", name: "Sparring", description: "Controlled sparring rounds.", color: "#f97316" },
   ];
 
   const addHour = (time: string) => {
@@ -304,8 +332,8 @@ function resetClassSchedule() {
   };
 
   const insertClass = db.prepare(`
-    INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const classImages = {
@@ -328,7 +356,8 @@ function resetClassSchedule() {
       addHour(cls.time), 
       capacities[cls.name] || 30, 
       25, 
-      classImages[cls.name as keyof typeof classImages] || "/images/boxing-training.png"
+      classImages[cls.name as keyof typeof classImages] || "/images/boxing-training.png",
+      cls.color || null
     );
   });
 
