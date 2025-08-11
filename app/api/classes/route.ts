@@ -77,11 +77,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const startTime = new Date(`2000-01-01 ${time}`);
-    const start = Number.isNaN(startTime.getTime())
-      ? time
-      : `${String(startTime.getHours()).padStart(2, "0")}:${String(startTime.getMinutes()).padStart(2, "0")}`;
-    const end = endTime ? addOneHour(endTime) : addOneHour(start);
+  const startTime = new Date(`2000-01-01 ${time}`);
+  const start = Number.isNaN(startTime.getTime())
+    ? time
+    : `${String(startTime.getHours()).padStart(2, "0")}:${String(startTime.getMinutes()).padStart(2, "0")}`;
+  let end: string;
+  if (endTime) {
+    const et = new Date(`2000-01-01 ${endTime}`);
+    end = Number.isNaN(et.getTime())
+      ? endTime
+      : `${String(et.getHours()).padStart(2, "0")}:${String(et.getMinutes()).padStart(2, "0")}`;
+  } else {
+    end = addOneHour(start);
+  }
 
     const stmt = db.prepare(
       `INSERT INTO classes (name, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color)
