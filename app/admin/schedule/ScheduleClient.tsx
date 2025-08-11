@@ -77,6 +77,25 @@ export default function ScheduleClient() {
     [events, filters]
   );
 
+  // Ensure initial fetch after calendar mounts and on external changes
+  useEffect(() => {
+    const refreshFromCalendar = () => {
+      const api = (calendarRef.current as any)?.getApi?.();
+      if (api?.view?.activeStart && api?.view?.activeEnd) {
+        fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+      }
+    };
+    // Run once on mount
+    const id = window.setTimeout(refreshFromCalendar, 0);
+    // Listen for global updates
+    const onChanged = () => refreshFromCalendar();
+    window.addEventListener("classes:changed", onChanged as any);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("classes:changed", onChanged as any);
+    };
+  }, []);
+
   const onDatesSet = (arg: any) => {
     const fromISO = arg.startStr;
     const toISO = arg.endStr;
@@ -189,6 +208,7 @@ export default function ScheduleClient() {
             <div className="mb-3 rounded border border-blue-300 bg-blue-50 text-blue-800 text-sm px-3 py-2">Click and drag on the calendar to create a class. Use the event menu to edit, change color/coach, duplicate or cancel.</div>
           )}
           <FullCalendar
+            ref={calendarRef as any}
             plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
             initialView="timeGridWeek"
             headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek" }}
