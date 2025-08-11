@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -23,6 +23,8 @@ export default function SchedulePage() {
   const [menu, setMenu] = useState<{ open: boolean; x: number; y: number; eventId?: string; data?: MemberEvent }>(
     { open: false, x: 0, y: 0 }
   );
+  const calendarRef = useRef<FullCalendar | null>(null);
+  const [range, setRange] = useState<{ from: string; to: string } | null>(null);
 
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
@@ -69,7 +71,7 @@ export default function SchedulePage() {
           dayMaxEventRows={3}
           slotDuration="00:30:00"
           events={fcEvents}
-          datesSet={(arg) => fetchEvents(arg.startStr, arg.endStr)}
+          datesSet={(arg) => { setRange({ from: arg.startStr, to: arg.endStr }); fetchEvents(arg.startStr, arg.endStr); }}
           eventContent={(arg) => {
             const data = arg.event.extendedProps as any as MemberEvent;
             const capacity = `${data.bookedCount}/${data.capacity}`;
@@ -142,7 +144,13 @@ export default function SchedulePage() {
           </div>
         )}
         {/* Listen for admin changes and refresh */}
-        <RefreshOnBroadcast onRefresh={(from,to)=>fetchEvents(from,to)} />
+        <BroadcastListener onTrigger={() => {
+          if (range) fetchEvents(range.from, range.to);
+          else {
+            const api = calendarRef.current?.getApi?.();
+            if (api) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+          }
+        }} />
       </div>
     </div>
   );
@@ -154,6 +162,15 @@ function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
       {label}
     </button>
   );
+}
+
+function BroadcastListener({ onTrigger }: { onTrigger: () => void }){
+  useEffect(()=>{
+    const handler = () => onTrigger();
+    window.addEventListener('classes:changed', handler);
+    return () => window.removeEventListener('classes:changed', handler);
+  }, [onTrigger]);
+  return null;
 }
 
 function RefreshOnBroadcast({ onRefresh }: { onRefresh: (fromISO:string, toISO:string)=>void }){
