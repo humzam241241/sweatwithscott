@@ -6,6 +6,7 @@ import MembershipPackages from "@/components/membership-packages";
 import ContactForm from "@/components/contact-form";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { headers } from "next/headers";
 
 const PLACEHOLDER_IMAGE = "/images/placeholder.jpg";
@@ -137,26 +138,7 @@ export default async function Home() {
        <section id="schedule" className="py-16 px-6 bg-gray-50">
          <h2 className="text-3xl font-bold mb-8 text-center">Class Schedule</h2>
          <div className="max-w-7xl mx-auto">
-           {/* Weekly grid */}
-           <div className="grid grid-cols-7 gap-4 min-w-[900px] overflow-x-auto">
-             {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map((day) => (
-               <div key={day} className="bg-white rounded-lg shadow-sm p-3">
-                 <h3 className="text-center font-semibold mb-3">{day}</h3>
-                 <div className="flex flex-col gap-2">
-                   {Array.isArray(scheduleData) && scheduleData
-                     .filter((c: any) => c.day_of_week === day)
-                     .sort((a: any,b: any) => String(a.start_time).localeCompare(String(b.start_time)))
-                     .map((c: any) => (
-                       <div key={`${c.id}-${c.start_time}`} className="event rounded-lg p-3" style={{backgroundColor:'#c90015'}}>
-                         <div className="text-sm font-semibold">{c.start_time} - {c.end_time}</div>
-                         <div className="text-sm">{c.name}</div>
-                         {c.instructor && <div className="text-xs opacity-80">Coach: {c.instructor}</div>}
-                       </div>
-                   ))}
-                 </div>
-               </div>
-             ))}
-           </div>
+           {dynamic(() => import("@/components/HomeSchedule"), { ssr: false })()}
          </div>
        </section>
 
