@@ -51,7 +51,7 @@ export default function AdminDashboard() {
       </div>
       <div className="mt-12 space-y-6">
         <h2 className="text-xl font-semibold">Live Calendar</h2>
-        <iframe title="admin-schedule" src="/admin/schedule" className="w-full h-[800px] rounded border" />
+        <iframe title="admin-schedule" src="/admin/schedule/embed" className="w-full h-[800px] rounded border bg-white" />
       </div>
       <div className="mt-12">
         <InventoryPanel />
