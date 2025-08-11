@@ -387,41 +387,41 @@ export default function ScheduleClient() {
         </div>
       </div>
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg bg-red-900 text-white border border-red-700">
           <DialogHeader>
-            <DialogTitle>New class</DialogTitle>
+            <DialogTitle className="text-white">New class</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-1">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
               <div className="md:col-span-3 space-y-1">
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" placeholder="e.g. Beginner Boxing" value={createForm.title} onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} />
+                <Input id="title" className="text-black" placeholder="e.g. Beginner Boxing" value={createForm.title} onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="cap">Capacity</Label>
-                <Input id="cap" type="number" value={createForm.capacity} onChange={(e) => setCreateForm({ ...createForm, capacity: Number(e.target.value || 0) })} />
+                <Input id="cap" className="text-black" type="number" value={createForm.capacity} onChange={(e) => setCreateForm({ ...createForm, capacity: Number(e.target.value || 0) })} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="coach">Coach</Label>
-                <Input id="coach" placeholder="optional" value={createForm.coachName} onChange={(e) => setCreateForm({ ...createForm, coachName: e.target.value })} />
+                <Input id="coach" className="text-black" placeholder="optional" value={createForm.coachName} onChange={(e) => setCreateForm({ ...createForm, coachName: e.target.value })} />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label htmlFor="start">Starts</Label>
-                <Input id="start" type="datetime-local" value={createForm.startsAt} onChange={(e) => setCreateForm({ ...createForm, startsAt: e.target.value })} />
+                <Input id="start" className="text-black" type="datetime-local" value={createForm.startsAt} onChange={(e) => setCreateForm({ ...createForm, startsAt: e.target.value })} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="end">Ends</Label>
-                <Input id="end" type="datetime-local" value={createForm.endsAt} onChange={(e) => setCreateForm({ ...createForm, endsAt: e.target.value })} />
+                <Input id="end" className="text-black" type="datetime-local" value={createForm.endsAt} onChange={(e) => setCreateForm({ ...createForm, endsAt: e.target.value })} />
               </div>
             </div>
             <div className="space-y-1">
               <Label htmlFor="color">Color</Label>
               <input id="color" type="color" value={createForm.color} onChange={(e) => setCreateForm({ ...createForm, color: e.target.value })} className="h-10 w-20 rounded" />
             </div>
-            <div className="rounded-md bg-gray-50 border border-gray-200 p-3 text-xs text-gray-600">
-              <div className="font-medium text-gray-700 mb-1">Preview</div>
+            <div className="rounded-md bg-red-800/50 border border-red-600 p-3 text-xs text-white/90">
+              <div className="font-medium text-white mb-1">Preview</div>
               <div className="flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full" style={{ background: createForm.color }} />
                 <div className="flex-1">
@@ -429,15 +429,16 @@ export default function ScheduleClient() {
                   <div className="text-[11px]">{new Date(createForm.startsAt).toLocaleString()} - {new Date(createForm.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
                   {createForm.coachName && <div className="text-[11px]">Coach: {createForm.coachName}</div>}
                 </div>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-white">0/{createForm.capacity}</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-white">0/{createForm.capacity}</span>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setCreateOpen(false)}>
+            <Button variant="ghost" className="bg-red-700/40 text-white hover:bg-red-700/60" onClick={() => setCreateOpen(false)}>
               Cancel
             </Button>
             <Button
+              className="bg-white text-red-900 hover:bg-gray-100"
               onClick={async () => {
                 const ok = await createClassFromForm();
                 if (ok) {

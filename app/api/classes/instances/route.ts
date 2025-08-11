@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getDb } from "@/lib/db"
+import db from "@/lib/database"
 import { addDays, format } from "date-fns"
 import { z } from "@/lib/z"
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       endDate = format(addDays(now, 7), "yyyy-MM-dd")
     }
 
-    const db = getDb()
+    // use centralized database (path resolved at app root)
 
     const params: any[] = [startDate, endDate]
     let query = `
