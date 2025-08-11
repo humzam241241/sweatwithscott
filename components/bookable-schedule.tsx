@@ -22,6 +22,7 @@ interface ClassInstance {
   price: number;
   status: string;
   user_booking_status?: string;
+  color?: string;
 }
 
 interface BookableScheduleProps {
@@ -376,7 +377,7 @@ export default function BookableSchedule({ userMode = false, userId }: BookableS
                 ) : (
                   <div className="divide-y">
                     {dayClasses.map((instance) => (
-                      <div key={instance.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div key={instance.id} className="p-4 hover:bg-gray-50 transition-colors border-l-4" style={{ borderColor: instance.color || '#c90015' }}>
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">

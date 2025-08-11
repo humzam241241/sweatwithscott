@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import db from "@/lib/database";
 import { z } from "@/lib/z";
 
 const patchSchema = z.object({
@@ -17,7 +17,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   try {
     const id = Number(params.id);
     if (!Number.isFinite(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
-    const db = getDb();
     const json = await request.json();
     const parsed = patchSchema.safeParse(json);
     if (!parsed.success) {
@@ -92,7 +91,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   try {
     const id = Number(params.id);
     if (!Number.isFinite(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
-    const db = getDb();
     db.prepare(`DELETE FROM class_instances WHERE id = ?`).run(id);
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
