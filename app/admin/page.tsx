@@ -397,6 +397,33 @@ export default function AdminDashboard() {
     }
   };
 
+  const markMembershipPaid = async (
+    userId: number,
+    months: number = 1,
+    plan?: string,
+  ) => {
+    try {
+      const res = await fetch("/api/admin/mark-membership-paid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, months, plan, method: "cash" }),
+      });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Membership marked paid" + (data?.newExpiry ? ` · new expiry ${data.newExpiry}` : ""));
+        fetchAdminData();
+      } else {
+        toast.error(data?.error || "Failed to mark paid");
+      }
+    } catch {
+      toast.error("Failed to mark paid");
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "short",
@@ -1108,6 +1135,7 @@ export default function AdminDashboard() {
                       <TableHead className="text-gray-300">Next Due</TableHead>
                       <TableHead className="text-gray-300">Amount</TableHead>
                       <TableHead className="text-gray-300">Status</TableHead>
+                      <TableHead className="text-gray-300">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1157,6 +1185,18 @@ export default function AdminDashboard() {
                             }
                           >
                             {member.subscription_status}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white bg-transparent"
+                              onClick={() =>
+                                markMembershipPaid(member.id, 1, member.plan)
+                              }
+                            >
+                              Mark Paid
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}

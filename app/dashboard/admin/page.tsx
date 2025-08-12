@@ -168,6 +168,16 @@ function UsersPanel() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const markMembershipPaid = async (userId: number) => {
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/mark-membership-paid', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId, months: 1, method: 'cash' }) });
+      if (!res.ok) throw new Error('Failed');
+      load();
+    } catch (e:any) {
+      setError('Failed to mark paid.');
+    }
+  };
   const load = async () => {
     setLoading(true);
     try { const r = await fetch('/api/admin/users'); const j = await r.json(); setUsers(Array.isArray(j) ? j : []); } finally { setLoading(false); }
@@ -196,9 +206,12 @@ function UsersPanel() {
               <div className="font-medium">{u.username}</div>
               <div className="text-gray-400">{u.membershipStatus}</div>
             </div>
-            <button onClick={()=>toggleSuspend(u)} className={`px-2 py-1 rounded border ${u.membershipStatus==='suspended' ? 'text-green-400 border-green-400' : 'text-red-400 border-red-400'}`}>
-              {u.membershipStatus==='suspended' ? 'Unsuspend' : 'Suspend'}
-            </button>
+            <div className="flex gap-2">
+              <button onClick={()=>markMembershipPaid(u.id)} className="px-2 py-1 rounded border text-green-400 border-green-400">Paid</button>
+              <button onClick={()=>toggleSuspend(u)} className={`px-2 py-1 rounded border ${u.membershipStatus==='suspended' ? 'text-green-400 border-green-400' : 'text-red-400 border-red-400'}`}>
+                {u.membershipStatus==='suspended' ? 'Unsuspend' : 'Suspend'}
+              </button>
+            </div>
           </div>
         ))}
       </div>
