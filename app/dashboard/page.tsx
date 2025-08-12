@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchSession = async () => {
-      const resp = await fetch("/api/auth/me")
+      const resp = await fetch("/api/auth/me", { cache: "no-store" })
       if (resp.ok) {
         const session = await resp.json()
         setUser(session)

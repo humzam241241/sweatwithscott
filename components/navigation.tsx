@@ -73,7 +73,7 @@ export default function Navigation() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch("/api/auth/me");
+      const response = await fetch("/api/auth/me", { cache: "no-store" });
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);

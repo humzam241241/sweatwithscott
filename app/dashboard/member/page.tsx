@@ -32,13 +32,10 @@ export default function MemberDashboard() {
 
   useEffect(() => {
     const fetchSession = async () => {
-      const resp = await fetch("/api/auth/me")
+      const resp = await fetch("/api/auth/me", { cache: "no-store" })
       if (resp.ok) {
         const session = await resp.json()
-        if (session.role !== "member") {
-          router.replace("/login")
-          return
-        }
+        // Allow both roles to view member dashboard; non-auth users redirected below
         setUser(session)
         loadBookings(session.userId)
         loadMembership(session.userId)

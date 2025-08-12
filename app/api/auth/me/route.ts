@@ -16,6 +16,7 @@ export async function GET() {
         isAdmin: Boolean(user.isAdmin),
         fullName: (user.name as string) || undefined,
         email: (user.email as string) || undefined,
+        role: Boolean(user.isAdmin) ? "admin" : "member",
       };
       return NextResponse.json(legacy);
     }
