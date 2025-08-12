@@ -27,6 +27,7 @@ function Toolbar() {
     <div className="p-3 text-sm text-gray-400 flex items-center justify-between">
       <span>Embedded live schedule editor</span>
       <div className="flex items-center gap-2">
+        <button onClick={async ()=>{ await fetch('/api/admin/classes/seed-weekly', { method: 'POST' }); const ifr = document.querySelector('iframe[title="admin-schedule"]') as HTMLIFrameElement | null; if (ifr) ifr.src = ifr.src; }} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-800">Reset & seed weekly</button>
         <button onClick={regenerate} className="px-3 py-1 rounded border border-gray-600 hover:bg-gray-800">Regenerate next 30 days</button>
         <Link href="/admin/schedule" className="px-3 py-1 rounded bg-red-600 hover:bg-red-700">Open Full Calendar</Link>
       </div>
