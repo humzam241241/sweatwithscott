@@ -36,7 +36,11 @@ export async function GET() {
       plan: u.membership_type,
       start_date: u.created_at,
       next_payment_due: u.membership_expiry,
+      renew_date: u.membership_expiry,
       subscription_status: u.membership_status,
+      paid:
+        Boolean(u.membership_status === "active") &&
+        Boolean(u.membership_expiry && u.membership_expiry >= today),
       next_payment_amount: planPrices[u.membership_type] || 0,
       overdue:
         u.membership_expiry &&

@@ -103,8 +103,10 @@ interface MemberData {
   plan: string;
   start_date: string;
   next_payment_due: string;
+  renew_date?: string;
   subscription_status: string;
   next_payment_amount: number;
+  paid?: boolean;
   overdue: boolean;
 }
 
@@ -1132,8 +1134,9 @@ export default function AdminDashboard() {
                       <TableHead className="text-gray-300">Phone</TableHead>
                       <TableHead className="text-gray-300">Plan</TableHead>
                       <TableHead className="text-gray-300">Start</TableHead>
-                      <TableHead className="text-gray-300">Next Due</TableHead>
+                      <TableHead className="text-gray-300">Renewal</TableHead>
                       <TableHead className="text-gray-300">Amount</TableHead>
+                      <TableHead className="text-gray-300">Paid</TableHead>
                       <TableHead className="text-gray-300">Status</TableHead>
                       <TableHead className="text-gray-300">Actions</TableHead>
                     </TableRow>
@@ -1174,10 +1177,18 @@ export default function AdminDashboard() {
                             {member.start_date.split("T")[0]}
                           </TableCell>
                           <TableCell className="text-gray-300">
-                            {member.next_payment_due}
+                            {member.renew_date || member.next_payment_due}
                           </TableCell>
                           <TableCell className="text-gray-300">
                             {"$" + member.next_payment_amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={member.paid ? "text-green-400 border-green-400" : "text-yellow-400 border-yellow-400"}
+                            >
+                              {member.paid ? "Paid" : "Unpaid"}
+                            </Badge>
                           </TableCell>
                           <TableCell
                             className={
@@ -1187,16 +1198,29 @@ export default function AdminDashboard() {
                             {member.subscription_status}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white bg-transparent"
-                              onClick={() =>
-                                markMembershipPaid(member.id, 1, member.plan)
-                              }
-                            >
-                              Mark Paid
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-400 border-green-400 hover:bg-green-400 hover:text-white bg-transparent"
+                                onClick={() =>
+                                  markMembershipPaid(member.id, 1, member.plan)
+                                }
+                              >
+                                Mark Paid
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white bg-transparent"
+                                onClick={async () => {
+                                  await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId: member.id, suspend: true }) });
+                                  fetchAdminData();
+                                }}
+                              >
+                                Suspend
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
