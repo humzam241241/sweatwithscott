@@ -33,7 +33,13 @@ export async function GET(): Promise<NextResponse<LoggedInResponse | LoggedOutRe
     };
     if (user.email) payload.user.email = user.email as string;
 
-    return NextResponse.json(payload);
+    // Disable caching so client always sees fresh auth state
+    return new NextResponse(JSON.stringify(payload), {
+      headers: {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+      },
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error(error.message);

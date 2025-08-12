@@ -91,6 +91,10 @@ Write-Host "Using port $port" -ForegroundColor Green
 
 # Launch browser after server starts
 Start-Job { param($p) Start-Sleep 3; Start-Process ("http://localhost:" + $p) } -ArgumentList $port | Out-Null
+ # Ensure NextAuth and app URL match the chosen port to avoid session cookie issues
+ $env:NEXTAUTH_URL = "http://localhost:$port"
+ $env:NEXT_PUBLIC_APP_URL = "http://localhost:$port"
+ Write-Host "NEXTAUTH_URL set to $env:NEXTAUTH_URL" -ForegroundColor DarkGray
 if ($Prod) {
   pnpm exec next start . -p $port
 } else {

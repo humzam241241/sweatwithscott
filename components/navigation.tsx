@@ -34,7 +34,7 @@ export default function Navigation() {
 
     // Check for logo image
     fetch("/images/cave-logo.png").then((res) => {
-      if (res.ok) setLogoExists(true);
+      setLogoExists(res.ok);
     });
 
     // Scroll listener for background fade
@@ -141,19 +141,13 @@ export default function Navigation() {
         {/* Logo + Title */}
         <div className="flex items-center space-x-4 pl-1">
           <Link href="/" className="flex items-center space-x-4">
-            {logoExists ? (
-              <Image
-                src="/images/cave-logo.png"
-                alt="The Cave Boxing logo"
-                width={60}
-                height={60}
-                className="cave-logo rounded-full"
-              />
-            ) : (
-              <div className="w-15 h-15 bg-red-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">CB</span>
-              </div>
-            )}
+            <Image
+              src={logoExists ? "/images/cave-logo.png" : "/placeholder-logo.png"}
+              alt="The Cave Boxing logo"
+              width={60}
+              height={60}
+              className="cave-logo rounded-full"
+            />
             <span className="text-white text-2xl font-bold tracking-wide">The Cave Boxing</span>
           </Link>
         </div>
