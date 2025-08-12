@@ -248,15 +248,12 @@ export function initializeDatabase() {
       `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin", expiry);
     }
 
-    resetClassSchedule();
+    // Seed a sensible default schedule only if the DB is empty, so admin edits persist
+    seedDefaultScheduleIfEmpty();
     seedCoaches();
     seedMembershipPackages();
     seedSettings();
     seedSampleUsers();
-
-    if (db.prepare("SELECT COUNT(*) as c FROM classes").get().c === 0) {
-      generateClassInstances();
-    }
 
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log("Database initialized successfully");
@@ -274,9 +271,10 @@ export function initializeDatabase() {
   }
 }
 
-function resetClassSchedule() {
-  db.prepare("DELETE FROM class_instances").run();
-  db.prepare("DELETE FROM classes").run();
+function seedDefaultScheduleIfEmpty() {
+  // Only seed the default weekly classes once on a new database
+  const alreadySeeded = db.prepare("SELECT COUNT(*) as c FROM classes").get() as { c: number };
+  if ((alreadySeeded?.c ?? 0) > 0) return;
 
   const capacities: Record<string, number> = {
     Bootcamp: 30,
@@ -368,6 +366,9 @@ function resetClassSchedule() {
     UPDATE classes
     SET slug = LOWER(REPLACE(REPLACE(name, '&', 'and'), ' ', '-')) || '-' || id
   `).run();
+
+  // After inserting base classes, generate the next 30 days of instances
+  generateClassInstances();
 }
 
 function seedCoaches() {
