@@ -159,69 +159,13 @@ function InventoryPanel() {
             </div>
           </div>
         </div>
-        <div>
-          <div className="text-sm text-gray-400 mb-2">Users</div>
-          <UsersPanel />
-        </div>
+        
       </div>
     </div>
   );
 }
 
-function UsersPanel() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const markMembershipPaid = async (userId: number) => {
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/mark-membership-paid', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId, months: 1, method: 'cash' }) });
-      if (!res.ok) throw new Error('Failed');
-      load();
-    } catch (e:any) {
-      setError('Failed to mark paid.');
-    }
-  };
-  const load = async () => {
-    setLoading(true);
-    try { const r = await fetch('/api/admin/users'); const j = await r.json(); setUsers(Array.isArray(j) ? j : []); } finally { setLoading(false); }
-  };
-  useEffect(() => { load(); }, []);
-  const toggleSuspend = async (user: any) => {
-    setError(null);
-    try {
-      const res = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId: user.id, suspend: user.membershipStatus !== 'suspended' }) });
-      if (!res.ok) throw new Error('Failed to update');
-      load();
-    } catch (e: any) {
-      setError('Failed to update user. Please try again.');
-    }
-  };
-  return (
-    <div className="rounded border border-gray-700 bg-gray-900">
-      <div className="p-3 text-sm text-gray-400 flex justify-between">
-        <span>{loading ? 'Loading…' : `${users.length} users`}</span>
-        {error && <span className="text-rose-400">{error}</span>}
-      </div>
-      <div className="max-h-[400px] overflow-auto divide-y divide-gray-800">
-        {users.map((u)=> (
-          <div key={u.id} className="flex items-center justify-between p-3 text-sm">
-            <div className="min-w-0">
-              <div className="font-medium">{u.username}</div>
-              <div className="text-gray-400">{u.membershipStatus}</div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={()=>markMembershipPaid(u.id)} className="px-2 py-1 rounded border text-green-400 border-green-400">Paid</button>
-              <button onClick={()=>toggleSuspend(u)} className={`px-2 py-1 rounded border ${u.membershipStatus==='suspended' ? 'text-green-400 border-green-400' : 'text-red-400 border-red-400'}`}>
-                {u.membershipStatus==='suspended' ? 'Unsuspend' : 'Suspend'}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// Users panel removed; manage users in Manage Members page
 
 function ScheduleBoard({ className = "" }: { className?: string }) {
   const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];

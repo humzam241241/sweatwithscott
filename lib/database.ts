@@ -507,9 +507,9 @@ function seedSampleUsers() {
   });
 }
 
-function generateClassInstances() {
+  function generateClassInstances() {
   try {
-    const classes = db.prepare("SELECT * FROM classes WHERE is_active = 1").all() as ClassRecord[];
+    const classes = db.prepare("SELECT * FROM classes WHERE is_active = 1 OR active = 1").all() as ClassRecord[];
     const today = new Date();
     db.prepare("DELETE FROM class_instances WHERE date > date('now')").run();
 
@@ -534,7 +534,7 @@ function generateClassInstances() {
             cls.start_time,
             cls.end_time,
             cls.instructor,
-            cls.max_capacity,
+            cls.max_capacity ?? 30,
           );
         } catch (error: unknown) {
           if (error instanceof Error) {
