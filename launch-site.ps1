@@ -69,25 +69,12 @@ if ($Prod) {
   Write-Host "Dev mode: skipping production build" -ForegroundColor DarkGray
 }
 
-# 6️⃣ Start the site locally and open browser (auto-pick free port)
+# 6️⃣ Start the site locally and open browser
 Write-Host "`n6/7 Starting local server..." -ForegroundColor Yellow
 
-function Get-FreePort {
-  param([int]$Start = 3000, [int]$End = 3020)
-  for ($p = $Start; $p -le $End; $p++) {
-    try {
-      # Probe if a listener exists on this port; discard output
-      Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction Stop | Out-Null
-    } catch {
-      return $p
-    }
-  }
-  return $null
-}
-
-$port = Get-FreePort -Start 3000 -End 3020
-if (-not $port) { $port = 3000 }
-Write-Host "Using port $port" -ForegroundColor Green
+# Force port 3000 for Google OAuth redirect_uri to match console settings
+$port = 3000
+Write-Host "Using fixed port $port (required for Google OAuth redirect)" -ForegroundColor Green
 
 # Launch browser after server starts
 Start-Job { param($p) Start-Sleep 3; Start-Process ("http://localhost:" + $p) } -ArgumentList $port | Out-Null
