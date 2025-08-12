@@ -3,6 +3,7 @@ import Navigation from "@/components/navigation";
 import { DataProvider } from "@/components/ui/data-provider";
 import type { ReactNode } from "react";
 import Script from "next/script";
+import { SessionProvider } from "next-auth/react";
 
 export default function RootLayout({
   children,
@@ -23,14 +24,16 @@ export default function RootLayout({
           `}
         </Script>
         <Navigation />
-        <DataProvider>
-          <main>
-            {children}
-          </main>
-        </DataProvider>
+        <SessionProvider>
+          <DataProvider>
+            <main>
+              {children}
+            </main>
+          </DataProvider>
+        </SessionProvider>
       </body>
     </html>
   );
 }
 
-import './globals.css'
+// Note: global styles loaded at top of file
