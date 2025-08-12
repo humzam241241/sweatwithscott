@@ -1,5 +1,6 @@
 param(
-  [switch]$CleanAll
+  [switch]$CleanAll,
+  [switch]$Prod
 )
 
 Write-Host "=== CaveBoxing Site Launcher & Deployer ===" -ForegroundColor Cyan
@@ -51,19 +52,21 @@ if ($CleanAll) {
 Write-Host "`n4/7 Installing dependencies..." -ForegroundColor Yellow
 pnpm install
 
-# 5️⃣ Build the site (tolerate static export errors by skipping export)
+# 5️⃣ Build the site (only for -Prod). In dev we skip build.
 Write-Host "`n5/7 Building site..." -ForegroundColor Yellow
-pnpm build --no-lint --no-strict --turbo
-
-# Ensure production artifacts exist; if missing, force a rebuild
-function Test-BuildReady {
-  return (Test-Path ".next/server/middleware-manifest.json") -and (Test-Path ".next/required-server-files.json")
-}
-
-if (-not (Test-BuildReady)) {
-  Write-Host "Build artifacts missing; performing a clean rebuild..." -ForegroundColor DarkYellow
-  try { Remove-Item ".next" -Recurse -Force -ErrorAction SilentlyContinue } catch {}
+if ($Prod) {
   pnpm build
+  # Ensure production artifacts exist; if missing, force a rebuild
+  function Test-BuildReady {
+    return (Test-Path ".next/server/middleware-manifest.json") -and (Test-Path ".next/required-server-files.json")
+  }
+  if (-not (Test-BuildReady)) {
+    Write-Host "Build artifacts missing; performing a clean rebuild..." -ForegroundColor DarkYellow
+    try { Remove-Item ".next" -Recurse -Force -ErrorAction SilentlyContinue } catch {}
+    pnpm build
+  }
+} else {
+  Write-Host "Dev mode: skipping production build" -ForegroundColor DarkGray
 }
 
 # 6️⃣ Start the site locally and open browser (auto-pick free port)
@@ -86,9 +89,13 @@ $port = Get-FreePort -Start 3000 -End 3020
 if (-not $port) { $port = 3000 }
 Write-Host "Using port $port" -ForegroundColor Green
 
-# Launch browser after server starts (development server guarantees pages build on demand)
+# Launch browser after server starts
 Start-Job { param($p) Start-Sleep 3; Start-Process ("http://localhost:" + $p) } -ArgumentList $port | Out-Null
-pnpm dev --port $port
+if ($Prod) {
+  pnpm exec next start . -p $port
+} else {
+  pnpm dev --port $port
+}
 
 # 7. Keep window open after exit
 Write-Host "";
