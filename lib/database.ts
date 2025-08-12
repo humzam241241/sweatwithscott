@@ -254,6 +254,7 @@ export function initializeDatabase() {
     seedMembershipPackages();
     seedSettings();
     seedSampleUsers();
+  ensureUpcomingInstances();
 
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log("Database initialized successfully");
@@ -369,6 +370,72 @@ function seedDefaultScheduleIfEmpty() {
 
   // After inserting base classes, generate the next 30 days of instances
   generateClassInstances();
+}
+
+// If there are no upcoming class instances, attempt to backfill class weekly fields
+// and generate a fresh 30-day instance set so calendars are never empty.
+function ensureUpcomingInstances() {
+  try {
+    const upcoming = db.prepare("SELECT COUNT(*) as c FROM class_instances WHERE date BETWEEN date('now') AND date('now','+30 days')").get() as { c: number };
+    if ((upcoming?.c ?? 0) > 0) return;
+
+    // Backfill weekly fields for known classes missing schedule info
+    const capacities: Record<string, number> = {
+      Bootcamp: 30,
+      "Boxing Tech": 30,
+      "Junior Jabbers (6-12 yr)": 15,
+      "Strength & Conditioning": 30,
+      "Beginner Boxing": 30,
+      Sparring: 20,
+      "Open Gym": 9999,
+    };
+    const schedule: Array<{ day: string; time: string; name: string; color?: string }> = [
+      { day: "Sunday", time: "20:00", name: "Strength & Conditioning", color: "#f59e0b" },
+      { day: "Monday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Monday", time: "12:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Monday", time: "17:00", name: "Boxing Tech", color: "#3b82f6" },
+      { day: "Monday", time: "18:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Monday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
+      { day: "Monday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
+      { day: "Tuesday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Tuesday", time: "17:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)", color: "#22c55e" },
+      { day: "Tuesday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
+      { day: "Tuesday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
+      { day: "Wednesday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Wednesday", time: "12:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Wednesday", time: "19:00", name: "Strength & Conditioning", color: "#f59e0b" },
+      { day: "Wednesday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
+      { day: "Thursday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Thursday", time: "17:30", name: "Beginner Boxing", color: "#ef4444" },
+      { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)", color: "#22c55e" },
+      { day: "Thursday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
+      { day: "Thursday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
+      { day: "Friday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Friday", time: "18:00", name: "Bootcamp", color: "#ef4444" },
+      { day: "Friday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
+      { day: "Friday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
+      { day: "Saturday", time: "12:00", name: "Open Gym", color: "#22d3ee" },
+      { day: "Saturday", time: "15:00", name: "Sparring", color: "#f97316" },
+    ];
+
+    const addHour = (time: string) => {
+      const [h, m] = time.split(":").map(Number);
+      return `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    };
+
+    const updateStmt = db.prepare(
+      `UPDATE classes SET day_of_week = COALESCE(day_of_week, ?), start_time = COALESCE(start_time, ?), end_time = COALESCE(end_time, ?), max_capacity = COALESCE(max_capacity, ?), color = COALESCE(color, ?) WHERE name = ?`
+    );
+    for (const s of schedule) {
+      const cap = capacities[s.name] || 30;
+      updateStmt.run(s.day, s.time, addHour(s.time), cap, s.color ?? null, s.name);
+    }
+
+    generateClassInstances();
+  } catch (err) {
+    // swallow to avoid crashing startup
+  }
 }
 
 function seedCoaches() {
