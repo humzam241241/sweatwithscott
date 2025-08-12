@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 
 function classNames(...s: Array<string | false | null | undefined>) {
   return s.filter(Boolean).join(" ");
