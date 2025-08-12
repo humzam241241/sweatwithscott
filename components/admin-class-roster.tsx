@@ -174,6 +174,7 @@ export default function AdminClassRoster() {
                       <TableHead>Member</TableHead>
                       <TableHead>Contact</TableHead>
                       <TableHead>Payment</TableHead>
+                      <TableHead>Mark Paid</TableHead>
                       <TableHead>Booked</TableHead>
                       <TableHead>Attendance</TableHead>
                       <TableHead>Actions</TableHead>
@@ -211,6 +212,28 @@ export default function AdminClassRoster() {
                             </Badge>
                             <p className="text-xs text-gray-500 capitalize">{attendee.payment_method}</p>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {attendee.payment_status !== 'paid' ? (
+                            <Button
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  await fetch('/api/admin/mark-payment-paid', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ bookingId: attendee.id, paymentMethod: 'cash' }),
+                                  });
+                                  fetchClassRosters();
+                                } catch {}
+                              }}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              Mark Paid
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-green-500">Paid</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <p className="text-sm">{format(new Date(attendee.booking_date), "MMM d, h:mm a")}</p>

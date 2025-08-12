@@ -167,18 +167,28 @@ function InventoryPanel() {
 function UsersPanel() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const load = async () => {
     setLoading(true);
     try { const r = await fetch('/api/admin/users'); const j = await r.json(); setUsers(Array.isArray(j) ? j : []); } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
   const toggleSuspend = async (user: any) => {
-    await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId: user.id, suspend: user.membershipStatus !== 'suspended' }) });
-    load();
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId: user.id, suspend: user.membershipStatus !== 'suspended' }) });
+      if (!res.ok) throw new Error('Failed to update');
+      load();
+    } catch (e: any) {
+      setError('Failed to update user. Please try again.');
+    }
   };
   return (
     <div className="rounded border border-gray-700 bg-gray-900">
-      <div className="p-3 text-sm text-gray-400">{loading ? 'Loading…' : `${users.length} users`}</div>
+      <div className="p-3 text-sm text-gray-400 flex justify-between">
+        <span>{loading ? 'Loading…' : `${users.length} users`}</span>
+        {error && <span className="text-rose-400">{error}</span>}
+      </div>
       <div className="max-h-[400px] overflow-auto divide-y divide-gray-800">
         {users.map((u)=> (
           <div key={u.id} className="flex items-center justify-between p-3 text-sm">
