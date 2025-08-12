@@ -27,3 +27,23 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { userId, suspend } = body as { userId?: number; suspend?: boolean };
+    if (!userId || typeof suspend !== 'boolean') {
+      return NextResponse.json({ error: 'userId and suspend required' }, { status: 400 });
+    }
+    // Map suspend=true to membership_status='suspended'
+    dbOperations.updateUser(userId, { membership_status: suspend ? 'suspended' : 'active' });
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+  }
+}

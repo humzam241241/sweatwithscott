@@ -40,8 +40,8 @@ export default function HomeSchedule() {
         title: e.title,
         start: e.startsAt,
         end: e.endsAt,
-        backgroundColor: e.color,
-        borderColor: e.color,
+        backgroundColor: (e as any).color,
+        borderColor: (e as any).color,
         extendedProps: e,
       })),
     [events]

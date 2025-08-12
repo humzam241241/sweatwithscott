@@ -144,6 +144,42 @@ function InventoryPanel() {
             </div>
           </div>
         </div>
+        <div>
+          <div className="text-sm text-gray-500 mb-2">Users</div>
+          <UsersPanel />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function UsersPanel() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const load = async () => {
+    setLoading(true);
+    try { const r = await fetch('/api/admin/users'); const j = await r.json(); setUsers(Array.isArray(j) ? j : []); } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+  const toggleSuspend = async (user: any) => {
+    await fetch('/api/admin/users', { method: 'PATCH', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ userId: user.id, suspend: user.membershipStatus !== 'suspended' }) });
+    load();
+  };
+  return (
+    <div className="rounded border border-gray-200 bg-white">
+      <div className="p-3 text-sm text-gray-600">{loading ? 'Loading…' : `${users.length} users`}</div>
+      <div className="max-h-[400px] overflow-auto divide-y">
+        {users.map((u)=> (
+          <div key={u.id} className="flex items-center justify-between p-3 text-sm">
+            <div className="min-w-0">
+              <div className="font-medium">{u.username}</div>
+              <div className="text-gray-500">{u.membershipStatus}</div>
+            </div>
+            <button onClick={()=>toggleSuspend(u)} className={`px-2 py-1 rounded border ${u.membershipStatus==='suspended' ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'}`}>
+              {u.membershipStatus==='suspended' ? 'Unsuspend' : 'Suspend'}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

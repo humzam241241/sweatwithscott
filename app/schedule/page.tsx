@@ -15,6 +15,7 @@ type MemberEvent = {
   capacity: number;
   bookedCount: number;
   user_booking_status?: string;
+  color?: string;
 };
 
 export default function SchedulePage() {
@@ -44,6 +45,8 @@ export default function SchedulePage() {
         title: e.title,
         start: e.startsAt,
         end: e.endsAt,
+        backgroundColor: (e as any).color,
+        borderColor: (e as any).color,
         extendedProps: e,
       })),
     [events]
