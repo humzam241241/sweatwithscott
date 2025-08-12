@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -127,6 +128,17 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          <div className="mt-6">
+            <Button
+              type="button"
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              disabled={loading}
+            >
+              Continue with Google
+            </Button>
+          </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
