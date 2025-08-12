@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   if (loading) return <div className="min-h-screen bg-black" />;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-black text-white p-8">
       <h1 className="mb-8 text-3xl font-bold">Admin Dashboard</h1>
       <StatsCards />
       <div className="mt-8">
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="block rounded-lg bg-white p-6 shadow transition-shadow hover:shadow-lg"
+                className="block rounded-lg bg-gray-900 border border-gray-700 p-6 transition-colors hover:bg-gray-800"
               >
                 {link.label}
               </Link>
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       </div>
       <div className="mt-12 space-y-6">
         <h2 className="text-xl font-semibold">Live Calendar</h2>
-        <iframe title="admin-schedule" src="/admin/schedule/embed" className="w-full h-[800px] rounded border bg-white" />
+        <iframe title="admin-schedule" src="/admin/schedule/embed" className="w-full h-[800px] rounded border border-gray-700 bg-gray-900" />
       </div>
       <div className="mt-12">
         <InventoryPanel />
@@ -83,8 +83,8 @@ function StatsCards() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {items.map((s, i) => (
-        <div key={i} className="rounded-lg bg-white p-4 border border-gray-200">
-          <div className="text-sm text-gray-500">{s.label}</div>
+        <div key={i} className="rounded-lg bg-gray-900 p-4 border border-gray-700">
+          <div className="text-sm text-gray-400">{s.label}</div>
           <div className="text-2xl font-semibold">{s.value ?? '—'}</div>
         </div>
       ))}
@@ -110,28 +110,28 @@ function InventoryPanel() {
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+    <div className="rounded-lg border border-gray-700 bg-gray-900">
+      <div className="p-4 border-b border-gray-700 flex items-center justify-between">
         <h2 className="font-semibold">Inventory</h2>
-        {data.lowStock.length > 0 && <span className="text-xs text-amber-600">Low stock: {data.lowStock.length}</span>}
+        {data.lowStock.length > 0 && <span className="text-xs text-amber-400">Low stock: {data.lowStock.length}</span>}
       </div>
       <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <div className="text-sm text-gray-500 mb-2">Items</div>
+          <div className="text-sm text-gray-400 mb-2">Items</div>
           <div className="space-y-2 max-h-[420px] overflow-auto pr-2">
             {data.items.map((it) => (
-              <div key={it.id} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded p-2">
+              <div key={it.id} className="flex items-center justify-between gap-3 bg-gray-800 border border-gray-700 rounded p-2">
                 <div className="min-w-0">
                   <div className="font-medium truncate">{it.name}</div>
-                  <div className="text-xs text-gray-500 truncate">{it.sku || '—'} · {it.category || 'Uncategorized'}</div>
+                  <div className="text-xs text-gray-400 truncate">{it.sku || '—'} · {it.category || 'Uncategorized'}</div>
                 </div>
-                <div className="text-sm text-gray-700 whitespace-nowrap">${'{'}it.price?.toFixed?.(2) ?? it.price ?? 0{'}'}</div>
+                <div className="text-sm text-gray-300 whitespace-nowrap">${'{'}it.price?.toFixed?.(2) ?? it.price ?? 0{'}'}</div>
                 <div className="text-xs">
                   <span className={`${'{'}it.quantity <= it.min_threshold ? 'bg-rose-600 text-white' : 'bg-gray-800 text-white'{'}'} px-2 py-0.5 rounded`}>{'{'}it.quantity{'}'}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => adjustQty(it, -1)} className="px-2 text-sm bg-gray-200 rounded">-</button>
-                  <button onClick={() => adjustQty(it, +1)} className="px-2 text-sm bg-gray-200 rounded">+</button>
+                  <button onClick={() => adjustQty(it, -1)} className="px-2 text-sm bg-gray-700 rounded">-</button>
+                  <button onClick={() => adjustQty(it, +1)} className="px-2 text-sm bg-gray-700 rounded">+</button>
                   <button onClick={() => { setEditing(it); setForm(it); }} className="px-2 text-sm underline">Edit</button>
                 </div>
               </div>
@@ -139,24 +139,24 @@ function InventoryPanel() {
           </div>
         </div>
         <div>
-          <div className="text-sm text-gray-500 mb-2">{editing ? 'Edit Item' : 'Add Item'}</div>
+          <div className="text-sm text-gray-400 mb-2">{editing ? 'Edit Item' : 'Add Item'}</div>
           <div className="space-y-2">
             {['name','sku','category'].map((k) => (
-              <input key={k} className="w-full rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder={k.toUpperCase()} value={form[k] ?? ''} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
+              <input key={k} className="w-full rounded bg-black border border-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500" placeholder={k.toUpperCase()} value={form[k] ?? ''} onChange={(e) => setForm({ ...form, [k]: e.target.value })} />
             ))}
             <div className="grid grid-cols-3 gap-2">
-              <input className="rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder="PRICE" type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-              <input className="rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder="QTY" type="number" value={form.quantity ?? 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
-              <input className="rounded bg-white border border-gray-200 px-3 py-2 text-sm" placeholder="MIN" type="number" value={form.min_threshold ?? 0} onChange={(e) => setForm({ ...form, min_threshold: Number(e.target.value) })} />
+              <input className="rounded bg-black border border-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500" placeholder="PRICE" type="number" value={form.price ?? 0} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+              <input className="rounded bg-black border border-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500" placeholder="QTY" type="number" value={form.quantity ?? 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+              <input className="rounded bg-black border border-gray-700 px-3 py-2 text-sm text-white placeholder-gray-500" placeholder="MIN" type="number" value={form.min_threshold ?? 0} onChange={(e) => setForm({ ...form, min_threshold: Number(e.target.value) })} />
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={saveItem} className="px-3 py-2 bg-black text-white rounded">{editing ? 'Update' : 'Add'}</button>
-              {editing && <button onClick={() => { setEditing(null); setForm({ name: '', sku: '', category: '', price: 0, quantity: 0, min_threshold: 0 }); }} className="px-3 py-2 bg-gray-200 rounded">Cancel</button>}
+              <button onClick={saveItem} className="px-3 py-2 bg-brand text-white rounded">{editing ? 'Update' : 'Add'}</button>
+              {editing && <button onClick={() => { setEditing(null); setForm({ name: '', sku: '', category: '', price: 0, quantity: 0, min_threshold: 0 }); }} className="px-3 py-2 bg-gray-700 rounded">Cancel</button>}
             </div>
           </div>
         </div>
         <div>
-          <div className="text-sm text-gray-500 mb-2">Users</div>
+          <div className="text-sm text-gray-400 mb-2">Users</div>
           <UsersPanel />
         </div>
       </div>
@@ -177,16 +177,16 @@ function UsersPanel() {
     load();
   };
   return (
-    <div className="rounded border border-gray-200 bg-white">
-      <div className="p-3 text-sm text-gray-600">{loading ? 'Loading…' : `${users.length} users`}</div>
-      <div className="max-h-[400px] overflow-auto divide-y">
+    <div className="rounded border border-gray-700 bg-gray-900">
+      <div className="p-3 text-sm text-gray-400">{loading ? 'Loading…' : `${users.length} users`}</div>
+      <div className="max-h-[400px] overflow-auto divide-y divide-gray-800">
         {users.map((u)=> (
           <div key={u.id} className="flex items-center justify-between p-3 text-sm">
             <div className="min-w-0">
               <div className="font-medium">{u.username}</div>
-              <div className="text-gray-500">{u.membershipStatus}</div>
+              <div className="text-gray-400">{u.membershipStatus}</div>
             </div>
-            <button onClick={()=>toggleSuspend(u)} className={`px-2 py-1 rounded border ${u.membershipStatus==='suspended' ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'}`}>
+            <button onClick={()=>toggleSuspend(u)} className={`px-2 py-1 rounded border ${u.membershipStatus==='suspended' ? 'text-green-400 border-green-400' : 'text-red-400 border-red-400'}`}>
               {u.membershipStatus==='suspended' ? 'Unsuspend' : 'Suspend'}
             </button>
           </div>
