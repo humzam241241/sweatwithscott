@@ -19,7 +19,13 @@ export default function MediaManager() {
     try {
       const res = await fetch("/api/media");
       if (res.ok) {
-        setItems(await res.json());
+        const rows = (await res.json()) as Array<{ id?: number; url?: string; type?: string }>;
+        const mapped: MediaItem[] = (rows || []).map((r) => ({
+          id: r.id,
+          src: r.url || "",
+          type: (r.type === "video" ? "video" : "image") as "image" | "video",
+        }));
+        setItems(mapped);
       }
     } catch (err) {
       console.error("Failed to load media", err);

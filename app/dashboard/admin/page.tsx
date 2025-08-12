@@ -18,15 +18,26 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((user) => {
-        if (!user || user.role !== "admin") {
-          router.replace("/login");
-        } else {
-          setLoading(false);
-        }
-      });
+    // Prefer NextAuth session endpoint; fallback to legacy
+    const check = async () => {
+      try {
+        const res = await fetch("/api/auth/session", { cache: "no-store" });
+        const data = res.ok ? await res.json() : null;
+        const isAdmin = Boolean(data?.user?.isAdmin);
+        if (!isAdmin) throw new Error("not-admin");
+        setLoading(false);
+        return;
+      } catch {}
+      try {
+        const legacy = await fetch("/api/auth/me");
+        const user = legacy.ok ? await legacy.json() : null;
+        if (!user || user.role !== "admin") throw new Error("not-admin");
+        setLoading(false);
+      } catch {
+        router.replace("/login");
+      }
+    };
+    check();
   }, [router]);
 
   if (loading) return <div className="min-h-screen bg-black" />;

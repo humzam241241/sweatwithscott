@@ -30,7 +30,10 @@ export default function SchedulePage() {
   const fetchEvents = async (fromISO: string, toISO: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/classes/instances?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`);
+      const uid = (typeof window !== 'undefined' && (window as any).CURRENT_USER_ID) ? Number((window as any).CURRENT_USER_ID) : null;
+      const params = new URLSearchParams({ from: fromISO, to: toISO });
+      if (uid && Number.isFinite(uid)) params.set('user_id', String(uid));
+      const res = await fetch(`/api/classes/instances?${params.toString()}`);
       const data = (await res.json()) as MemberEvent[];
       setEvents(data);
     } finally {
@@ -137,7 +140,11 @@ export default function SchedulePage() {
             )}
             <MenuItem label="Pay Drop-in" onClick={async ()=>{
               try {
-                const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) });
+                const res = await fetch('/api/stripe/checkout', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ planCode: 'DROP_IN', class_instance_id: Number(menu.eventId) }),
+                });
                 const data = await res.json();
                 if (data.url) window.location.href = data.url;
               } finally {

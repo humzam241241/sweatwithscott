@@ -7,7 +7,7 @@ const bookings = new Map<string, any>()
 
 export async function POST(request: NextRequest) {
   try {
-    const { user_id, class_instance_id, payment_method = "drop_in" } = await request.json()
+    const { user_id, class_instance_id, payment_method } = await request.json()
 
     if (!user_id || !class_instance_id) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -25,12 +25,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Class not found" }, { status: 404 })
     }
 
-    // Require active membership or drop-in payment intent
+    // Require active membership OR a confirmed drop-in payment
+    // Convention: client sets payment_method = "drop_in_paid" only AFTER successful Stripe checkout
     const hasActive = isMembershipActiveForUserId(user_id, { graceDays: 7 })
-    const isDropIn = String(payment_method).toLowerCase() === "drop_in"
-    if (!hasActive && !isDropIn) {
+    const paidDropIn = String(payment_method || "").toLowerCase() === "drop_in_paid"
+    if (!hasActive && !paidDropIn) {
       return NextResponse.json(
-        { error: "Requires active membership or purchase a drop-in" },
+        { error: "Payment required. Complete drop-in checkout to confirm booking.", code: "PAYMENT_REQUIRED" },
         { status: 402 },
       )
     }
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Create the booking
+    // Create the booking as confirmed (membership) or confirmed after paid drop-in
     const bookingId = dbOperations.bookClass(user_id, class_instance_id)
 
     // In production, you would also:
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     // 3. Update member statistics
 
     return NextResponse.json({
-      message: "Class booked successfully! You'll receive a confirmation email shortly.",
+      message: "Class booked successfully!",
       booking_id: bookingId,
       status: "confirmed",
     })

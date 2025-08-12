@@ -1,4 +1,6 @@
 import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./authOptions";
 
 export type AppSession = {
   userId: number;
@@ -9,6 +11,21 @@ export type AppSession = {
 };
 
 export async function getCurrentSession(): Promise<AppSession | null> {
+  // Prefer NextAuth session if available
+  try {
+    const session = (await getServerSession(authOptions as any)) as any;
+    const user = session?.user as any;
+    if (user) {
+      return {
+        userId: Number(user.id ?? 0) || 0,
+        username: (user.email as string) || (user.name as string) || "user",
+        isAdmin: Boolean(user.isAdmin),
+        email: (user.email as string) || undefined,
+        fullName: (user.name as string) || undefined,
+      };
+    }
+  } catch {}
+  // Fallback to legacy cookie session for compatibility
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session");
   if (!sessionCookie) return null;

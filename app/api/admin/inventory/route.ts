@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 import { z } from "@/lib/z";
 import { dbOperations } from "@/lib/database";
 
 async function requireAdmin() {
+  // Try NextAuth session first
+  try {
+    const session = await getServerSession(authOptions as any);
+    if (session?.user && (session.user as any).isAdmin) return session.user;
+  } catch {}
+  // Fallback to legacy cookie
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session");
   if (!sessionCookie) return null;

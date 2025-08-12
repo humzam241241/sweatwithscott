@@ -6,6 +6,8 @@ import { dbOperations } from "@/lib/database";
 
 const bodySchema = z.object({
   planCode: z.enum(["ADULT_UNLIMITED", "YOUTH_2X", "DROP_IN"]),
+  // Optional: when paying for a single class drop-in, include the instance id
+  class_instance_id: z.number().int().positive().optional(),
 });
 
 export async function POST(req: Request) {
@@ -19,7 +21,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid body", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { planCode } = parsed.data;
+    const { planCode, class_instance_id } = parsed.data;
     const stripe = getStripe();
 
     // Ensure Stripe customer
@@ -43,7 +45,13 @@ export async function POST(req: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       client_reference_id: String(userId),
-      metadata: { planCode },
+      metadata: {
+        planCode,
+        // Tag drop-in flows so webhook can confirm bookings
+        ...(mode === "payment"
+          ? { flow: "DROP_IN", class_instance_id: class_instance_id ? String(class_instance_id) : undefined }
+          : {}),
+      },
     });
 
     return NextResponse.json({ url: session.url });

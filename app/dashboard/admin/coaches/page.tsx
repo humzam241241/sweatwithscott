@@ -21,15 +21,25 @@ export default function AdminCoachesPage() {
   const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((user) => {
-        if (!user || user.role !== "admin") {
-          router.replace("/login");
-        } else {
-          loadCoaches();
-        }
-      });
+    const check = async () => {
+      try {
+        const res = await fetch("/api/auth/session", { cache: "no-store" });
+        const data = res.ok ? await res.json() : null;
+        const isAdmin = Boolean(data?.user?.isAdmin);
+        if (!isAdmin) throw new Error("not-admin");
+        loadCoaches();
+        return;
+      } catch {}
+      try {
+        const legacy = await fetch("/api/auth/me");
+        const user = legacy.ok ? await legacy.json() : null;
+        if (!user || user.role !== "admin") throw new Error("not-admin");
+        loadCoaches();
+      } catch {
+        router.replace("/login");
+      }
+    };
+    check();
   }, [router]);
 
   const loadCoaches = () => {

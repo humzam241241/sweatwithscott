@@ -188,6 +188,15 @@ export function initializeDatabase() {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (item_id) REFERENCES inventory_items(id)
       );
+
+      -- Media table for uploads
+      CREATE TABLE IF NOT EXISTS media (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT NOT NULL,
+        title TEXT,
+        type TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Ensure columns exist for older DBs created by legacy code
@@ -1191,9 +1200,24 @@ export const dbOperations = {
       return [];
     }
   },
+  // Media operations
   getMedia: () => {
-    // No media table; return empty to let UI handle gracefully
-    return [] as Array<{ id: number; url: string; title?: string; type?: string; category?: string }>;
+    try {
+      return db.prepare(`SELECT id, url, title, type, created_at FROM media ORDER BY created_at DESC`).all();
+    } catch {
+      return [] as Array<{ id: number; url: string; title?: string; type?: string; category?: string }>;
+    }
+  },
+  getMediaById: (id: number) => {
+    try { return db.prepare(`SELECT id, url, title, type FROM media WHERE id = ?`).get(id); } catch { return undefined; }
+  },
+  insertMedia: (data: { url: string; title?: string; type?: string }) => {
+    const info = db.prepare(`INSERT INTO media (url, title, type) VALUES (?, ?, ?)`)
+      .run(data.url, data.title ?? null, data.type ?? null);
+    return { id: Number(info.lastInsertRowid) };
+  },
+  deleteMedia: (id: number) => {
+    try { db.prepare(`DELETE FROM media WHERE id = ?`).run(id); } catch {}
   },
 };
 

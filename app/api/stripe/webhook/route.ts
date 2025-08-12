@@ -52,6 +52,29 @@ export async function POST(req: Request) {
             status: "active",
           });
         }
+        // Handle drop-in payments → create confirmed booking
+        if (session.mode === "payment" && session.metadata?.flow === "DROP_IN") {
+          const instanceIdRaw = session.metadata?.class_instance_id;
+          const instanceId = instanceIdRaw ? Number(instanceIdRaw) : NaN;
+          if (Number.isFinite(instanceId)) {
+            // Avoid duplicate booking if already exists
+            const existing = (dbOperations as any).getUserBookingForClass?.(userId, instanceId);
+            if (!existing) {
+              try {
+                const bookingId = (dbOperations as any).bookClass?.(userId, instanceId);
+                if (bookingId) {
+                  (dbOperations as any).markPaymentPaid?.(Number(bookingId), "stripe_drop_in");
+                }
+              } catch {
+                // swallow; keep webhook idempotent
+              }
+            } else {
+              try {
+                (dbOperations as any).markPaymentPaid?.(existing.id ?? existing.booking_id ?? existing, "stripe_drop_in");
+              } catch {}
+            }
+          }
+        }
         break;
       }
       case "invoice.paid": {
