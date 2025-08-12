@@ -6,10 +6,15 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
 function getAdminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS || "")
+  const set = new Set<string>();
+  const list = (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
+  list.forEach((e) => set.add(e));
+  const single = (process.env.ADMIN_EMAIL || process.env.GOOGLE_ADMIN_EMAIL || "").trim().toLowerCase();
+  if (single) set.add(single);
+  return Array.from(set);
 }
 
 const providers: NextAuthOptions["providers"] = [
@@ -54,6 +59,11 @@ export const authOptions: NextAuthOptions = {
       if (typeof isAdmin === "boolean") (token as any).isAdmin = isAdmin;
       if (user?.id) (token as any).id = user.id;
       return token;
+    },
+    async redirect({ baseUrl, token }) {
+      // Route after sign-in based on admin flag
+      const isAdmin = Boolean((token as any)?.isAdmin);
+      return isAdmin ? `${baseUrl}/dashboard/admin` : `${baseUrl}/dashboard/member`;
     },
     async session({ session, token }) {
       if (session.user) {

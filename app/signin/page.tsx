@@ -15,9 +15,7 @@ export default function SignInPage() {
 
   // If already authenticated (e.g., after Google redirect), go to dashboard
   useEffect(() => {
-    if (status === "authenticated") {
-      router.replace("/dashboard");
-    }
+    if (status === "authenticated") router.replace("/dashboard");
   }, [status, router]);
 
   // Surface NextAuth error messages on this page
@@ -65,7 +63,7 @@ export default function SignInPage() {
         <div className="mt-6">
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google")}
             className="w-full rounded-xl py-2 bg-red-600 text-white font-medium hover:bg-red-700 transition"
           >
             Continue with Google
