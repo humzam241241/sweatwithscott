@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 interface LoggedInResponse {
   isLoggedIn: true
@@ -14,60 +15,32 @@ interface LoggedOutResponse {
   isLoggedIn: false
 }
 
-export async function GET(): Promise<
-  NextResponse<LoggedInResponse | LoggedOutResponse>
-> {
+export async function GET(): Promise<NextResponse<LoggedInResponse | LoggedOutResponse>> {
   try {
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get("session")
+    const session = (await getServerSession(authOptions as any)) as any;
+    const user = session?.user as any | undefined;
 
-    if (!sessionCookie) {
-      return NextResponse.json({ isLoggedIn: false })
+    if (!user) {
+      return NextResponse.json({ isLoggedIn: false });
     }
 
-    try {
-      const parsed = JSON.parse(sessionCookie.value) as {
-        username?: unknown
-        email?: unknown
-        isAdmin?: unknown
-      }
+    const payload: LoggedInResponse = {
+      isLoggedIn: true,
+      user: {
+        username: (user.email as string) || (user.name as string) || "user",
+        isAdmin: Boolean(user.isAdmin),
+      },
+    };
+    if (user.email) payload.user.email = user.email as string;
 
-      if (
-        typeof parsed.username === "string" &&
-        typeof parsed.isAdmin === "boolean"
-      ) {
-        const user: LoggedInResponse["user"] = {
-          username: parsed.username,
-          isAdmin: parsed.isAdmin,
-        }
-
-        if (typeof parsed.email === "string") {
-          user.email = parsed.email
-        }
-
-        return NextResponse.json({
-          isLoggedIn: true,
-          user,
-        })
-      }
-    } catch (error: unknown) {
-  if (error instanceof Error) {
-    console.error(error.message);
-  } else {
-    console.error(String(error));
-  }
-      console.error("Invalid session cookie:", error)
-    }
-
-    return NextResponse.json({ isLoggedIn: false })
+    return NextResponse.json(payload);
   } catch (error: unknown) {
-  if (error instanceof Error) {
-    console.error(error.message);
-  } else {
-    console.error(String(error));
-  }
-    console.error("Failed to read session cookie:", error)
-    return NextResponse.json({ isLoggedIn: false })
+    if (error instanceof Error) {
+      console.error(error.message);
+    } else {
+      console.error(String(error));
+    }
+    return NextResponse.json({ isLoggedIn: false });
   }
 }
 

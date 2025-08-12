@@ -31,6 +31,8 @@ GOOGLE_CLIENT_SECRET=
 
 # Prisma (for NextAuth adapter)
 DATABASE_URL=file:./prisma/dev.db
+STRIPE_PUBLISHABLE_KEY=your_pk_test
+STRIPE_SECRET_KEY=your_sk_test
 ```
 
 2) Install Stripe CLI (Windows): download from stripe.com/docs/stripe-cli and add to PATH.
