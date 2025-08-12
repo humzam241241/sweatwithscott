@@ -33,6 +33,15 @@ export default function SignInPage() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            className="w-full rounded-xl py-2 bg-red-600 text-white font-medium hover:bg-red-700 transition"
+          >
+            Continue with Google
+          </button>
+        </div>
       </div>
     </div>
   );
