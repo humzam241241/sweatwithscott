@@ -3,7 +3,7 @@ import Navigation from "@/components/navigation";
 import { DataProvider } from "@/components/ui/data-provider";
 import type { ReactNode } from "react";
 import Script from "next/script";
-import { SessionProvider } from "next-auth/react";
+import AuthSessionProvider from "@/components/auth-session-provider";
 
 export default function RootLayout({
   children,
@@ -24,13 +24,13 @@ export default function RootLayout({
           `}
         </Script>
         <Navigation />
-        <SessionProvider>
+        <AuthSessionProvider>
           <DataProvider>
             <main>
               {children}
             </main>
           </DataProvider>
-        </SessionProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );
