@@ -18,6 +18,7 @@ export async function GET() {
         email: (user.email as string) || undefined,
         role: Boolean(user.isAdmin) ? "admin" : "member",
       };
+      // Also mirror values as cookies for legacy code if needed
       return NextResponse.json(legacy);
     }
 

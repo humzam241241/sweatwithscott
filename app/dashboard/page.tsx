@@ -35,6 +35,11 @@ export default function Dashboard() {
       const resp = await fetch("/api/auth/me", { cache: "no-store" })
       if (resp.ok) {
         const session = await resp.json()
+        // If admin, route to admin dashboard immediately
+        if (session?.isAdmin) {
+          router.replace("/dashboard/admin")
+          return
+        }
         setUser(session)
         loadBookings(session.userId)
         loadMembership(session.userId)
