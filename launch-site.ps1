@@ -73,7 +73,8 @@ function Get-FreePort {
   param([int]$Start = 3000, [int]$End = 3020)
   for ($p = $Start; $p -le $End; $p++) {
     try {
-      $conn = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction Stop
+      # Probe if a listener exists on this port; discard output
+      Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction Stop | Out-Null
     } catch {
       return $p
     }

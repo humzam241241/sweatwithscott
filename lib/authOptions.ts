@@ -12,11 +12,8 @@ function getAdminEmails(): string[] {
     .filter(Boolean);
 }
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  providers: [
-    Credentials({
+const providers: NextAuthOptions["providers"] = [
+  Credentials({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -29,13 +26,24 @@ export const authOptions: NextAuthOptions = {
         const ok = await bcrypt.compare(creds.password, user.passwordHash);
         return ok ? { id: user.id, email: user.email ?? undefined, name: user.name ?? undefined } : null;
       },
-    }),
+  }),
+];
+
+// Add Google only when keys are present to avoid confusing invalid_client errors in dev
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
-    }),
-  ],
+    })
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  session: { strategy: "jwt" },
+  providers,
   pages: { signIn: "/signin" },
   callbacks: {
     async jwt({ token, user }) {
