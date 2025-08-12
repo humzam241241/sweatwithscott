@@ -28,7 +28,7 @@ function withImage<T extends { image?: string | null }>(item: T): T {
 
 async function getData(endpoint: string) {
   try {
-    const h = headers();
+    const h = await headers();
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("host");
     const base = host ? `${proto}://${host}` : "";
@@ -43,7 +43,7 @@ async function getData(endpoint: string) {
 
 async function getSchedule() {
   try {
-    const h = headers();
+    const h = await headers();
     const proto = h.get("x-forwarded-proto") ?? "http";
     const host = h.get("host");
     const base = host ? `${proto}://${host}` : "";

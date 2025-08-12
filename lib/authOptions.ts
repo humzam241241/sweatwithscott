@@ -60,17 +60,29 @@ export const authOptions: NextAuthOptions = {
       if (user?.id) (token as any).id = user.id;
       return token;
     },
-    async redirect({ baseUrl, token }) {
-      // Route after sign-in based on admin flag
-      const isAdmin = Boolean((token as any)?.isAdmin);
-      return isAdmin ? `${baseUrl}/dashboard/admin` : `${baseUrl}/dashboard/member`;
-    },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = (token as any).id;
         (session.user as any).isAdmin = Boolean((token as any).isAdmin);
       }
       return session;
+    },
+  },
+  events: {
+    async signIn({ user, account }) {
+      try {
+        const adminEmails = getAdminEmails();
+        const email = String((user as any)?.email || "").toLowerCase();
+        const isAdmin = email && adminEmails.includes(email);
+        if (!isAdmin && (account?.provider === "google")) {
+          // Ensure a Member row exists for non-admin Google users
+          await prisma.member.upsert({
+            where: { userId: String((user as any).id) },
+            update: {},
+            create: { userId: String((user as any).id), status: "active" },
+          });
+        }
+      } catch {}
     },
   },
 };
