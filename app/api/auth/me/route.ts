@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { cookies } from "next/headers";
 
 // Return a legacy-compatible shape so existing pages keep working
 export async function GET() {
@@ -18,6 +19,22 @@ export async function GET() {
       };
       return NextResponse.json(legacy);
     }
+
+    // Fallback: legacy cookie session
+    try {
+      const cookieStore = await cookies();
+      const sessionCookie = cookieStore.get("session");
+      if (sessionCookie?.value) {
+        const parsed = JSON.parse(sessionCookie.value);
+        if (
+          typeof parsed.userId === "number" &&
+          typeof parsed.username === "string" &&
+          typeof parsed.isAdmin === "boolean"
+        ) {
+          return NextResponse.json(parsed);
+        }
+      }
+    } catch {}
 
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   } catch (error: unknown) {
