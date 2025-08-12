@@ -34,7 +34,7 @@ export default function SignInPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await signIn("credentials", { email, password, callbackUrl: "/dashboard" });
+    await signIn("credentials", { email, password, callbackUrl: "/dashboard", redirect: true });
   }
 
   return (
@@ -63,7 +63,7 @@ export default function SignInPage() {
         <div className="mt-6">
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl: "/dashboard", redirect: true })}
             className="w-full rounded-xl py-2 bg-red-600 text-white font-medium hover:bg-red-700 transition"
           >
             Continue with Google

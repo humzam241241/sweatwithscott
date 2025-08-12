@@ -15,6 +15,8 @@ interface LoggedOutResponse {
   isLoggedIn: false
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(): Promise<NextResponse<LoggedInResponse | LoggedOutResponse>> {
   try {
     const session = (await getServerSession(authOptions as any)) as any;

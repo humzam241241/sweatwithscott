@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/authOptions";
 import { cookies } from "next/headers";
 
 // Return a legacy-compatible shape so existing pages keep working
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const nextAuthSession = (await getServerSession(authOptions as any)) as any;
