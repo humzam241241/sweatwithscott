@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getStripe } from "@/lib/stripe";
+import { sendMail } from "@/lib/utils";
 import { dbOperations } from "@/lib/database";
 
 export const runtime = "nodejs";
@@ -51,6 +52,12 @@ export async function POST(req: Request) {
             planCode,
             status: "active",
           });
+          try {
+            const u = dbOperations.getUserById(userId) as any;
+            if (u?.email && (u.email_opt_in ?? 1)) {
+              await sendMail({ to: u.email, subject: "Cave Boxing – Subscription active", text: `Your membership is now active. Welcome back to the Cave!` });
+            }
+          } catch {}
         }
         // Handle drop-in payments → create confirmed booking
         if (session.mode === "payment" && session.metadata?.flow === "DROP_IN") {
@@ -73,6 +80,12 @@ export async function POST(req: Request) {
                 (dbOperations as any).markPaymentPaid?.(existing.id ?? existing.booking_id ?? existing, "stripe_drop_in");
               } catch {}
             }
+            try {
+              const u = dbOperations.getUserById(userId) as any;
+              if (u?.email && (u.email_opt_in ?? 1)) {
+                await sendMail({ to: u.email, subject: "Cave Boxing – Drop-in confirmed", text: `Thanks for your drop-in payment. See you in class!` });
+              }
+            } catch {}
           }
         }
         break;
@@ -83,6 +96,13 @@ export async function POST(req: Request) {
         if (subId) {
           dbOperations.setSubscriptionStatus(subId, "active", new Date(invoice.lines.data[0]?.period?.end * 1000).toISOString());
           dbOperations.clearDelinquent(subId);
+          try {
+            const uid = Number(invoice.client_reference_id || 0) || undefined;
+            if (uid) {
+              const u = dbOperations.getUserById(uid) as any;
+              if (u?.email && (u.email_opt_in ?? 1)) await sendMail({ to: u.email, subject: "Cave Boxing – Invoice paid", text: `Your latest invoice was paid successfully.` });
+            }
+          } catch {}
         }
         break;
       }
@@ -91,6 +111,13 @@ export async function POST(req: Request) {
         const subId = String(invoice.subscription ?? "");
         if (subId) {
           dbOperations.setDelinquent(subId);
+          try {
+            const uid = Number(invoice.client_reference_id || 0) || undefined;
+            if (uid) {
+              const u = dbOperations.getUserById(uid) as any;
+              if (u?.email && (u.email_opt_in ?? 1)) await sendMail({ to: u.email, subject: "Cave Boxing – Payment failed", text: `Your recent payment failed. Please update your payment method in the billing portal.` });
+            }
+          } catch {}
         }
         break;
       }

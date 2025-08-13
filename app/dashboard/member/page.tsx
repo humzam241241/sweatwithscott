@@ -117,9 +117,6 @@ export default function MemberDashboard() {
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
         )}
         <BookableSchedule userMode userId={user?.userId} />
-        <div className="mt-8">
-          <iframe title="schedule" src="/schedule" className="w-full h-[700px] rounded border" />
-        </div>
         <div className="mt-6">
           <button
             onClick={async () => {
@@ -134,6 +131,35 @@ export default function MemberDashboard() {
             Manage Billing
           </button>
         </div>
+
+        {(
+          <div className="mt-8 border border-gray-700 p-4 rounded bg-gray-900">
+            <h2 className="text-xl font-bold mb-2">Buy Membership or Drop-in</h2>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <button
+                onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'ADULT_UNLIMITED' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
+                className="px-3 py-2 rounded bg-white text-black disabled:opacity-50"
+                disabled={Boolean(membership && membership.membershipStatus === 'active')}
+              >
+                Monthly Unlimited
+              </button>
+              <button
+                onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'YOUTH_2X' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
+                className="px-3 py-2 rounded bg-white text-black disabled:opacity-50"
+                disabled={Boolean(membership && membership.membershipStatus === 'active')}
+              >
+                Junior Jabbers
+              </button>
+              <button
+                onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
+                className="px-3 py-2 rounded bg-brand text-white disabled:opacity-50"
+                disabled={Boolean(membership && membership.membershipStatus === 'active')}
+              >
+                Pay Drop-in
+              </button>
+            </div>
+          </div>
+        )}
 
         {membership && (
           <div className="mt-8 border border-gray-700 p-4 rounded bg-gray-900">

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { dbOperations } from "@/lib/database"
+import { sendMail } from "@/lib/utils"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,10 +23,12 @@ export async function POST(request: NextRequest) {
       console.log(`Promoted waitlisted user ${promoted} to confirmed for class ${class_instance_id}`)
     }
 
-    // In production, you would also:
-    // 1. Process refund if applicable
-    // 2. Notify waitlisted users
-    // 3. Send cancellation confirmation email
+    try {
+      const u = dbOperations.getUserById(user_id) as any;
+      if (u?.email && (u.email_opt_in ?? 1)) {
+        await sendMail({ to: u.email, subject: "Cave Boxing – Booking cancelled", text: `Your booking for class ${class_instance_id} has been cancelled.` })
+      }
+    } catch {}
 
     return NextResponse.json({
       message:

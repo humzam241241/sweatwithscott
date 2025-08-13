@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { dbOperations } from "@/lib/database"
 import { isMembershipActiveForUserId } from "@/lib/memberships"
+import { sendMail } from "@/lib/utils"
 
 // Mock booking storage - in production, this would be in the database
 const bookings = new Map<string, any>()
@@ -73,6 +74,17 @@ export async function POST(request: NextRequest) {
     // 1. Process payment
     // 2. Send confirmation email
     // 3. Update member statistics
+
+    try {
+      const u = dbOperations.getUserById(user_id) as any;
+      if (u?.email && (u.email_opt_in ?? 1)) {
+        await sendMail({
+          to: u.email,
+          subject: "Cave Boxing – Class booked",
+          text: `You booked a class on ${classInstance.date} at ${classInstance.start_time}. If you need to cancel, visit your dashboard.`,
+        });
+      }
+    } catch {}
 
     return NextResponse.json({
       message: "Class booked successfully!",

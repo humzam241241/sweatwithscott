@@ -63,6 +63,9 @@ export default function AdminDashboard() {
             </li>
           ))}
         </ul>
+        <div className="mt-4">
+          <Link href={`/api/admin/reports/attendance?from=${new Date().toISOString().slice(0,10)}&to=${new Date().toISOString().slice(0,10)}`} className="underline text-sm">Download attendance CSV (today)</Link>
+        </div>
       </div>
       <div className="mt-12 space-y-6">
         <h2 className="text-xl font-semibold">Live Calendar</h2>

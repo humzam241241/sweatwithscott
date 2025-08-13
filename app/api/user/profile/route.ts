@@ -31,12 +31,14 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const body = await request.json()
-  const { userId, fullName, email, password } = body
+  const { userId, fullName, email, password, emailOptIn, waiverAccept } = body
   if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 })
 
   const data: any = {}
   if (fullName !== undefined) data.full_name = fullName
   if (email !== undefined) data.username = email
+  if (typeof emailOptIn === 'boolean') data.email_opt_in = emailOptIn ? 1 : 0
+  if (waiverAccept) { data.waiver_signed_at = new Date().toISOString(); data.waiver_version = 'v1'; }
   if (password) {
     const errors = validatePassword(password)
     if (errors.length) return NextResponse.json({ errors }, { status: 400 })

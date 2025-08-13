@@ -79,6 +79,9 @@ export function initializeDatabase() {
         membership_type TEXT DEFAULT 'basic',
         membership_status TEXT DEFAULT 'active',
         membership_expiry DATE,
+        waiver_signed_at DATETIME,
+        waiver_version TEXT,
+        email_opt_in INTEGER DEFAULT 1,
         is_admin INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -212,6 +215,11 @@ export function initializeDatabase() {
       { name: "image", type: "TEXT" },
       { name: "color", type: "TEXT" },
       { name: "updated_at", type: "DATETIME", defaultSql: "DEFAULT CURRENT_TIMESTAMP" },
+    ]);
+    ensureColumns("users", [
+      { name: "waiver_signed_at", type: "DATETIME" },
+      { name: "waiver_version", type: "TEXT" },
+      { name: "email_opt_in", type: "INTEGER", defaultSql: "DEFAULT 1" },
     ]);
 
     // Ensure auxiliary tables used by admin features exist
@@ -683,6 +691,9 @@ export const dbOperations = {
       "membership_type",
       "membership_status",
       "membership_expiry",
+      "waiver_signed_at",
+      "waiver_version",
+      "email_opt_in",
     ]);
     const entries = Object.entries(data).filter(([k]) => allowed.has(k));
     if (entries.length === 0) return;
