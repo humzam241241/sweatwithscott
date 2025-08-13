@@ -525,7 +525,12 @@ function replaceScheduleWithExactTemplate() {
       return `${String(h + 1).padStart(2, "0")}:${String(m ?? 0).padStart(2, "0")}`;
     };
 
-    // Clear and reseed classes
+    // Clear and reseed classes (idempotent): remove duplicates by name+day+time first
+    db.exec(`
+      DELETE FROM classes WHERE id NOT IN (
+        SELECT MIN(id) FROM classes GROUP BY name, day_of_week, start_time
+      );
+    `);
     db.prepare(`DELETE FROM class_instances`).run();
     db.prepare(`DELETE FROM classes`).run();
 

@@ -13,16 +13,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-brand-light text-brand-dark">
-        <Script id="current-user-id" strategy="beforeInteractive">
-          {`
-            (async function(){
-              try{
-                const resp = await fetch('/api/auth/me');
-                if(resp.ok){ const s = await resp.json(); window.CURRENT_USER_ID = s.userId; }
-              }catch{}
-            })();
-          `}
-        </Script>
+        {/* Remove auto-auth context on boot; site should start signed-out */}
         <Navigation />
         <AuthSessionProvider>
           <DataProvider>

@@ -118,7 +118,7 @@ export default function Navigation() {
   ];
 
   const navLinks = user
-    ? [...baseLinks, { href: "/dashboard/member", label: "Dashboard" }]
+    ? [...baseLinks, { href: user.isAdmin ? "/dashboard/admin" : "/dashboard/member", label: "Dashboard" }]
     : baseLinks;
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, link: NavLink) => {
