@@ -22,6 +22,15 @@ export async function POST(req: Request) {
     }
 
     const { planCode, class_instance_id } = parsed.data;
+    // Validate required env first to give actionable error
+    const missing: string[] = [];
+    if (!process.env.STRIPE_SECRET_KEY) missing.push("STRIPE_SECRET_KEY");
+    if (!process.env.NEXT_PUBLIC_APP_URL) missing.push("NEXT_PUBLIC_APP_URL");
+    try { getPriceId(planCode as PlanCode); } catch { missing.push(`STRIPE_PRICE_${planCode}`); }
+    if (missing.length) {
+      return NextResponse.json({ error: "Missing configuration", missing }, { status: 500 });
+    }
+
     const stripe = getStripe();
 
     // Ensure Stripe customer
@@ -57,6 +66,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
+    console.error("/api/stripe/checkout error:", message);
     return NextResponse.json({ error: "Checkout error", message }, { status: 500 });
   }
 }
