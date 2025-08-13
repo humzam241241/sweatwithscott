@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./authOptions";
+import { dbOperations } from "./database";
+import bcrypt from "bcryptjs";
 
 export type AppSession = {
   userId: number;
@@ -16,12 +18,28 @@ export async function getCurrentSession(): Promise<AppSession | null> {
     const session = (await getServerSession(authOptions as any)) as any;
     const user = session?.user as any;
     if (user) {
+      // Map NextAuth user to legacy SQLite numeric user id
+      const email = String(user.email || "").toLowerCase();
+      const name = String(user.name || email || "user");
+      let sqliteUser = email ? dbOperations.getUserByEmail(email) : undefined;
+      if (!sqliteUser && email) {
+        // Create a companion user row for OAuth logins
+        try {
+          const hashed = bcrypt.hashSync("oauth-login", 10);
+          const info = dbOperations.createUser({ username: email, password: hashed, email, fullName: name });
+          sqliteUser = dbOperations.getUserById(Number(info.lastInsertRowid));
+        } catch {
+          // ignore if race
+          sqliteUser = dbOperations.getUserByEmail(email);
+        }
+      }
+      const userId = Number(sqliteUser?.id ?? 0) || 0;
       return {
-        userId: Number(user.id ?? 0) || 0,
-        username: (user.email as string) || (user.name as string) || "user",
+        userId,
+        username: email || name || "user",
         isAdmin: Boolean(user.isAdmin),
-        email: (user.email as string) || undefined,
-        fullName: (user.name as string) || undefined,
+        email: email || undefined,
+        fullName: name || undefined,
       };
     }
   } catch {}
