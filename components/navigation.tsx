@@ -172,17 +172,7 @@ export default function Navigation() {
                 </li>
               );
             })}
-            {user?.isAdmin && (
-              <li>
-                <Link
-                  href="/dashboard/admin"
-                  onClick={(e) => handleLinkClick(e, { href: "/dashboard/admin", label: "Admin" })}
-                  className={`px-3 py-2 rounded hover:text-red-500 ${active === "/dashboard/admin" ? "text-red-500 font-bold" : "text-gray-300"}`}
-                >
-                  Admin
-                </Link>
-              </li>
-            )}
+            {/* No Admin link for users in any circumstance */}
           </ul>
           {user ? (
             <Button
@@ -226,19 +216,7 @@ export default function Navigation() {
                 </li>
               );
             })}
-            {user?.isAdmin && (
-              <li>
-                <Link
-                  href="/dashboard/admin"
-                  onClick={(e) => handleLinkClick(e, { href: "/dashboard/admin", label: "Admin" })}
-                  className={`block px-3 py-2 rounded hover:text-red-500 ${
-                    active === "/dashboard/admin" ? "text-red-500 font-bold" : "text-gray-300"
-                  }`}
-                >
-                  Admin
-                </Link>
-              </li>
-            )}
+            {/* No Admin link for users in any circumstance */}
           </ul>
           <div className="p-4 border-t border-gray-800">
             {user ? (
