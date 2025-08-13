@@ -4,15 +4,9 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
 
 function getAdminEmails(): string[] {
-  const set = new Set<string>();
-  (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean)
-    .forEach((e) => set.add(e));
-  const single = (process.env.ADMIN_EMAIL || process.env.GOOGLE_ADMIN_EMAIL || "").trim().toLowerCase();
-  if (single) set.add(single);
-  return Array.from(set);
+  // Hard-lock to a single admin email as requested
+  const hardcoded = (process.env.ADMIN_EMAIL || process.env.GOOGLE_ADMIN_EMAIL || "mystrey827@gmail.com").trim().toLowerCase();
+  return [hardcoded];
 }
 
 export const authOptions: NextAuthOptions = {
