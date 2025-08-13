@@ -18,6 +18,10 @@ interface Membership {
   membershipType: string
   membershipStatus: string
   membershipExpiry?: string
+  image?: string | null
+  bio?: string
+  goal?: string
+  memberSince?: string | null
 }
 
 export default function MemberDashboard() {
@@ -83,6 +87,9 @@ export default function MemberDashboard() {
         fullName: profileData.fullName || undefined,
         email: profileData.email || undefined,
         password: profileData.password || undefined,
+        bio: membership?.bio ?? undefined,
+        goal: membership?.goal ?? undefined,
+        image: membership?.image ?? undefined,
       }),
     })
     const data = await resp.json()
@@ -115,6 +122,53 @@ export default function MemberDashboard() {
       <div className="max-w-4xl mx-auto p-4">
         {user && (
           <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
+        )}
+
+        {membership && (
+          <div className="mb-6 rounded border border-gray-700 bg-gray-900 p-4 flex gap-4 items-start">
+            <img
+              src={membership.image || "/placeholder-user.jpg"}
+              alt="Profile photo"
+              className="w-20 h-20 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-lg font-semibold">{membership.fullName || user?.fullName}</p>
+                <span className="text-xs px-2 py-0.5 rounded border border-gray-600 text-gray-300">
+                  {membership.membershipStatus}
+                </span>
+              </div>
+              {membership.memberSince && (
+                <p className="text-sm text-gray-400">Member since: {new Date(membership.memberSince).toLocaleDateString()}</p>
+              )}
+              {membership.bio && <p className="mt-2 text-sm text-gray-200">{membership.bio}</p>}
+              {membership.goal && (
+                <p className="mt-1 text-sm text-gray-300"><span className="text-gray-400">Goal:</span> {membership.goal}</p>
+              )}
+              <div className="mt-3">
+                <label className="text-xs text-gray-400 block mb-1">Update photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const fd = new FormData()
+                    fd.append("file", file)
+                    try {
+                      const r = await fetch("/api/media", { method: "POST", body: fd })
+                      if (r.ok) {
+                        const j = await r.json()
+                        const url = `/uploads/media/${j.filename}`
+                        setMembership((m) => (m ? { ...m, image: url } : m))
+                      }
+                    } catch {}
+                  }}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+          </div>
         )}
         <BookableSchedule userMode userId={user?.userId} />
         <div className="mt-6">
@@ -266,6 +320,19 @@ export default function MemberDashboard() {
             placeholder="Email"
             value={profileData.email}
             onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <textarea
+            placeholder="Bio"
+            value={membership?.bio ?? ""}
+            onChange={(e) => setMembership((m) => (m ? { ...m, bio: e.target.value } : m))}
+            className="w-full p-2 rounded text-black"
+          />
+          <input
+            type="text"
+            placeholder="Goal"
+            value={membership?.goal ?? ""}
+            onChange={(e) => setMembership((m) => (m ? { ...m, goal: e.target.value } : m))}
             className="w-full p-2 rounded text-black"
           />
           <input

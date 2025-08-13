@@ -23,20 +23,27 @@ export async function GET(request: NextRequest) {
     id: user.id,
     fullName: user.full_name,
     email: user.username,
+    image: (user as any).image ?? null,
+    bio: (user as any).bio ?? "",
+    goal: (user as any).goal ?? "",
     membershipType: user.membership_type,
     membershipStatus: user.membership_status,
     membershipExpiry: user.membership_expiry,
+    memberSince: (user as any).created_at ?? null,
   })
 }
 
 export async function PUT(request: NextRequest) {
   const body = await request.json()
-  const { userId, fullName, email, password, emailOptIn, waiverAccept } = body
+  const { userId, fullName, email, password, emailOptIn, waiverAccept, bio, goal, image } = body
   if (!userId) return NextResponse.json({ error: "Missing userId" }, { status: 400 })
 
   const data: any = {}
   if (fullName !== undefined) data.full_name = fullName
   if (email !== undefined) data.username = email
+  if (bio !== undefined) data.bio = bio
+  if (goal !== undefined) data.goal = goal
+  if (image !== undefined) data.image = image
   if (typeof emailOptIn === 'boolean') data.email_opt_in = emailOptIn ? 1 : 0
   if (waiverAccept) { data.waiver_signed_at = new Date().toISOString(); data.waiver_version = 'v1'; }
   if (password) {

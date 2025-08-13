@@ -220,6 +220,9 @@ export function initializeDatabase() {
       { name: "waiver_signed_at", type: "DATETIME" },
       { name: "waiver_version", type: "TEXT" },
       { name: "email_opt_in", type: "INTEGER", defaultSql: "DEFAULT 1" },
+      { name: "bio", type: "TEXT" },
+      { name: "goal", type: "TEXT" },
+      { name: "image", type: "TEXT" },
     ]);
 
     // Ensure auxiliary tables used by admin features exist
@@ -272,6 +275,9 @@ export function initializeDatabase() {
     seedSettings();
     seedSampleUsers();
   ensureUpcomingInstances();
+
+    // Replace any existing schedule with the exact requested weekly template
+    replaceScheduleWithExactTemplate();
 
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log("Database initialized successfully");
@@ -452,6 +458,110 @@ function ensureUpcomingInstances() {
     generateClassInstances();
   } catch (err) {
     // swallow to avoid crashing startup
+  }
+}
+
+// Hard reset classes and instances to match the exact weekly schedule provided by the user
+function replaceScheduleWithExactTemplate() {
+  try {
+    // Weekly template and helpers
+    const capacities: Record<string, number> = {
+      Bootcamp: 30,
+      "Boxing Tech": 30,
+      "Junior Jabbers (6-12 yr)": 15,
+      "Strength & Conditioning": 30,
+      "Beginner Boxing": 30,
+      Sparring: 20,
+      "Open Gym": 30,
+    };
+    const colors: Record<string, string> = {
+      Bootcamp: "#ef4444",
+      "Boxing Tech": "#3b82f6",
+      "Junior Jabbers (6-12 yr)": "#22c55e",
+      "Strength & Conditioning": "#f59e0b",
+      "Beginner Boxing": "#ef4444",
+      Sparring: "#f97316",
+      "Open Gym": "#22d3ee",
+    };
+    const weekly: Array<{ day: string; time: string; name: string }> = [
+      // Monday
+      { day: "Monday", time: "08:00", name: "Bootcamp" },
+      { day: "Monday", time: "12:00", name: "Bootcamp" },
+      { day: "Monday", time: "17:00", name: "Boxing Tech" },
+      { day: "Monday", time: "18:00", name: "Bootcamp" },
+      { day: "Monday", time: "19:00", name: "Boxing Tech" },
+      { day: "Monday", time: "20:00", name: "Open Gym" },
+      // Tuesday
+      { day: "Tuesday", time: "08:00", name: "Bootcamp" },
+      { day: "Tuesday", time: "17:00", name: "Bootcamp" },
+      { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
+      { day: "Tuesday", time: "19:00", name: "Boxing Tech" },
+      { day: "Tuesday", time: "20:00", name: "Open Gym" },
+      // Wednesday
+      { day: "Wednesday", time: "08:00", name: "Bootcamp" },
+      { day: "Wednesday", time: "12:00", name: "Bootcamp" },
+      { day: "Wednesday", time: "19:00", name: "Strength & Conditioning" },
+      { day: "Wednesday", time: "20:00", name: "Open Gym" },
+      // Thursday
+      { day: "Thursday", time: "08:00", name: "Bootcamp" },
+      { day: "Thursday", time: "17:30", name: "Beginner Boxing" },
+      { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
+      { day: "Thursday", time: "19:00", name: "Boxing Tech" },
+      { day: "Thursday", time: "20:00", name: "Open Gym" },
+      // Friday
+      { day: "Friday", time: "08:00", name: "Bootcamp" },
+      { day: "Friday", time: "18:00", name: "Bootcamp" },
+      { day: "Friday", time: "19:00", name: "Boxing Tech" },
+      { day: "Friday", time: "20:00", name: "Open Gym" },
+      // Saturday
+      { day: "Saturday", time: "12:00", name: "Open Gym" },
+      { day: "Saturday", time: "15:00", name: "Sparring" },
+      // Sunday
+      { day: "Sunday", time: "20:00", name: "Strength & Conditioning" },
+    ];
+
+    const addHour = (time: string) => {
+      const [h, m] = time.split(":").map(Number);
+      return `${String(h + 1).padStart(2, "0")}:${String(m ?? 0).padStart(2, "0")}`;
+    };
+
+    // Clear and reseed classes
+    db.prepare(`DELETE FROM class_instances`).run();
+    db.prepare(`DELETE FROM classes`).run();
+
+    const insertClass = db.prepare(
+      `INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color, is_active, active)
+       VALUES (?, '', '', ?, ?, ?, ?, 25, NULL, ?, 1, 1)`
+    );
+    weekly.forEach((slot) => {
+      const color = colors[slot.name] || null;
+      const cap = capacities[slot.name] ?? 30;
+      insertClass.run(slot.name, slot.day, slot.time, addHour(slot.time), cap, color);
+    });
+
+    // Generate next 30 days of instances
+    const classes = db.prepare(`SELECT id, day_of_week, start_time, end_time, COALESCE(instructor,'') as instructor, COALESCE(max_capacity,30) as max_capacity FROM classes`).all() as Array<{ id: number; day_of_week: string; start_time: string; end_time: string; instructor?: string; max_capacity?: number }>;
+    const today = new Date();
+    const insertInstance = db.prepare(
+      `INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'scheduled')`
+    );
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const da = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${da}`;
+      for (const c of classes) {
+        if (c.day_of_week === dayName) {
+          try { insertInstance.run(c.id, dateStr, c.start_time, c.end_time, c.instructor ?? '', c.max_capacity ?? 30); } catch {}
+        }
+      }
+    }
+  } catch (error) {
+    // swallow; non-critical
   }
 }
 
@@ -694,6 +804,9 @@ export const dbOperations = {
       "waiver_signed_at",
       "waiver_version",
       "email_opt_in",
+      "bio",
+      "goal",
+      "image",
     ]);
     const entries = Object.entries(data).filter(([k]) => allowed.has(k));
     if (entries.length === 0) return;
