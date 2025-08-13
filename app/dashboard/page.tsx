@@ -5,5 +5,6 @@ import { redirect } from "next/navigation";
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions as any);
   if (!session) redirect("/signin");
-  return <div className="min-h-screen bg-black text-white" />;
+  const isAdmin = Boolean((session.user as any)?.isAdmin);
+  redirect(isAdmin ? "/dashboard/admin" : "/dashboard/member");
 }
