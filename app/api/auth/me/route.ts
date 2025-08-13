@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { dbOperations } from "@/lib/database";
+import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
 // Return a legacy-compatible shape so existing pages keep working
@@ -12,15 +14,27 @@ export async function GET() {
 
     const user = nextAuthSession?.user as any | undefined;
     if (user) {
+      // Map OAuth user to numeric SQLite id for legacy routes
+      const email = String(user.email || "").toLowerCase();
+      const name = String(user.name || email || "user");
+      let sqliteUser = email ? dbOperations.getUserByEmail(email) : undefined;
+      if (!sqliteUser && email) {
+        try {
+          const hashed = bcrypt.hashSync("oauth-login", 10);
+          const info = dbOperations.createUser({ username: email, password: hashed, email, fullName: name });
+          sqliteUser = dbOperations.getUserById(Number(info.lastInsertRowid));
+        } catch {
+          sqliteUser = dbOperations.getUserByEmail(email);
+        }
+      }
       const legacy = {
-        userId: Number(user.id ?? 0) || 0,
-        username: (user.email as string) || (user.name as string) || "user",
+        userId: Number(sqliteUser?.id ?? 0) || 0,
+        username: email || name || "user",
         isAdmin: Boolean(user.isAdmin),
-        fullName: (user.name as string) || undefined,
-        email: (user.email as string) || undefined,
+        fullName: name || undefined,
+        email: email || undefined,
         role: Boolean(user.isAdmin) ? "admin" : "member",
       };
-      // Also mirror values as cookies for legacy code if needed
       return NextResponse.json(legacy);
     }
 
