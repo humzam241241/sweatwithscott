@@ -138,22 +138,19 @@ export default function MemberDashboard() {
             <div className="grid sm:grid-cols-3 gap-3">
               <button
                 onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'ADULT_UNLIMITED' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
-                className="px-3 py-2 rounded bg-white text-black disabled:opacity-50"
-                disabled={Boolean(membership && membership.membershipStatus === 'active')}
+                className="px-3 py-2 rounded bg-white text-black"
               >
                 Monthly Unlimited
               </button>
               <button
                 onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'YOUTH_2X' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
-                className="px-3 py-2 rounded bg-white text-black disabled:opacity-50"
-                disabled={Boolean(membership && membership.membershipStatus === 'active')}
+                className="px-3 py-2 rounded bg-white text-black"
               >
                 Junior Jabbers
               </button>
               <button
                 onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
-                className="px-3 py-2 rounded bg-brand text-white disabled:opacity-50"
-                disabled={Boolean(membership && membership.membershipStatus === 'active')}
+                className="px-3 py-2 rounded bg-brand text-white"
               >
                 Pay Drop-in
               </button>
