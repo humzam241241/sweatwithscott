@@ -95,7 +95,7 @@ export default async function Home() {
         <h2 className="text-3xl font-bold mb-8 text-center">Our Classes</h2>
          {Array.isArray(classes) && classes.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from(new Map(classes.map((c:any)=>[c.slug ?? c.id, c])).values()).map((cls: any) => (
+            {Array.from(new Map(classes.map((c:any)=>[(String(c.name||'').toLowerCase()||String(c.slug||c.id)).trim(), c])).values()).map((cls: any) => (
               <Link key={cls.id ?? cls.slug} href={`/classes/${cls.slug}`}>
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
                   <img src={cls.image || PLACEHOLDER_IMAGE} alt={cls.name} className="h-56 w-full object-cover" />

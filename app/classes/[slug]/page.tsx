@@ -37,7 +37,12 @@ export default async function ClassPage({
   if (classes.length === 0) {
     classes = placeholderClasses;
   }
-  const cls = classes.find((c) => c.slug === params.slug);
+  let cls = classes.find((c) => c.slug === params.slug);
+  // Fallback: match by normalized name if slug not found
+  if (!cls) {
+    const norm = (s?: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    cls = classes.find((c) => norm(c.name) === params.slug);
+  }
   if (!cls) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8">
