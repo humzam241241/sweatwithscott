@@ -33,7 +33,14 @@ export async function GET() {
       .prepare(
         `SELECT id, slug, name, description, day_of_week, start_time, end_time, max_capacity, price, image,
                 COALESCE(instructor, coach_name, '') as instructor
-         FROM classes WHERE is_active = 1 ORDER BY name`
+         FROM classes
+         WHERE is_active = 1 AND id IN (
+           SELECT MIN(id)
+           FROM classes
+           WHERE is_active = 1
+           GROUP BY name, day_of_week, start_time
+         )
+         ORDER BY name`
       )
       .all();
     return NextResponse.json(Array.isArray(classes) ? classes : []);

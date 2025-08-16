@@ -10,6 +10,11 @@ export default function ClassCard({ cls }: { cls: ClassRecord }) {
       ? cls.image
       : "/images/boxing-training.png";
 
+  const description =
+    typeof cls.description === "string" && cls.description.trim().length > 0
+      ? cls.description
+      : "Technical boxing skills and drills to improve form, footwork, and timing.";
+
   const slug = cls.slug || "unknown-class";
 
   return (
@@ -21,13 +26,9 @@ export default function ClassCard({ cls }: { cls: ClassRecord }) {
         <img src={imageSrc} alt={cls.name} className="h-48 w-full object-cover" />
         <div className="p-6">
           <h3 className="text-xl font-semibold text-brand">{cls.name}</h3>
-          {typeof cls.description === "string" && (
-            <p className="mt-2 text-sm text-brand-dark/70">
-              {cls.description.length > 100
-                ? cls.description.substring(0, 100) + "..."
-                : cls.description}
-            </p>
-          )}
+          <p className="mt-2 text-sm text-brand-dark/70">
+            {description.length > 100 ? description.substring(0, 100) + "..." : description}
+          </p>
         </div>
       </motion.div>
     </Link>

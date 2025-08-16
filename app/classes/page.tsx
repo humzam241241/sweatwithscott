@@ -51,12 +51,18 @@ export default async function HomePage() {
         <h2 className="mb-8 text-center text-3xl font-bold">Our Classes</h2>
         {classes.length ? (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {classes.map((cls) => (
+            {Array.from(new Map(classes.map((c:any)=>[c.slug ?? c.id, c])).values()).map((cls) => (
               <ClassCard key={cls.slug ?? cls.id} cls={cls} />
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500">No classes available.</p>
+          <div className="text-center text-gray-500">
+            <div className="mx-auto max-w-md">
+              <img src="/images/boxing-training.png" alt="Sample class" className="w-full h-48 object-cover rounded-xl mb-4" />
+              <h3 className="text-xl font-semibold">Boxing Tech</h3>
+              <p className="mt-2">Technical boxing skills and drills to improve form, footwork, and timing.</p>
+            </div>
+          </div>
         )}
       </section>
 
