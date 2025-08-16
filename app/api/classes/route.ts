@@ -29,7 +29,7 @@ function ensureFutureInstancesForClass(classId: number, dayOfWeek: string, start
 
 export async function GET() {
   try {
-    const classes = db
+    let classes = db
       .prepare(
         `SELECT id, slug, name, description, day_of_week, start_time, end_time, max_capacity, price, image,
                 COALESCE(instructor, coach_name, '') as instructor
@@ -43,7 +43,22 @@ export async function GET() {
          ORDER BY name`
       )
       .all();
-    return NextResponse.json(Array.isArray(classes) ? classes : []);
+    // Ensure slug exists for each class for stable routing
+    classes = (Array.isArray(classes) ? classes : []).map((c: any) => ({
+      ...c,
+      slug:
+        c.slug || String(c.name || "class")
+          .toLowerCase()
+          .replace(/&/g, "and")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, ""),
+      description:
+        typeof c.description === "string" && c.description.trim().length
+          ? c.description
+          : "Technical boxing skills and drills to improve form, footwork, and timing.",
+      image: c.image || "/images/boxing-training.png",
+    }));
+    return NextResponse.json(classes);
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error("Error fetching classes:", error.message);

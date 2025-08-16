@@ -44,14 +44,21 @@ export default async function ClassPage({
     cls = classes.find((c) => norm(c.name) === params.slug);
   }
   if (!cls) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white p-8">
-        <p className="text-2xl font-bold text-brand mb-4">Class Not Found</p>
-        <Link href="/" className="text-brand underline">
-          ← Back to Home
-        </Link>
-      </div>
-    );
+    const displayName = params.slug
+      .replace(/-/g, " ")
+      .replace(/\band\b/g, "&")
+      .replace(/\b\w/g, (m) => m.toUpperCase());
+    cls = {
+      id: 0,
+      slug: params.slug,
+      name: displayName || "Class",
+      description: "Technical boxing skills and drills to improve form, footwork, and timing.",
+      coach_name: "",
+      day_of_week: undefined,
+      start_time: undefined,
+      end_time: undefined,
+      image: "/images/boxing-training.png",
+    } as any;
   }
 
   const schedule =

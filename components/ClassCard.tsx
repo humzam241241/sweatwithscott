@@ -15,7 +15,14 @@ export default function ClassCard({ cls }: { cls: ClassRecord }) {
       ? cls.description
       : "Technical boxing skills and drills to improve form, footwork, and timing.";
 
-  const slug = cls.slug || "unknown-class";
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+  const slug = cls.slug || normalize(cls.name || "class");
 
   return (
     <Link href={`/classes/${slug}`}>
