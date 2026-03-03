@@ -1,0 +1,96 @@
+export const dynamic = 'force-dynamic';
+import Link from "next/link";
+import { headers } from "next/headers";
+import type { ClassRecord } from "@/lib/types";
+
+const placeholderClasses: ClassRecord[] = [
+  {
+    id: 0,
+    slug: "sample-class",
+    name: "Sample Class",
+    description: "This is a placeholder class.",
+    coach_name: "Sample Coach",
+    day_of_week: "Monday",
+    start_time: "09:00",
+    end_time: "10:00",
+    image: "/images/boxing-training.png",
+  },
+];
+
+export default async function ClassPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const h = headers();
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  const host = h.get("host") ?? "";
+  const base = host ? `${proto}://${host}` : "";
+
+  let classes: ClassRecord[] = [];
+  try {
+    const res = await fetch(`${base}/api/classes`, { cache: "no-store" });
+    classes = (await res.json()) as ClassRecord[];
+  } catch {
+    classes = [];
+  }
+  if (classes.length === 0) {
+    classes = placeholderClasses;
+  }
+  let cls = classes.find((c) => c.slug === params.slug);
+  // Fallback: match by normalized name if slug not found
+  if (!cls) {
+    const norm = (s?: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    cls = classes.find((c) => norm(c.name) === params.slug);
+  }
+  if (!cls) {
+    const displayName = params.slug
+      .replace(/-/g, " ")
+      .replace(/\band\b/g, "&")
+      .replace(/\b\w/g, (m) => m.toUpperCase());
+    cls = {
+      id: 0,
+      slug: params.slug,
+      name: displayName || "Class",
+      description: "Technical boxing skills and drills to improve form, footwork, and timing.",
+      coach_name: "",
+      day_of_week: undefined,
+      start_time: undefined,
+      end_time: undefined,
+      image: "/images/boxing-training.png",
+    } as any;
+  }
+
+  const schedule =
+    cls.day_of_week && cls.start_time && cls.end_time
+      ? `${cls.day_of_week} ${cls.start_time} - ${cls.end_time}`
+      : null;
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto max-w-4xl p-8">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cls.image || "/images/boxing-training.png"}
+          alt={cls.name}
+          className="mb-6 h-80 w-full object-cover"
+        />
+        <h1 className="mb-4 text-4xl font-bold text-brand">{cls.name}</h1>
+        {cls.coach_name && (
+          <p className="mb-2 text-lg text-brand-dark">
+            Coach: {cls.coach_name}
+          </p>
+        )}
+        {cls.description && (
+          <p className="mb-6 text-brand-dark/80">{cls.description}</p>
+        )}
+        <ul className="mb-6 space-y-2">
+          {schedule && <li>Schedule: {schedule}</li>}
+        </ul>
+        <Link href="/classes" className="text-brand underline">
+          ← Back to All Classes
+        </Link>
+      </div>
+    </div>
+  );
+}

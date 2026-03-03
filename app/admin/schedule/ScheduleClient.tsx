@@ -1,0 +1,632 @@
+"use client";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
+import interactionPlugin, { DateSelectArg, EventDropArg, EventResizeDoneArg } from "@fullcalendar/interaction";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+type AdminEvent = {
+  id: number | string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  coach?: { id: number | null; name: string };
+  capacity: number;
+  bookedCount: number;
+  color?: string;
+  status: string;
+};
+
+function toLocalIsoMinute(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export default function ScheduleClient() {
+  const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const calendarRef = useRef<FullCalendar | null>(null);
+  const [menu, setMenu] = useState<{
+    open: boolean;
+    x: number;
+    y: number;
+    eventId?: string;
+    data?: AdminEvent;
+  }>({ open: false, x: 0, y: 0 });
+  const [roster, setRoster] = useState<{ open: boolean; attendees: any[]; eventId?: string }>({ open: false, attendees: [] });
+  const [editor, setEditor] = useState<{
+    open: boolean;
+    id?: string;
+    form?: { title: string; startsAt: string; endsAt: string; capacity: number; coachName: string; color?: string; status?: string };
+    attendees?: any[];
+  }>({ open: false });
+  const [filters, setFilters] = useState<{ coach: string | "All"; title: string | "All" }>({ coach: "All", title: "All" });
+  const [showTip, setShowTip] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<{ title: string; startsAt: string; endsAt: string; capacity: number; coachName: string; color: string }>({
+    title: "New Class",
+    startsAt: toLocalIsoMinute(new Date()),
+    endsAt: toLocalIsoMinute(new Date(Date.now() + 60 * 60 * 1000)),
+    capacity: 20,
+    coachName: "",
+    color: "#ef4444",
+  });
+
+  const fetchEvents = async (fromISO: string, toISO: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/classes/instances?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`);
+      const data = (await res.json()) as AdminEvent[];
+      setEvents(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fcEvents = useMemo(
+    () =>
+      events
+        .filter((e) => (filters.coach === "All" || (e.coach?.name || "") === filters.coach))
+        .filter((e) => (filters.title === "All" || e.title === filters.title))
+        .map((e) => ({
+          id: String(e.id),
+          title: e.title,
+          start: e.startsAt,
+          end: e.endsAt,
+          backgroundColor: e.color,
+          borderColor: e.color,
+          extendedProps: e,
+          classNames: e.status === "canceled" ? ["opacity-50", "line-through"] : [],
+        })),
+    [events, filters]
+  );
+
+  // Ensure initial fetch after calendar mounts and on external changes
+  useEffect(() => {
+    const refreshFromCalendar = () => {
+      const api = (calendarRef.current as any)?.getApi?.();
+      if (api?.view?.activeStart && api?.view?.activeEnd) {
+        fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+      }
+    };
+    // Run once on mount
+    const id = window.setTimeout(refreshFromCalendar, 0);
+    // Listen for global updates
+    const onChanged = () => refreshFromCalendar();
+    window.addEventListener("classes:changed", onChanged as any);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("classes:changed", onChanged as any);
+    };
+  }, []);
+
+  const onDatesSet = (arg: any) => {
+    const fromISO = arg.startStr;
+    const toISO = arg.endStr;
+    fetchEvents(fromISO, toISO);
+  };
+
+  const handleEventDrop = async (info: EventDropArg) => {
+    const id = info.event.id;
+    const startsAt = info.event.start?.toISOString();
+    const endsAt = info.event.end?.toISOString();
+    await fetch(`/api/classes/instances/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startsAt, endsAt }),
+    });
+    window.dispatchEvent(new CustomEvent("classes:changed"));
+  };
+
+  const handleEventResize = async (info: EventResizeDoneArg) => {
+    const id = info.event.id;
+    const startsAt = info.event.start?.toISOString();
+    const endsAt = info.event.end?.toISOString();
+    await fetch(`/api/classes/instances/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startsAt, endsAt }),
+    });
+    window.dispatchEvent(new CustomEvent("classes:changed"));
+  };
+
+  const handleDateSelect = (selectInfo: DateSelectArg) => {
+    setCreateForm({
+      title: "New Class",
+      startsAt: toLocalIsoMinute(selectInfo.start),
+      endsAt: toLocalIsoMinute(selectInfo.end),
+      capacity: 20,
+      coachName: "",
+      color: "#ef4444",
+    });
+    setCreateOpen(true);
+  };
+
+  const createClassFromForm = async () => {
+    const { title, startsAt, endsAt, capacity, coachName, color } = createForm;
+    const res = await fetch(`/api/classes/instances`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({ title, startsAt, endsAt, capacity, color, coachName }),
+    });
+    if (res.ok) {
+      // Optimistically add created event if returned
+      try {
+        const ev = (await res.json()) as AdminEvent
+        setEvents((prev) => [...prev, ev])
+        const api = (calendarRef.current as any)?.getApi?.();
+        api?.addEvent?.({
+          id: String(ev.id),
+          title: ev.title,
+          start: ev.startsAt,
+          end: ev.endsAt,
+          backgroundColor: ev.color,
+          borderColor: ev.color,
+          extendedProps: ev,
+        });
+      } catch {}
+      const api = (calendarRef.current as any)?.getApi?.();
+      fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+      window.dispatchEvent(new CustomEvent("classes:changed"));
+      api.unselect?.();
+      return true;
+    }
+    const errText = await res.text();
+    console.error("Failed to create class instance", errText);
+    if (typeof window !== 'undefined') {
+      alert(`Could not create class.\n${errText || 'Unknown error'}`);
+    }
+    return false;
+  };
+
+  return (
+    <>
+      <div className="p-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+            <h1 className="text-xl font-semibold">Schedule Manager</h1>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateForm({ title: "New Class", startsAt: toLocalIsoMinute(new Date()), endsAt: toLocalIsoMinute(new Date(Date.now() + 60 * 60 * 1000)), capacity: 20, coachName: "", color: "#ef4444" });
+                  setCreateOpen(true);
+                }}
+                className="px-3 py-1.5 rounded bg-black text-white border border-gray-300 hover:bg-gray-900"
+              >
+                + New class
+              </button>
+              <select className="border rounded px-2 py-1 text-sm" value={filters.coach} onChange={(e) => setFilters((f) => ({ ...f, coach: e.target.value as any }))}>
+                <option>All</option>
+                {Array.from(new Set(events.map((e) => e.coach?.name).filter(Boolean) as string[])).map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <select className="border rounded px-2 py-1 text-sm" value={filters.title} onChange={(e) => setFilters((f) => ({ ...f, title: e.target.value as any }))}>
+                <option>All</option>
+                {Array.from(new Set(events.map((e) => e.title))).map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              {loading && <span className="text-sm text-gray-500">Loading…</span>}
+            </div>
+          </div>
+          {showTip && (
+            <div className="mb-3 rounded border border-blue-300 bg-blue-50 text-blue-800 text-sm px-3 py-2">Click and drag on the calendar to create a class. Use the event menu to edit, change color/coach, duplicate or cancel.</div>
+          )}
+          <FullCalendar
+            ref={calendarRef as any}
+            plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay,listWeek" }}
+            timeZone="local"
+            slotMinTime="06:00:00"
+            slotMaxTime="23:00:00"
+            nowIndicator
+            selectMirror
+            expandRows
+            eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: true }}
+            weekNumbers
+            stickyHeaderDates
+            dayMaxEventRows={3}
+            selectable
+            selectOverlap={true}
+            longPressDelay={0}
+            snapDuration={{ minutes: 15 } as any}
+            slotDuration="00:30:00"
+            height="auto"
+            selectable
+            editable
+            eventStartEditable
+            eventDurationEditable
+            events={fcEvents}
+            datesSet={onDatesSet}
+            select={handleDateSelect}
+            eventDrop={handleEventDrop}
+            eventResize={handleEventResize}
+            eventContent={(arg) => {
+              const data = arg.event.extendedProps as any as AdminEvent;
+              const capacity = `${data.bookedCount}/${data.capacity}`;
+              const isCanceled = data.status === "canceled";
+              return {
+                html: `
+                <div class="flex items-center gap-2 ${isCanceled ? "opacity-50 line-through" : ""}">
+                  <span class="inline-block w-2 h-2 rounded-full" style="background:${data.color || "#ef4444"}"></span>
+                  <div class="flex-1 truncate">
+                    <div class="text-[12px] font-semibold leading-tight">${arg.event.title}</div>
+                    <div class="text-[10px] text-gray-500">${new Date(data.startsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - ${new Date(data.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                    ${data.coach?.name ? `<div class="text-[10px] text-gray-500">Coach: ${data.coach.name}</div>` : ''}
+                  </div>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-800 text-white">${capacity}</span>
+                </div>`
+              };
+            }}
+            eventClick={async (click) => {
+              const data = click.event.extendedProps as any as AdminEvent;
+              setEditor({
+                open: true,
+                id: click.event.id,
+                form: {
+                  title: data.title || click.event.title,
+                  startsAt: toLocalIsoMinute(new Date(data.startsAt || click.event.start!)),
+                  endsAt: toLocalIsoMinute(new Date(data.endsAt || click.event.end!)),
+                  capacity: data.capacity ?? 20,
+                  coachName: data.coach?.name || "",
+                  color: data.color,
+                  status: data.status,
+                },
+                attendees: [],
+              });
+              try {
+                const res = await fetch(`/api/admin/classes/${click.event.id}/attendees`);
+                const attendees = res.ok ? await res.json() : [];
+                setEditor((e) => ({ ...e, attendees }));
+              } catch {}
+            }}
+            height="auto"
+          />
+          {menu.open && (
+            <div className="fixed z-50 rounded-md border bg-white shadow-lg text-sm" style={{ left: menu.x, top: menu.y }} onMouseLeave={() => setMenu((m) => ({ ...m, open: false }))}>
+              <MenuItem
+                label="Edit title/capacity/coach"
+                onClick={async () => {
+                  const id = menu.eventId!;
+                  const newTitle = window.prompt("Title", menu.data?.title || "") || menu.data?.title;
+                  const newCapacityStr = window.prompt("Capacity", String(menu.data?.capacity || 20));
+                  const newCapacity = newCapacityStr ? Number(newCapacityStr) : undefined;
+                  const coachName = window.prompt("Coach", menu.data?.coach?.name || "") || menu.data?.coach?.name;
+                  await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: newTitle, capacity: newCapacity, coachName }) });
+                  setMenu((m) => ({ ...m, open: false }));
+                  const view = (calendarRef.current as any)?.getApi?.().view;
+                  fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+                  window.dispatchEvent(new CustomEvent("classes:changed"));
+                }}
+              />
+              <MenuItem
+                label="Change color"
+                onClick={async () => {
+                  const id = menu.eventId!;
+                  const color = window.prompt("Hex color", menu.data?.color || "#ef4444");
+                  if (!color) return;
+                  await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ color }) });
+                  setMenu((m) => ({ ...m, open: false }));
+                  const view = (calendarRef.current as any)?.getApi?.().view;
+                  fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+                  window.dispatchEvent(new CustomEvent("classes:changed"));
+                }}
+              />
+              <MenuItem
+                label="Capacity +1"
+                onClick={async () => {
+                  const id = menu.eventId!;
+                  const newCapacity = (menu.data?.capacity || 20) + 1;
+                  await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ capacity: newCapacity }) });
+                  setMenu((m) => ({ ...m, open: false }));
+                  const view = (calendarRef.current as any)?.getApi?.().view;
+                  fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+                }}
+              />
+              <MenuItem
+                label="Capacity −1"
+                onClick={async () => {
+                  const id = menu.eventId!;
+                  const newCapacity = Math.max(1, (menu.data?.capacity || 20) - 1);
+                  await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ capacity: newCapacity }) });
+                  setMenu((m) => ({ ...m, open: false }));
+                  const view = (calendarRef.current as any)?.getApi?.().view;
+                  fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+                }}
+              />
+              <MenuItem
+                label="View roster"
+                onClick={async () => {
+                  const id = menu.eventId!;
+                  const res = await fetch(`/api/admin/classes/${id}/attendees`);
+                  const attendees = res.ok ? await res.json() : [];
+                  setMenu((m) => ({ ...m, open: false }));
+                  setRoster({ open: true, attendees, eventId: id });
+                }}
+              />
+              <MenuItem
+                label="Duplicate +1 week"
+                onClick={async () => {
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  const ev = api?.getEventById(menu.eventId!);
+                  if (!ev) return;
+                  const start = ev.start!;
+                  const end = ev.end!;
+                  const startsAt = new Date(start.getTime());
+                  startsAt.setDate(startsAt.getDate() + 7);
+                  const endsAt = new Date(end.getTime());
+                  endsAt.setDate(endsAt.getDate() + 7);
+                  await fetch(`/api/classes/instances`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: ev.title, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), capacity: menu.data?.capacity, color: menu.data?.color, coachName: menu.data?.coach?.name }) });
+                  setMenu((m) => ({ ...m, open: false }));
+                  fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                  window.dispatchEvent(new CustomEvent("classes:changed"));
+                }}
+              />
+              <MenuItem
+                label="Cancel"
+                onClick={async () => {
+                  const id = menu.eventId!;
+                  await fetch(`/api/classes/instances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "canceled" }) });
+                  setMenu((m) => ({ ...m, open: false }));
+                  const view = (calendarRef.current as any)?.getApi?.().view;
+                  fetchEvents(view.activeStart.toISOString(), view.activeEnd.toISOString());
+                }}
+              />
+            </div>
+          )}
+          {roster.open && (
+            <RosterModal
+              attendees={roster.attendees}
+              onClose={() => setRoster({ open: false, attendees: [] })}
+              onKick={async (userId: number) => {
+                await fetch("/api/classes/cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId, class_instance_id: Number(roster.eventId) }) });
+                const res = await fetch(`/api/admin/classes/${roster.eventId}/attendees`);
+                const attendees = res.ok ? await res.json() : [];
+                setRoster((r) => ({ ...r, attendees }));
+                window.dispatchEvent(new CustomEvent("classes:changed"));
+              }}
+            />
+          )}
+        </div>
+      </div>
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-lg bg-red-900 text-white border border-red-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">New class</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+              <div className="md:col-span-3 space-y-1">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" className="text-black" placeholder="e.g. Beginner Boxing" value={createForm.title} onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cap">Capacity</Label>
+                <Input id="cap" className="text-black" type="number" value={createForm.capacity} onChange={(e) => setCreateForm({ ...createForm, capacity: Number(e.target.value || 0) })} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="coach">Coach</Label>
+                <Input id="coach" className="text-black" placeholder="optional" value={createForm.coachName} onChange={(e) => setCreateForm({ ...createForm, coachName: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="start">Starts</Label>
+                <Input id="start" className="text-black" type="datetime-local" value={createForm.startsAt} onChange={(e) => setCreateForm({ ...createForm, startsAt: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="end">Ends</Label>
+                <Input id="end" className="text-black" type="datetime-local" value={createForm.endsAt} onChange={(e) => setCreateForm({ ...createForm, endsAt: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="color">Color</Label>
+              <input id="color" type="color" value={createForm.color} onChange={(e) => setCreateForm({ ...createForm, color: e.target.value })} className="h-10 w-20 rounded" />
+            </div>
+            <div className="rounded-md bg-red-800/50 border border-red-600 p-3 text-xs text-white/90">
+              <div className="font-medium text-white mb-1">Preview</div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ background: createForm.color }} />
+                <div className="flex-1">
+                  <div className="text-[12px] font-semibold">{createForm.title || 'New Class'}</div>
+                  <div className="text-[11px]">{new Date(createForm.startsAt).toLocaleString()} - {new Date(createForm.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>
+                  {createForm.coachName && <div className="text-[11px]">Coach: {createForm.coachName}</div>}
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/60 text-white">0/{createForm.capacity}</span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" className="bg-red-700/40 text-white hover:bg-red-700/60" onClick={() => setCreateOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-white text-red-900 hover:bg-gray-100"
+              onClick={async () => {
+                const ok = await createClassFromForm();
+                if (ok) {
+                  setCreateOpen(false);
+                }
+              }}
+            >
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Event editor dialog */}
+      <Dialog open={editor.open} onOpenChange={(open)=> setEditor((e)=>({ ...e, open }))}>
+        <DialogContent className="sm:max-w-2xl bg-white">
+          <DialogHeader>
+            <DialogTitle>Edit class</DialogTitle>
+          </DialogHeader>
+          {editor.form && (
+            <div className="space-y-4 py-1">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                <div className="md:col-span-3 space-y-1">
+                  <Label htmlFor="e-title">Title</Label>
+                  <Input id="e-title" value={editor.form.title} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, title: e.target.value } } : prev)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="e-cap">Capacity</Label>
+                  <Input id="e-cap" type="number" value={editor.form.capacity} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, capacity: Number(e.target.value || 0) } } : prev)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="e-coach">Coach</Label>
+                  <Input id="e-coach" value={editor.form.coachName} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, coachName: e.target.value } } : prev)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="e-start">Starts</Label>
+                  <Input id="e-start" type="datetime-local" value={editor.form.startsAt} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, startsAt: e.target.value } } : prev)} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="e-end">Ends</Label>
+                  <Input id="e-end" type="datetime-local" value={editor.form.endsAt} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, endsAt: e.target.value } } : prev)} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="e-color">Color</Label>
+                <input id="e-color" type="color" value={editor.form.color || '#ef4444'} onChange={(e)=> setEditor((prev)=> prev.form ? { ...prev, form: { ...prev.form, color: e.target.value } } : prev)} className="h-10 w-20 rounded" />
+              </div>
+              <div className="rounded-md border p-3">
+                <div className="font-medium mb-2">Attendees</div>
+                <div className="max-h-[220px] overflow-auto divide-y">
+                  {editor.attendees && editor.attendees.length > 0 ? (
+                    editor.attendees.map((a:any)=> (
+                      <div key={a.id} className="flex items-center justify-between py-2 text-sm">
+                        <div>
+                          <div className="font-medium">{a.username || a.email || `User ${a.user_id}`}</div>
+                          <div className="text-gray-500">{a.status} · {a.payment_status}</div>
+                        </div>
+                        <button className="px-2 py-1 text-red-600 border border-red-600 rounded" onClick={async ()=>{
+                          await fetch('/api/classes/cancel', { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ user_id: a.user_id, class_instance_id: Number(editor.id) }) });
+                          try { const res = await fetch(`/api/admin/classes/${editor.id}/attendees`); const attendees = res.ok ? await res.json() : []; setEditor((e)=> ({ ...e, attendees })); } catch {}
+                        }}>Kick</button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500">No attendees</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <div className="flex items-center gap-2 w-full justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={async ()=>{
+                  if (!editor.id || !editor.form) return;
+                  await fetch(`/api/classes/instances/${editor.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+                    title: editor.form.title,
+                    capacity: editor.form.capacity,
+                    coachName: editor.form.coachName,
+                    color: editor.form.color,
+                    startsAt: new Date(editor.form.startsAt).toISOString(),
+                    endsAt: new Date(editor.form.endsAt).toISOString(),
+                  }) });
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  if (api) {
+                    const ev = api.getEventById(editor.id);
+                    if (ev) {
+                      ev.setProp('title', editor.form.title);
+                      ev.setStart(new Date(editor.form.startsAt));
+                      ev.setEnd(new Date(editor.form.endsAt));
+                    }
+                  }
+                  setEditor({ open: false });
+                  if (api?.view) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                }}>Save changes</Button>
+                <Button variant="outline" onClick={async ()=>{
+                  if (!editor.id) return;
+                  await fetch(`/api/classes/instances/${editor.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'canceled' }) });
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  setEditor({ open: false });
+                  if (api?.view) fetchEvents(api.view.activeStart.toISOString(), api.view.activeEnd.toISOString());
+                }}>Cancel class</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={()=> setEditor({ open:false })}>Close</Button>
+                <Button variant="destructive" onClick={async ()=>{
+                  if (!editor.id) return;
+                  await fetch(`/api/classes/instances/${editor.id}`, { method: 'DELETE' });
+                  const api = (calendarRef.current as any)?.getApi?.();
+                  const e = api?.getEventById(editor.id);
+                  e?.remove();
+                  setEditor({ open: false });
+                }}>Delete</Button>
+              </div>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function MenuItem({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="block w-full text-left px-3 py-2 hover:bg-gray-100" type="button">
+      {label}
+    </button>
+  );
+}
+
+function RosterModal({ attendees, onClose, onKick }: { attendees: any[]; onClose: () => void; onKick: (userId: number) => void }) {
+  useEffect(() => {
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg rounded-md bg-white p-4 shadow-xl">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Attendees</h3>
+          <button onClick={onClose} className="text-sm text-gray-500">
+            Close
+          </button>
+        </div>
+        <div className="max-h-[50vh] overflow-auto divide-y">
+          {attendees.length === 0 ? (
+            <div className="text-sm text-gray-500">No attendees</div>
+          ) : (
+            attendees.map((a) => (
+              <div key={a.id} className="flex items-center justify-between py-2 text-sm">
+                <div>
+                  <div className="font-medium">{a.username || a.email || `User ${a.user_id}`}</div>
+                  <div className="text-gray-500">{a.status} · {a.payment_status}</div>
+                </div>
+                <button className="px-2 py-1 text-red-600 border border-red-600 rounded" onClick={() => onKick(a.user_id)}>
+                  Kick
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+

@@ -1,0 +1,51 @@
+# dependencies
+/node_modules/
+
+# next.js
+/.next/
+/out/
+
+# build output
+/build/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (secrets)
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# local database (don't track your live SQLite file)
+gym.db
+gym.db-shm
+gym.db-wal
+dev.db
+dev.db-shm
+dev.db-wal
+
+# editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# SQLite CLI binaries you added (don't track)
+sqlite3.dll
+sqlite3.def
+
+# dedicated secrets dir (keep template tracked)
+secrets/
+secrets/*
+!secrets/.gitignore
+
+/lib/generated/prisma

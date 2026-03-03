@@ -1,0 +1,361 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import BookableSchedule from "@/components/bookable-schedule"
+import Link from "next/link"
+
+interface Booking {
+  id: number
+  className: string
+  date: string
+  time: string
+  classInstanceId: number
+}
+
+interface Membership {
+  fullName: string
+  email: string
+  membershipType: string
+  membershipStatus: string
+  membershipExpiry?: string
+  image?: string | null
+  bio?: string
+  goal?: string
+  memberSince?: string | null
+}
+
+export default function MemberDashboard() {
+  const [user, setUser] = useState<any>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [upcoming, setUpcoming] = useState<Booking[]>([])
+  const [past, setPast] = useState<Booking[]>([])
+  const [membership, setMembership] = useState<Membership | null>(null)
+  const [payments, setPayments] = useState<any[]>([])
+  const router = useRouter()
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const resp = await fetch("/api/auth/me", { cache: "no-store" })
+      if (resp.ok) {
+        const session = await resp.json()
+        // Allow both roles to view member dashboard; non-auth users redirected below
+        setUser(session)
+        loadBookings(session.userId)
+        loadMembership(session.userId)
+      } else {
+        router.replace("/login")
+      }
+      setCheckingAuth(false)
+    }
+    fetchSession()
+  }, [])
+
+  const loadBookings = async (userId: number) => {
+    const resp = await fetch(`/api/user/bookings?user_id=${userId}`)
+    if (resp.ok) {
+      const all = (await resp.json()) as Booking[]
+      setBookings(all)
+      const today = new Date()
+      setUpcoming(all.filter((b) => new Date(b.date) >= today))
+      setPast(all.filter((b) => new Date(b.date) < today))
+    }
+  }
+
+  const loadMembership = async (userId: number) => {
+    const resp = await fetch(`/api/user/profile?user_id=${userId}`)
+    if (resp.ok) {
+      setMembership(await resp.json())
+    }
+    const payResp = await fetch(`/api/user/payments`)
+    if (payResp.ok) {
+      setPayments(await payResp.json())
+    }
+  }
+
+  const [profileData, setProfileData] = useState({ fullName: "", email: "", password: "" })
+  const [profileMsg, setProfileMsg] = useState("")
+
+  const handleProfileSave = async () => {
+    if (!user) return
+    setProfileMsg("")
+    const resp = await fetch(`/api/user/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.userId,
+        fullName: profileData.fullName || undefined,
+        email: profileData.email || undefined,
+        password: profileData.password || undefined,
+        bio: membership?.bio ?? undefined,
+        goal: membership?.goal ?? undefined,
+        image: membership?.image ?? undefined,
+      }),
+    })
+    const data = await resp.json()
+    if (resp.ok) {
+      setProfileMsg("Profile updated")
+      loadMembership(user.userId)
+    } else {
+      setProfileMsg(data.errors ? data.errors.join(". ") : data.error)
+    }
+  }
+
+  const handleCancelBooking = async (classInstanceId: number) => {
+    if (!user) return
+    const resp = await fetch("/api/classes/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.userId, class_instance_id: classInstanceId }),
+    })
+    if (resp.ok) {
+      loadBookings(user.userId)
+    }
+  }
+
+  if (checkingAuth) {
+    return <div className="min-h-screen bg-black" />
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-4xl mx-auto p-4">
+        {user && (
+          <h1 className="text-2xl font-bold mb-4">Welcome, {user.fullName}</h1>
+        )}
+        <div className="mb-6">
+          <Link href="/dashboard/member/programs" className="inline-block rounded bg-brand px-4 py-2 text-sm text-white">
+            Open Online Coaching Hub
+          </Link>
+        </div>
+
+        {membership && (
+          <div className="mb-6 rounded border border-gray-700 bg-gray-900 p-4 flex gap-4 items-start">
+            <img
+              src={membership.image || "/placeholder-user.jpg"}
+              alt="Profile photo"
+              className="w-20 h-20 rounded-full object-cover"
+            />
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-lg font-semibold">{membership.fullName || user?.fullName}</p>
+                <span className="text-xs px-2 py-0.5 rounded border border-gray-600 text-gray-300">
+                  {membership.membershipStatus}
+                </span>
+              </div>
+              {membership.memberSince && (
+                <p className="text-sm text-gray-400">Member since: {new Date(membership.memberSince).toLocaleDateString()}</p>
+              )}
+              {membership.bio && <p className="mt-2 text-sm text-gray-200">{membership.bio}</p>}
+              {membership.goal && (
+                <p className="mt-1 text-sm text-gray-300"><span className="text-gray-400">Goal:</span> {membership.goal}</p>
+              )}
+              <div className="mt-3">
+                <label className="text-xs text-gray-400 block mb-1">Update photo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const fd = new FormData()
+                    fd.append("file", file)
+                    try {
+                      const r = await fetch("/api/media", { method: "POST", body: fd })
+                      if (r.ok) {
+                        const j = await r.json()
+                        const url = `/uploads/media/${j.filename}`
+                        setMembership((m) => (m ? { ...m, image: url } : m))
+                      }
+                    } catch {}
+                  }}
+                  className="text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        <BookableSchedule userMode userId={user?.userId} />
+        <div className="mt-6">
+          <button
+            onClick={async () => {
+              try {
+                const res = await fetch("/api/stripe/portal", { method: "POST" });
+                const data = await res.json();
+                if (data.url) window.location.href = data.url;
+              } catch {}
+            }}
+            className="text-sm text-brand hover:underline"
+          >
+            Manage Billing
+          </button>
+        </div>
+
+        {(
+          <div className="mt-8 border border-gray-700 p-4 rounded bg-gray-900">
+            <h2 className="text-xl font-bold mb-2">Buy Membership or Drop-in</h2>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <button
+                onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'ADULT_UNLIMITED' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
+                className="px-3 py-2 rounded bg-white text-black"
+              >
+                Monthly Unlimited
+              </button>
+              <button
+                onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'YOUTH_2X' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
+                className="px-3 py-2 rounded bg-white text-black"
+              >
+                Junior Jabbers
+              </button>
+              <button
+                onClick={async () => { try { const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) }); const data = await res.json(); if (data.url) window.location.href = data.url; } catch {} }}
+                className="px-3 py-2 rounded bg-brand text-white"
+              >
+                Pay Drop-in
+              </button>
+            </div>
+          </div>
+        )}
+
+        {membership && (
+          <div className="mt-8 border border-gray-700 p-4 rounded bg-gray-900">
+            <h2 className="text-xl font-bold mb-2">Membership Details</h2>
+            <p>Plan: {membership.membershipType}</p>
+            <p>Status: {membership.membershipStatus}</p>
+            {membership.membershipExpiry && (
+              <p className="text-sm text-gray-400">
+                Next billing date: {new Date(membership.membershipExpiry).toLocaleDateString()}
+              </p>
+            )}
+            {payments.length > 0 && (
+              <div className="mt-2">
+                <h3 className="font-semibold">Payment History</h3>
+                <ul className="list-disc ml-4 text-sm">
+                  {payments.map((p) => (
+                    <li key={p.id}>
+                      {p.date} - ${'{'}p.amount{'}'} ({'{'}p.status{'}'})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="mt-3 flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'DROP_IN' }) });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {}
+                }}
+                className="bg-brand text-white px-3 py-2 rounded"
+              >
+                Pay Drop-in
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/stripe/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planCode: 'ADULT_UNLIMITED' }) });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                  } catch {}
+                }}
+                className="bg-white text-black px-3 py-2 rounded"
+              >
+                Subscribe
+              </button>
+            </div>
+          </div>
+        )}
+
+        <h2 className="text-xl font-bold mt-8 mb-4">Upcoming Classes</h2>
+        {upcoming.length > 0 ? (
+          <ul className="space-y-2">
+            {upcoming.map((b) => (
+              <li key={b.id} className="border border-gray-700 p-4 rounded bg-gray-900">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-semibold">{b.className}</p>
+                    <p className="text-sm text-gray-400">
+                      {new Date(b.date).toLocaleDateString()} {b.time}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleCancelBooking(b.classInstanceId)}
+                    className="text-brand text-sm hover:underline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No upcoming bookings.</p>
+        )}
+
+        <h2 className="text-xl font-bold mt-8 mb-4">Past Classes</h2>
+        {past.length > 0 ? (
+          <ul className="space-y-2">
+            {past.map((b) => (
+              <li key={b.id} className="border border-gray-700 p-4 rounded bg-gray-900">
+                <p className="font-semibold">{b.className}</p>
+                <p className="text-sm text-gray-400">
+                  {new Date(b.date).toLocaleDateString()} {b.time}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No past bookings.</p>
+        )}
+
+        <h2 className="text-xl font-bold mt-8 mb-4">Edit Profile</h2>
+        {profileMsg && <p className="mb-2 text-sm text-brand">{profileMsg}</p>}
+        <div className="space-y-2">
+          <input
+            type="text"
+            placeholder="Full name"
+            value={profileData.fullName}
+            onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={profileData.email}
+            onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <textarea
+            placeholder="Bio"
+            value={membership?.bio ?? ""}
+            onChange={(e) => setMembership((m) => (m ? { ...m, bio: e.target.value } : m))}
+            className="w-full p-2 rounded text-black"
+          />
+          <input
+            type="text"
+            placeholder="Goal"
+            value={membership?.goal ?? ""}
+            onChange={(e) => setMembership((m) => (m ? { ...m, goal: e.target.value } : m))}
+            className="w-full p-2 rounded text-black"
+          />
+          <input
+            type="password"
+            placeholder="New password"
+            value={profileData.password}
+            onChange={(e) => setProfileData({ ...profileData, password: e.target.value })}
+            className="w-full p-2 rounded text-black"
+          />
+          <button
+            onClick={handleProfileSave}
+            className="bg-brand hover:bg-brand-dark text-white px-4 py-2 rounded transition-transform duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(201,0,21,0.5)]"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

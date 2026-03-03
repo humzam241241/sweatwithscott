@@ -1,0 +1,21 @@
+import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+
+export async function POST() {
+  try {
+    const cookieStore = await cookies()
+
+    // Clear the session cookie
+    cookieStore.delete("session")
+
+    return NextResponse.json({ success: true, message: "Logged out successfully" })
+  } catch (error: unknown) {
+  if (error instanceof Error) {
+    console.error(error.message);
+  } else {
+    console.error(String(error));
+  }
+    console.error("Error during logout:", error)
+    return NextResponse.json({ error: "Logout failed" }, { status: 500 })
+  }
+}

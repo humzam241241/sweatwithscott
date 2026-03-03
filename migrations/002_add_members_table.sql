@@ -1,0 +1,6 @@
+-- migrations/002_add_members_table.sql
+CREATE TABLE IF NOT EXISTS members (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  joined_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
