@@ -47,7 +47,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 to-black/40" />
         <div className="relative z-10 text-center px-4">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white opacity-0 animate-in fade-in slide-in-from-bottom-4">
-            Welcome to The Cave Boxing
+            Welcome to Sweat with Scott
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-white opacity-0 animate-in fade-in slide-in-from-bottom-4 delay-150">
             Train Hard. Fight Smart. Become Unstoppable.
@@ -102,7 +102,7 @@ export default function Home() {
       <section id="about" className="min-h-screen p-8 flex flex-col justify-center">
         <h2 className="text-4xl font-bold mb-4 text-red-600">About</h2>
         <p className="mb-6 text-lg max-w-2xl">
-          The Cave Boxing is a community where fighters of all levels come together to push their limits and achieve their goals.
+          Sweat with Scott is a focused boxing community where people build skills, confidence, and consistency.
         </p>
         <Link href="/about" className="text-red-600 underline font-semibold">
           Learn More

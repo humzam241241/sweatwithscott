@@ -9,7 +9,7 @@ const testimonials = [
     age: 28,
     program: "Women's Boxing",
     rating: 5,
-    text: "The Cave has completely transformed my life! I started as a complete beginner 6 months ago, and now I feel stronger and more confident than ever. The coaches are incredibly supportive and the women's classes create such a positive environment.",
+    text: "Sweat with Scott has completely transformed my life! I started as a complete beginner 6 months ago, and now I feel stronger and more confident than ever.",
     image: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -17,7 +17,7 @@ const testimonials = [
     age: 35,
     program: "Boxing Technique",
     rating: 5,
-    text: "As someone who's trained at several gyms, The Cave stands out for its technical focus and professional coaching. Kyle's attention to detail has improved my technique dramatically. This place is the real deal.",
+    text: "As someone who's trained at several gyms, Sweat with Scott stands out for its technical focus and coaching quality. My technique improved dramatically.",
     image: "/placeholder.svg?height=80&width=80",
   },
   {
@@ -50,7 +50,7 @@ const testimonials = [
     age: 16,
     program: "Teen Boxing",
     rating: 5,
-    text: "Training at The Cave has taught me discipline and respect. The teen program is perfect for my age group, and I love that I'm learning real boxing skills while staying fit. Coach Kyle is an awesome mentor!",
+    text: "Training with Sweat with Scott has taught me discipline and respect. I am learning real boxing skills while getting fitter every week.",
     image: "/placeholder.svg?height=80&width=80",
   },
 ]
@@ -67,7 +67,7 @@ export default function Testimonials() {
       <div className="text-center mb-12">
         <h2 className="cave-section-title mb-4">What Our Members Say</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Don't just take our word for it - hear from real members who have transformed their lives at The Cave Boxing
+          Don't just take our word for it - hear from real members who have transformed their lives with Sweat with Scott
           Gym.
         </p>
       </div>
@@ -105,7 +105,7 @@ export default function Testimonials() {
       <div className="mt-16 text-center bg-red-600 text-white rounded-lg p-8">
         <h3 className="text-2xl font-bold mb-4">Ready to Write Your Success Story?</h3>
         <p className="text-lg mb-6 opacity-90">
-          Join hundreds of satisfied members who have transformed their lives at The Cave Boxing Gym.
+          Join hundreds of satisfied members who have transformed their lives with Sweat with Scott.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <a

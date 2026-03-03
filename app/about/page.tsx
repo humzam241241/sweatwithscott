@@ -8,7 +8,7 @@ export default function AboutPage() {
       {/* Hero Section */}
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">About The Cave Boxing Gym</h1>
+          <h1 className="text-5xl font-bold mb-6">About Sweat with Scott</h1>
           <p className="text-xl">
             Discover our story, values, and what makes us the go-to gym for boxing and fitness enthusiasts.
           </p>
@@ -21,7 +21,7 @@ export default function AboutPage() {
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              The Cave Boxing Gym was founded with a deep love for boxing and a commitment to creating a community where
+              Sweat with Scott was founded with a deep love for boxing and a commitment to creating a community where
               everyone feels empowered. From beginners taking their first steps into the ring to seasoned athletes
               looking to refine their craft, we welcome all skill levels.
             </p>

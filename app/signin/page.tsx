@@ -9,7 +9,7 @@ export default function SignInPage() {
   const searchParams = useSearchParams();
   const errorParam = searchParams?.get("error");
   const [email, setEmail] = useState("admin@cave.boxing");
-  const [password, setPassword] = useState("CaveAdmin123!");
+  const [password, setPassword] = useState("SweatAdmin123!");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 

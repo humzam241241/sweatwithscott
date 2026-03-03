@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       if (u?.email && (u.email_opt_in ?? 1)) {
         await sendMail({
           to: u.email,
-          subject: "Cave Boxing – Class booked",
+          subject: "Sweat with Scott – Class booked",
           text: `You booked a class on ${classInstance.date} at ${classInstance.start_time}. If you need to cancel, visit your dashboard.`,
         });
       }

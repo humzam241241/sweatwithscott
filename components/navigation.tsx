@@ -126,13 +126,13 @@ export default function Navigation() {
             <Link href="/">
               <Image
                 src="/images/logo.png"
-                alt="The Cave Boxing logo"
+                alt="Sweat with Scott logo"
                 width={32}
                 height={32}
               />
             </Link>
           )}
-          <Link href="/">The Cave Boxing</Link>
+          <Link href="/">Sweat with Scott</Link>
         </div>
         <ul className="flex-1 space-y-2 px-2 overflow-y-auto">
           {navLinks.map((link) => {

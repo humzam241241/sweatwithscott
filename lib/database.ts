@@ -346,20 +346,18 @@ export function initializeDatabase() {
       db.prepare(`
         INSERT INTO users (username, password, email, full_name, is_admin, membership_status, membership_expiry)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run("admin", hashedAdmin, "admin@cavegym.com", "Admin User", 1, "admin", expiry);
+      `).run("admin", hashedAdmin, "admin@sweatwithscott.com", "Admin User", 1, "admin", expiry);
     }
 
-    // Seed a sensible default schedule only if the DB is empty, so admin edits persist
     seedDefaultScheduleIfEmpty();
     seedCoaches();
     seedMembershipPackages();
     seedSettings();
     seedPrograms();
     seedSampleUsers();
-  ensureUpcomingInstances();
-
-    // Replace any existing schedule with the exact requested weekly template
     replaceScheduleWithExactTemplate();
+    enforceMinimalCatalog();
+    ensureUpcomingInstances();
 
     console.log(`📂 Using DB file: ${dbPath}`);
     console.log("Database initialized successfully");
@@ -378,102 +376,24 @@ export function initializeDatabase() {
 }
 
 function seedDefaultScheduleIfEmpty() {
-  // Only seed the default weekly classes once on a new database
   const alreadySeeded = db.prepare("SELECT COUNT(*) as c FROM classes").get() as { c: number };
   if ((alreadySeeded?.c ?? 0) > 0) return;
-
-  const capacities: Record<string, number> = {
-    Bootcamp: 30,
-    "Boxing Tech": 30,
-    "Junior Jabbers (6-12 yr)": 15,
-    "Strength & Conditioning": 30,
-    "Beginner Boxing": 30,
-    Sparring: 20,
-    "Open Gym": 9999,
-  };
-
-  // Rich weekly template to populate the public/admin schedules by default
-  const schedule: Array<{ day: string; time: string; name: string; description?: string; color?: string }> = [
-    // Sunday
-    { day: "Sunday", time: "20:00", name: "Strength & Conditioning", description: "Evening conditioning session.", color: "#f59e0b" },
-    // Monday
-    { day: "Monday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
-    { day: "Monday", time: "12:00", name: "Bootcamp", description: "Midday Bootcamp.", color: "#ef4444" },
-    { day: "Monday", time: "17:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
-    { day: "Monday", time: "18:00", name: "Bootcamp", description: "Evening Bootcamp.", color: "#ef4444" },
-    { day: "Monday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
-    { day: "Monday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
-    // Tuesday
-    { day: "Tuesday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
-    { day: "Tuesday", time: "17:00", name: "Bootcamp", description: "After-work Bootcamp.", color: "#ef4444" },
-    { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)", description: "Kids fundamentals.", color: "#22c55e" },
-    { day: "Tuesday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
-    { day: "Tuesday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
-    // Wednesday
-    { day: "Wednesday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
-    { day: "Wednesday", time: "12:00", name: "Bootcamp", description: "Midday Bootcamp.", color: "#ef4444" },
-    { day: "Wednesday", time: "19:00", name: "Strength & Conditioning", description: "Power and endurance.", color: "#f59e0b" },
-    { day: "Wednesday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
-    // Thursday
-    { day: "Thursday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
-    { day: "Thursday", time: "17:30", name: "Beginner Boxing", description: "Intro to boxing.", color: "#ef4444" },
-    { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)", description: "Kids fundamentals.", color: "#22c55e" },
-    { day: "Thursday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
-    { day: "Thursday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
-    // Friday
-    { day: "Friday", time: "08:00", name: "Bootcamp", description: "Morning Bootcamp.", color: "#ef4444" },
-    { day: "Friday", time: "18:00", name: "Bootcamp", description: "Evening Bootcamp.", color: "#ef4444" },
-    { day: "Friday", time: "19:00", name: "Boxing Tech", description: "Technical boxing skills.", color: "#3b82f6" },
-    { day: "Friday", time: "20:00", name: "Open Gym", description: "Open gym time.", color: "#22d3ee" },
-    // Saturday
-    { day: "Saturday", time: "12:00", name: "Open Gym", description: "Open gym.", color: "#22d3ee" },
-    { day: "Saturday", time: "15:00", name: "Sparring", description: "Controlled sparring rounds.", color: "#f97316" },
-  ];
-
-  const addHour = (time: string) => {
-    const [h, m] = time.split(":").map(Number);
-    return `${String(h + 1).padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-  };
-
-  const insertClass = db.prepare(`
-    INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  const classImages = {
-    "Bootcamp": "/images/gym-training.png",
-    "Boxing Tech": "/images/boxing-training.png", 
-    "Junior Jabbers (6-12 yr)": "/images/junior-jabbers.png",
-    "Strength & Conditioning": "/images/strength-conditioning.png",
-    "Beginner Boxing": "/images/boxing-training.png",
-    "Advanced Boxing": "/images/boxing-training.png",
-    "Open Gym": "/images/gym-training.png",
-  };
-
-  const addedNames = new Set<string>();
-  schedule.forEach((cls) => {
-    if (addedNames.has(cls.name)) return;
-    insertClass.run(
-      cls.name,
-      cls.description || "",
-      "",
-      cls.day,
-      cls.time,
-      addHour(cls.time),
-      capacities[cls.name] || 30,
-      25,
-      classImages[cls.name as keyof typeof classImages] || "/images/boxing-training.png",
-      cls.color || null
-    );
-    addedNames.add(cls.name);
-  });
-
   db.prepare(`
-    UPDATE classes
-    SET slug = LOWER(REPLACE(REPLACE(name, '&', 'and'), ' ', '-')) || '-' || id
-  `).run();
-
-  // After inserting base classes, generate the next 30 days of instances
+    INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color, slug, is_active, active)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+  `).run(
+    "Boxing Fundamentals",
+    "Signature boxing fundamentals session.",
+    "Coach Scott",
+    "Monday",
+    "18:00",
+    "19:00",
+    25,
+    25,
+    "/images/boxing-training.png",
+    "#ef4444",
+    "boxing-fundamentals-1",
+  );
   generateClassInstances();
 }
 
@@ -483,60 +403,6 @@ function ensureUpcomingInstances() {
   try {
     const upcoming = db.prepare("SELECT COUNT(*) as c FROM class_instances WHERE date BETWEEN date('now') AND date('now','+30 days')").get() as { c: number };
     if ((upcoming?.c ?? 0) > 0) return;
-
-    // Backfill weekly fields for known classes missing schedule info
-    const capacities: Record<string, number> = {
-      Bootcamp: 30,
-      "Boxing Tech": 30,
-      "Junior Jabbers (6-12 yr)": 15,
-      "Strength & Conditioning": 30,
-      "Beginner Boxing": 30,
-      Sparring: 20,
-      "Open Gym": 9999,
-    };
-    const schedule: Array<{ day: string; time: string; name: string; color?: string }> = [
-      { day: "Sunday", time: "20:00", name: "Strength & Conditioning", color: "#f59e0b" },
-      { day: "Monday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Monday", time: "12:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Monday", time: "17:00", name: "Boxing Tech", color: "#3b82f6" },
-      { day: "Monday", time: "18:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Monday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
-      { day: "Monday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
-      { day: "Tuesday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Tuesday", time: "17:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)", color: "#22c55e" },
-      { day: "Tuesday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
-      { day: "Tuesday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
-      { day: "Wednesday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Wednesday", time: "12:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Wednesday", time: "19:00", name: "Strength & Conditioning", color: "#f59e0b" },
-      { day: "Wednesday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
-      { day: "Thursday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Thursday", time: "17:30", name: "Beginner Boxing", color: "#ef4444" },
-      { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)", color: "#22c55e" },
-      { day: "Thursday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
-      { day: "Thursday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
-      { day: "Friday", time: "08:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Friday", time: "18:00", name: "Bootcamp", color: "#ef4444" },
-      { day: "Friday", time: "19:00", name: "Boxing Tech", color: "#3b82f6" },
-      { day: "Friday", time: "20:00", name: "Open Gym", color: "#22d3ee" },
-      { day: "Saturday", time: "12:00", name: "Open Gym", color: "#22d3ee" },
-      { day: "Saturday", time: "15:00", name: "Sparring", color: "#f97316" },
-    ];
-
-    const addHour = (time: string) => {
-      const [h, m] = time.split(":").map(Number);
-      return `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-    };
-
-    const updateStmt = db.prepare(
-      `UPDATE classes SET day_of_week = COALESCE(day_of_week, ?), start_time = COALESCE(start_time, ?), end_time = COALESCE(end_time, ?), max_capacity = COALESCE(max_capacity, ?), color = COALESCE(color, ?) WHERE name = ?`
-    );
-    for (const s of schedule) {
-      const cap = capacities[s.name] || 30;
-      updateStmt.run(s.day, s.time, addHour(s.time), cap, s.color ?? null, s.name);
-    }
-
     generateClassInstances();
   } catch (err) {
     // swallow to avoid crashing startup
@@ -546,107 +412,30 @@ function ensureUpcomingInstances() {
 // Hard reset classes and instances to match the exact weekly schedule provided by the user
 function replaceScheduleWithExactTemplate() {
   try {
-    // Weekly template and helpers
-    const capacities: Record<string, number> = {
-      Bootcamp: 30,
-      "Boxing Tech": 30,
-      "Junior Jabbers (6-12 yr)": 15,
-      "Strength & Conditioning": 30,
-      "Beginner Boxing": 30,
-      Sparring: 20,
-      "Open Gym": 30,
-    };
-    const colors: Record<string, string> = {
-      Bootcamp: "#ef4444",
-      "Boxing Tech": "#3b82f6",
-      "Junior Jabbers (6-12 yr)": "#22c55e",
-      "Strength & Conditioning": "#f59e0b",
-      "Beginner Boxing": "#ef4444",
-      Sparring: "#f97316",
-      "Open Gym": "#22d3ee",
-    };
-    const weekly: Array<{ day: string; time: string; name: string }> = [
-      // Monday
-      { day: "Monday", time: "08:00", name: "Bootcamp" },
-      { day: "Monday", time: "12:00", name: "Bootcamp" },
-      { day: "Monday", time: "17:00", name: "Boxing Tech" },
-      { day: "Monday", time: "18:00", name: "Bootcamp" },
-      { day: "Monday", time: "19:00", name: "Boxing Tech" },
-      { day: "Monday", time: "20:00", name: "Open Gym" },
-      // Tuesday
-      { day: "Tuesday", time: "08:00", name: "Bootcamp" },
-      { day: "Tuesday", time: "17:00", name: "Bootcamp" },
-      { day: "Tuesday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
-      { day: "Tuesday", time: "19:00", name: "Boxing Tech" },
-      { day: "Tuesday", time: "20:00", name: "Open Gym" },
-      // Wednesday
-      { day: "Wednesday", time: "08:00", name: "Bootcamp" },
-      { day: "Wednesday", time: "12:00", name: "Bootcamp" },
-      { day: "Wednesday", time: "19:00", name: "Strength & Conditioning" },
-      { day: "Wednesday", time: "20:00", name: "Open Gym" },
-      // Thursday
-      { day: "Thursday", time: "08:00", name: "Bootcamp" },
-      { day: "Thursday", time: "17:30", name: "Beginner Boxing" },
-      { day: "Thursday", time: "18:00", name: "Junior Jabbers (6-12 yr)" },
-      { day: "Thursday", time: "19:00", name: "Boxing Tech" },
-      { day: "Thursday", time: "20:00", name: "Open Gym" },
-      // Friday
-      { day: "Friday", time: "08:00", name: "Bootcamp" },
-      { day: "Friday", time: "18:00", name: "Bootcamp" },
-      { day: "Friday", time: "19:00", name: "Boxing Tech" },
-      { day: "Friday", time: "20:00", name: "Open Gym" },
-      // Saturday
-      { day: "Saturday", time: "12:00", name: "Open Gym" },
-      { day: "Saturday", time: "15:00", name: "Sparring" },
-      // Sunday
-      { day: "Sunday", time: "20:00", name: "Strength & Conditioning" },
-    ];
-
-    const addHour = (time: string) => {
-      const [h, m] = time.split(":").map(Number);
-      return `${String(h + 1).padStart(2, "0")}:${String(m ?? 0).padStart(2, "0")}`;
-    };
-
-    // Clear and reseed classes (idempotent): remove duplicates by name+day+time first
-    db.exec(`
-      DELETE FROM classes WHERE id NOT IN (
-        SELECT MIN(id) FROM classes GROUP BY name, day_of_week, start_time
-      );
-    `);
+    db.prepare("DELETE FROM class_bookings").run();
     db.prepare(`DELETE FROM class_instances`).run();
     db.prepare(`DELETE FROM classes`).run();
-
-    const insertClass = db.prepare(
-      `INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color, is_active, active)
-       VALUES (?, '', '', ?, ?, ?, ?, 25, NULL, ?, 1, 1)`
+    const classInfo = db.prepare(`
+      INSERT INTO classes (name, description, instructor, day_of_week, start_time, end_time, max_capacity, price, image, color, slug, is_active, active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)
+    `).run(
+      "Boxing Fundamentals",
+      "Signature boxing fundamentals session.",
+      "Coach Scott",
+      "Monday",
+      "18:00",
+      "19:00",
+      25,
+      25,
+      "/images/boxing-training.png",
+      "#ef4444",
+      "boxing-fundamentals-1",
     );
-    weekly.forEach((slot) => {
-      const color = colors[slot.name] || null;
-      const cap = capacities[slot.name] ?? 30;
-      insertClass.run(slot.name, slot.day, slot.time, addHour(slot.time), cap, color);
-    });
-
-    // Generate next 30 days of instances
-    const classes = db.prepare(`SELECT id, day_of_week, start_time, end_time, COALESCE(instructor,'') as instructor, COALESCE(max_capacity,30) as max_capacity FROM classes`).all() as Array<{ id: number; day_of_week: string; start_time: string; end_time: string; instructor?: string; max_capacity?: number }>;
-    const today = new Date();
-    const insertInstance = db.prepare(
-      `INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity, status)
-       VALUES (?, ?, ?, ?, ?, ?, 'scheduled')`
-    );
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const dayName = d.toLocaleDateString('en-US', { weekday: 'long' });
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const da = String(d.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m}-${da}`;
-      for (const c of classes) {
-        if (c.day_of_week === dayName) {
-          try { insertInstance.run(c.id, dateStr, c.start_time, c.end_time, c.instructor ?? '', c.max_capacity ?? 30); } catch {}
-        }
-      }
-    }
+    const classId = Number(classInfo.lastInsertRowid);
+    db.prepare(`
+      INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity, status)
+      VALUES (?, date('now','+1 day'), ?, ?, ?, ?, 'scheduled')
+    `).run(classId, "18:00", "19:00", "Coach Scott", 25);
   } catch (error) {
     // swallow; non-critical
   }
@@ -659,24 +448,10 @@ function seedCoaches() {
     VALUES (?, ?, ?, ?, ?)
   `);
   insertCoach.run(
-    "humza-muhammad", 
-    "Humza Muhammad", 
-    "Head coach with over 8 years of boxing experience. Specializes in technical training and competitive preparation.", 
-    "Certified Boxing Coach, Level 2 Personal Trainer", 
-    "/images/coach-humza.png"
-  );
-  insertCoach.run(
-    "kyle-mclaughlin", 
-    "Kyle McLaughlin", 
-    "Former amateur boxer turned coach. Focuses on fundamentals and building confidence in new fighters.", 
-    "USA Boxing Certified Coach", 
-    "/images/kyle-mclaughlin.png"
-  );
-  insertCoach.run(
     "scott-trainer", 
     "Scott Wilson", 
-    "Strength and conditioning specialist with a background in professional athletics.", 
-    "NSCA Certified Strength Coach, Boxing Conditioning Specialist", 
+    "Lead coach for Sweat with Scott online and in-person training.", 
+    "Certified Boxing Coach", 
     "/images/coach-scott.png"
   );
 }
@@ -688,8 +463,6 @@ function seedMembershipPackages() {
     VALUES (?, ?, ?, ?)
   `);
   insertPkg.run("8-Week Boxing Reset", "Structured 8-week online transformation", 197, JSON.stringify(["3 guided workouts weekly", "Video coaching library", "Progress checkpoints"]));
-  insertPkg.run("Sweat with Scott Daily", "Daily online drills and workouts", 39, JSON.stringify(["Daily sessions", "Technique progression", "Dashboard tracking"]));
-  insertPkg.run("Gym Membership", "In-person classes and facility access", 150, JSON.stringify(["Unlimited classes", "Priority booking"]));
 }
 
 function seedSettings() {
@@ -723,9 +496,7 @@ function seedPrograms() {
       VALUES (?, ?, ?, ?, ?)
     `);
     insertProgram.run("8-week-boxing-reset", "8-Week Boxing Reset", "one_time", "EIGHT_WEEK_RESET", "A guided 8-week boxing transformation.");
-    insertProgram.run("sweat-with-scott-daily", "Sweat with Scott Daily", "subscription", "DAILY_DRILLS_MONTHLY", "Daily boxing and fitness sessions with coaching structure.");
-
-    const programs = db.prepare("SELECT id, slug FROM programs").all() as Array<{ id: number; slug: string }>;
+    const programs = db.prepare("SELECT id FROM programs").all() as Array<{ id: number }>;
     const insertWeek = db.prepare(`INSERT OR IGNORE INTO program_weeks (program_id, week_number, title) VALUES (?, ?, ?)`);
     const insertDay = db.prepare(`
       INSERT OR IGNORE INTO program_days (week_id, day_number, title, workout_description, youtube_url, is_rest_day)
@@ -733,21 +504,121 @@ function seedPrograms() {
     `);
 
     for (const program of programs) {
-      const totalWeeks = program.slug === "8-week-boxing-reset" ? 8 : 4;
-      for (let week = 1; week <= totalWeeks; week++) {
-        insertWeek.run(program.id, week, `Week ${week}`);
-      }
-
-      const weeks = db.prepare("SELECT id, week_number FROM program_weeks WHERE program_id = ? ORDER BY week_number").all(program.id) as Array<{ id: number; week_number: number }>;
-      for (const week of weeks) {
+      insertWeek.run(program.id, 1, "Week 1");
+      const week = db.prepare("SELECT id FROM program_weeks WHERE program_id = ? AND week_number = 1").get(program.id) as { id: number } | undefined;
+      if (week?.id) {
         insertDay.run(week.id, 1, "Technique Day", "Footwork, guard, and jab mechanics.", "https://www.youtube.com/embed/dQw4w9WgXcQ", 0);
-        insertDay.run(week.id, 2, "Conditioning Day", "Intervals, core rounds, and mobility finishers.", "https://www.youtube.com/embed/dQw4w9WgXcQ", 0);
-        insertDay.run(week.id, 3, "Power Day", "Bag rounds, combo progression, and strength circuit.", "https://www.youtube.com/embed/dQw4w9WgXcQ", 0);
-        insertDay.run(week.id, 4, "Recovery Day", "Light movement and active recovery.", "", 1);
       }
     }
   } catch (error) {
     console.error("seedPrograms error:", error);
+  }
+}
+
+function enforceMinimalCatalog() {
+  try {
+    // Keep one class and one upcoming instance
+    const keepClass = db.prepare("SELECT id FROM classes ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
+    if (keepClass?.id) {
+      db.prepare(`
+        DELETE FROM class_bookings
+        WHERE class_instance_id IN (SELECT id FROM class_instances WHERE class_id != ?)
+      `).run(keepClass.id);
+      db.prepare("DELETE FROM class_instances WHERE class_id != ?").run(keepClass.id);
+      db.prepare("DELETE FROM classes WHERE id != ?").run(keepClass.id);
+      db.prepare(`
+        UPDATE classes
+        SET name = ?, description = ?, instructor = ?, coach_name = ?, day_of_week = ?, start_time = ?, end_time = ?, slug = ?, image = ?, max_capacity = ?, price = ?, is_active = 1, active = 1
+        WHERE id = ?
+      `).run(
+        "Boxing Fundamentals",
+        "Signature boxing fundamentals session.",
+        "Coach Scott",
+        "Scott Wilson",
+        "Monday",
+        "18:00",
+        "19:00",
+        "boxing-fundamentals-1",
+        "/images/boxing-training.png",
+        25,
+        25,
+        keepClass.id,
+      );
+      db.prepare("DELETE FROM class_instances WHERE class_id = ?").run(keepClass.id);
+      db.prepare(`
+        INSERT INTO class_instances (class_id, date, start_time, end_time, instructor, max_capacity, status)
+        VALUES (?, date('now','+1 day'), ?, ?, ?, ?, 'scheduled')
+      `).run(keepClass.id, "18:00", "19:00", "Coach Scott", 25);
+    }
+
+    // Keep one coach
+    const keepCoach = db.prepare("SELECT id FROM coaches ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
+    if (keepCoach?.id) {
+      db.prepare("DELETE FROM coaches WHERE id != ?").run(keepCoach.id);
+      db.prepare(`
+        UPDATE coaches
+        SET slug = ?, name = ?, bio = ?, certifications = ?, image = ?
+        WHERE id = ?
+      `).run(
+        "scott-trainer",
+        "Scott Wilson",
+        "Lead coach for Sweat with Scott online and in-person training.",
+        "Certified Boxing Coach",
+        "/images/coach-scott.png",
+        keepCoach.id,
+      );
+    }
+
+    // Keep one membership package
+    const keepPackage = db.prepare("SELECT id FROM membership_packages ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
+    if (keepPackage?.id) {
+      db.prepare("DELETE FROM membership_packages WHERE id != ?").run(keepPackage.id);
+      db.prepare(`
+        UPDATE membership_packages
+        SET name = ?, description = ?, price = ?, features = ?
+        WHERE id = ?
+      `).run(
+        "8-Week Boxing Reset",
+        "Structured 8-week online transformation",
+        197,
+        JSON.stringify(["3 guided workouts weekly", "Video coaching library", "Progress checkpoints"]),
+        keepPackage.id,
+      );
+    }
+
+    // Keep one program with one week/day
+    const keepProgram = db.prepare("SELECT id FROM programs ORDER BY id ASC LIMIT 1").get() as { id: number } | undefined;
+    if (keepProgram?.id) {
+      db.prepare("DELETE FROM programs WHERE id != ?").run(keepProgram.id);
+      db.prepare(`
+        UPDATE programs
+        SET slug = ?, title = ?, program_type = ?, price_code = ?, summary = ?, active = 1
+        WHERE id = ?
+      `).run(
+        "8-week-boxing-reset",
+        "8-Week Boxing Reset",
+        "one_time",
+        "EIGHT_WEEK_RESET",
+        "A guided 8-week boxing transformation.",
+        keepProgram.id,
+      );
+      const keepWeek = db.prepare("SELECT id FROM program_weeks WHERE program_id = ? ORDER BY week_number ASC LIMIT 1").get(keepProgram.id) as { id: number } | undefined;
+      if (keepWeek?.id) {
+        db.prepare("DELETE FROM program_weeks WHERE program_id = ? AND id != ?").run(keepProgram.id, keepWeek.id);
+        db.prepare("UPDATE program_weeks SET week_number = 1, title = ? WHERE id = ?").run("Week 1", keepWeek.id);
+        const keepDay = db.prepare("SELECT id FROM program_days WHERE week_id = ? ORDER BY day_number ASC LIMIT 1").get(keepWeek.id) as { id: number } | undefined;
+        if (keepDay?.id) {
+          db.prepare("DELETE FROM program_days WHERE week_id = ? AND id != ?").run(keepWeek.id, keepDay.id);
+          db.prepare(`
+            UPDATE program_days
+            SET day_number = 1, title = ?, workout_description = ?, youtube_url = ?, is_rest_day = 0
+            WHERE id = ?
+          `).run("Technique Day", "Footwork, guard, and jab mechanics.", "https://www.youtube.com/embed/dQw4w9WgXcQ", keepDay.id);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("enforceMinimalCatalog error:", error);
   }
 }
 

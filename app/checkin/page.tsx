@@ -38,7 +38,7 @@ export default function CheckInPage() {
                 <div className="mt-3 p-3 rounded bg-yellow-50 border border-yellow-200 text-sm text-yellow-900">
                   <p className="mb-2 font-medium">Waiver required</p>
                   <div className="h-24 overflow-auto p-2 bg-white border text-xs text-gray-700 rounded">
-                    By checking this box, I agree to the Cave Boxing liability waiver (v1)...
+                    By checking this box, I agree to the Sweat with Scott liability waiver (v1)...
                   </div>
                   <label className="mt-2 flex items-center gap-2">
                     <input type="checkbox" checked={waiverAccept} onChange={(e)=>setWaiverAccept(e.target.checked)} />

@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     try {
       const u = dbOperations.getUserById(user_id) as any;
       if (u?.email && (u.email_opt_in ?? 1)) {
-        await sendMail({ to: u.email, subject: "Cave Boxing – Booking cancelled", text: `Your booking for class ${class_instance_id} has been cancelled.` })
+        await sendMail({ to: u.email, subject: "Sweat with Scott – Booking cancelled", text: `Your booking for class ${class_instance_id} has been cancelled.` })
       }
     } catch {}
 

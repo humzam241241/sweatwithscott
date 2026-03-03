@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 (async () => {
   const email = "admin@cave.boxing";
-  const password = "CaveAdmin123!";
+  const password = "SweatAdmin123!";
   const passwordHash = await bcrypt.hash(password, 10);
 
   await prisma.user.upsert({

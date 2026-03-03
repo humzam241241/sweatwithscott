@@ -109,7 +109,7 @@ try {
     db.prepare(`
       INSERT INTO users (username, password, email, full_name, is_admin, membership_status) 
       VALUES (?, ?, ?, ?, ?, ?)
-    `).run("admin", "admin123", "admin@cavegym.com", "Admin User", 1, "admin")
+    `).run("admin", "admin123", "admin@sweatwithscott.com", "Admin User", 1, "admin")
     console.log("Admin user created")
   } else {
     console.log("Admin user already exists")

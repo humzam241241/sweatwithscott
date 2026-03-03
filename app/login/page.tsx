@@ -62,7 +62,7 @@ export default function LoginPage() {
         <Card className="w-full max-w-md bg-gray-900 border-gray-700">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <img src="/images/cave-logo.png" alt="The Cave Boxing" className="h-16 w-16" />
+            <img src="/images/cave-logo.png" alt="Sweat with Scott" className="h-16 w-16" />
           </div>
           <CardTitle className="text-2xl font-bold text-white">Sign In</CardTitle>
           <CardDescription className="text-gray-400">Enter your credentials to access your account</CardDescription>

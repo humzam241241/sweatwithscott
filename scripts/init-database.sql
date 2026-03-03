@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS attendance (
 
 -- Insert admin user
 INSERT OR REPLACE INTO users (id, username, password, email, full_name, is_admin, membership_status) 
-VALUES (1, 'admin', 'admin123', 'admin@cavegym.com', 'Admin User', 1, 'admin');
+VALUES (1, 'admin', 'admin123', 'admin@sweatwithscott.com', 'Admin User', 1, 'admin');
 
 -- Insert sample classes
 INSERT OR REPLACE INTO classes (id, name, description, instructor, duration, max_capacity, price) VALUES

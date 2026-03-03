@@ -78,7 +78,7 @@ export default function WomenPage() {
       {/* Benefits Section */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="cave-section-title mb-8">Why Women Choose The Cave</h2>
+          <h2 className="cave-section-title mb-8">Why Women Choose Sweat with Scott</h2>
           <div className="grid md:grid-cols-2 gap-8 text-left">
             <div>
               <h3 className="text-xl font-bold mb-4 text-red-600">Safe & Supportive Environment</h3>

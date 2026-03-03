@@ -10,7 +10,7 @@ export default function FAQPage() {
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">Frequently Asked Questions</h1>
-          <p className="text-xl">Get answers to common questions about The Cave Boxing Gym.</p>
+          <p className="text-xl">Get answers to common questions about Sweat with Scott.</p>
         </div>
       </header>
 
@@ -72,7 +72,7 @@ export default function FAQPage() {
           </AccordionItem>
 
           <AccordionItem value="item-8">
-            <AccordionTrigger className="text-left">What makes The Cave different from other gyms?</AccordionTrigger>
+            <AccordionTrigger className="text-left">What makes Sweat with Scott different from other gyms?</AccordionTrigger>
             <AccordionContent>
               We focus on building a supportive community where everyone feels welcome. Our coaches have extensive
               competitive and coaching experience, and we emphasize proper technique, safety, and personal growth

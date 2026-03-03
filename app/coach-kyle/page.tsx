@@ -56,7 +56,7 @@ export default function CoachKylePage() {
         <div className="bg-white border rounded-lg p-8 shadow-sm">
           <h3 className="text-2xl font-bold mb-4">About Coach Kyle</h3>
           <p className="text-gray-700 leading-relaxed mb-6">
-            Kyle McLaughlin brings a wealth of competitive boxing experience to The Cave Boxing Gym. As our Head Boxing
+            Kyle McLaughlin brings a wealth of competitive boxing experience to Sweat with Scott. As our Head Boxing
             Coach, he has dedicated his career to developing fighters at all levels, from complete beginners to
             competitive athletes.
           </p>

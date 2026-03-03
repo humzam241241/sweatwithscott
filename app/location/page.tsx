@@ -11,7 +11,7 @@ export default function LocationPage() {
       <header className="bg-gradient-to-r from-red-600 to-red-800 text-white py-20">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl font-bold mb-6">Location & Hours</h1>
-          <p className="text-xl">Find us and plan your visit to The Cave Boxing Gym.</p>
+          <p className="text-xl">Find us and plan your visit to Sweat with Scott.</p>
         </div>
       </header>
 
