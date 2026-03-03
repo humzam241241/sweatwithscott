@@ -48,7 +48,7 @@ export default function ScheduleClient() {
     attendees?: any[];
   }>({ open: false });
   const [filters, setFilters] = useState<{ coach: string | "All"; title: string | "All" }>({ coach: "All", title: "All" });
-  const [showTip, setShowTip] = useState(false);
+  const [showTip, _setShowTip] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<{ title: string; startsAt: string; endsAt: string; capacity: number; coachName: string; color: string }>({
     title: "New Class",
@@ -247,7 +247,6 @@ export default function ScheduleClient() {
             snapDuration={{ minutes: 15 } as any}
             slotDuration="00:30:00"
             height="auto"
-            selectable
             editable
             eventStartEditable
             eventDurationEditable
@@ -295,7 +294,6 @@ export default function ScheduleClient() {
                 setEditor((e) => ({ ...e, attendees }));
               } catch {}
             }}
-            height="auto"
           />
           {menu.open && (
             <div className="fixed z-50 rounded-md border bg-white shadow-lg text-sm" style={{ left: menu.x, top: menu.y }} onMouseLeave={() => setMenu((m) => ({ ...m, open: false }))}>
